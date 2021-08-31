@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{A94AC9AF-BA6D-4F79-AD8A-806D78CD4A0E}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(SolutionDir)\PmWorkspace.default.props" />
+  <Import Project="$(SolutionDir)..\EDK-II\MSBuild\nasm.props" />
+  <Import Project="$(SolutionDir)\PmWorkspace.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="$(SolutionDir)..\EDK-II\MSBuild\nasm.targets" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies>UefiApplicationEntryPoint.lib;BaseIoLibIntrinsic.lib;SecPeiDxeTimerLibCpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>EFI Application</SubSystem>
+    </Link>
+    <ClCompile>
+      <ShowIncludes Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ShowIncludes>
+      <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AssemblyAndSourceCode</AssemblerOutput>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_VISUALUEFI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard_C Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdc17</LanguageStandard_C>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Speed</FavorSizeOrSpeed>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="CONFIGURATION.c" />
+    <ClCompile Include="CpuMailboxes.c" />
+    <ClCompile Include="DelayX86.c" />
+    <ClCompile Include="FixedPoint.c" />
+    <ClCompile Include="TimeWindows.c" />
+    <ClCompile Include="VFTuning.c" />
+    <ClCompile Include="InterruptHook.c" />
+    <ClCompile Include="LowLevel.c" />
+    <ClCompile Include="MpDispatcher.c" />
+    <ClCompile Include="OcMailbox.c" />
+    <ClCompile Include="Platform.c" />
+    <ClCompile Include="PowerLimits.c" />
+    <ClCompile Include="PowerMonkey.c" />
+    <ClCompile Include="TurboRatioLimits.c" />
+    <ClCompile Include="VisualUefi.c" />
+    <ClCompile Include="VoltTables.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Constants.h" />
+    <ClInclude Include="CpuMailboxes.h" />
+    <ClInclude Include="ASMx64\ComboHell_AVX2.h" />
+    <ClInclude Include="DelayX86.h" />
+    <ClInclude Include="FixedPoint.h" />
+    <ClInclude Include="SaferAsmHdr.h" />
+    <ClInclude Include="InterruptHook.h" />
+    <ClInclude Include="LowLevel.h" />
+    <ClInclude Include="TimeWindows.h" />
+    <ClInclude Include="VFTuning.h" />
+    <ClInclude Include="MpDispatcher.h" />
+    <ClInclude Include="OcMailbox.h" />
+    <ClInclude Include="Platform.h" />
+    <ClInclude Include="PowerLimits.h" />
+    <ClInclude Include="TurboRatioLimits.h" />
+    <ClInclude Include="VoltTables.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <NASM Include="ASMx64\ComboHell_AVX2.nasm">
+      <PreIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </PreIncludeFiles>
+    </NASM>
+    <NASM Include="ASMx64\SaferAsm.nasm">
+      <PreIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </PreIncludeFiles>
+      <ErrorReportingFormat Condition="'$(Configuration)|$(Platform)'=='Release|x64'">1</ErrorReportingFormat>
+    </NASM>
+  </ItemGroup>
+</Project>

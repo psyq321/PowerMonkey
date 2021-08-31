@@ -1,0 +1,86 @@
+################################################################################
+#  ______                            ______                 _
+# (_____ \                          |  ___ \               | |
+#  _____) )___   _ _ _   ____   ___ | | _ | |  ___   ____  | |  _  ____  _   _
+# |  ____// _ \ | | | | / _  ) / __)| || || | / _ \ |  _ \ | | / )/ _  )| | | |
+# | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
+# |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
+#                                                                       (____/
+# Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# WARNING: This code is a proof of concept for educative purposes. It can
+# modify internal computer configuration parameters and cause malfunctions or
+# even permanent damage. It has been tested on a limited range of target CPUs
+# and has minimal built-in failsafe mechanisms, thus making it unsuitable for
+# recommended use by users not skilled in the art. Use it at your own risk.
+#
+################################################################################
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PowerMonkey
+  MODULE_UNI_FILE                = PowerMonkey.uni
+  FILE_GUID                      = A94AC9AF-BA6D-4F79-AD8A-806D78CD4A0E
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = UefiMain
+
+#
+#  This flag specifies whether HII resource section is generated into PE image.
+#
+
+UEFI_HII_RESOURCE_SECTION      = FALSE
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+VALID_ARCHITECTURES           = X64
+
+[Sources]
+  CONFIGURATION.c
+  Constants.h
+  CpuMailboxes.c
+  CpuMailboxes.h
+  DelayX86.c
+  DelayX86.h
+  FixedPoint.c
+  FixedPoint.h
+  InterruptHook.c
+  InterruptHook.h
+  LowLevel.c
+  LowLevel.h
+  MpDispatcher.c
+  MpDispatcher.h
+  OcMailbox.c
+  OcMailbox.h
+  Platform.c
+  Platform.h
+  PowerLimits.c
+  PowerLimits.h
+  PowerMonkey.c
+  SaferAsmHdr.h
+  TimeWindows.h
+  TimeWindows.c
+  TurboRatioLimits.c
+  TurboRatioLimits.h
+  VFTuning.c
+  VFTuning.h
+  VoltTables.c
+  ASMx64/SaferAsm.nasm
+  
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  BaseLib
+  UefiLib
+  IoLib
+  MemoryAllocationLib
+  DebugLib
+  
+[Protocols]
+  gEfiMpServiceProtocolGuid

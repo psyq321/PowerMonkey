@@ -1,0 +1,8 @@
+*.sdf
+x64
+*.opensdf
+*.suo
+*.opendb
+.vs
+.vscode
+PmWorkspace.VC.db

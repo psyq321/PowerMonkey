@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="CONFIGURATION.c" />
+    <ClCompile Include="VFTuning.c" />
+    <ClCompile Include="MpDispatcher.c" />
+    <ClCompile Include="OcMailbox.c" />
+    <ClCompile Include="Platform.c" />
+    <ClCompile Include="PowerLimits.c" />
+    <ClCompile Include="PowerMonkey.c" />
+    <ClCompile Include="TurboRatioLimits.c" />
+    <ClCompile Include="LowLevel.c" />
+    <ClCompile Include="DelayX86.c" />
+    <ClCompile Include="InterruptHook.c" />
+    <ClCompile Include="CpuMailboxes.c" />
+    <ClCompile Include="FixedPoint.c" />
+    <ClCompile Include="VoltTables.c" />
+    <ClCompile Include="VisualUefi.c" />
+    <ClCompile Include="TimeWindows.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ASMx64">
+      <UniqueIdentifier>{dacef863-ab0b-4b3d-b09d-c69f3dcdb71e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include">
+      <UniqueIdentifier>{0f5cdc5b-3b40-44c4-82a2-dae3827afe5d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="VFTuning.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="MpDispatcher.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="OcMailbox.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="PowerLimits.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="TurboRatioLimits.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="DelayX86.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="LowLevel.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="InterruptHook.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="CpuMailboxes.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="FixedPoint.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Constants.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="SaferAsmHdr.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="ASMx64\ComboHell_AVX2.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="VoltTables.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeWindows.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <NASM Include="ASMx64\ComboHell_AVX2.nasm">
+      <Filter>ASMx64</Filter>
+    </NASM>
+    <NASM Include="ASMx64\SaferAsm.nasm">
+      <Filter>ASMx64</Filter>
+    </NASM>
+  </ItemGroup>
+</Project>
