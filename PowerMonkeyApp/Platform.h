@@ -40,7 +40,7 @@
 #define MAX_POWAH       0xFFFFFFFF
 
 /*******************************************************************************
- *
+ * OC Mailbox - Voltage Domains (NOTE: some might be linked!)
  ******************************************************************************/
 
 enum VoltDomains
@@ -50,6 +50,17 @@ enum VoltDomains
   RING =      0x02,           // Ring / Cache
   GTUNSLICE = 0x03,           // GT Unslice
   UNCORE =    0x04            // Uncore (SA)
+};
+
+
+/*******************************************************************************
+ * OC Mailbox - Voltage Adjustment Modes
+ ******************************************************************************/
+
+enum VoltMode
+{
+  V_IPOLATIVE = 0x00,         // Interpolative
+  V_OVERRIDE  = 0x01          // Override
 };
 
 /*******************************************************************************
@@ -77,7 +88,6 @@ typedef union _QWORD
   } u8;
 } QWORD;
 
-
 /*******************************************************************************
  * VF_POINT - Data describing single Voltage/Frequency (VF) point
  ******************************************************************************/
@@ -88,7 +98,6 @@ typedef struct _VF_POINT
   INT16   OffsetVolts;              // R/W if supported and if V/F point valid
 } VF_POINT;
 
-
 /*******************************************************************************
  * DOMAIN - Holds data specific to individual unit within package
  * (core, uncore, cache/ring, gt slice, gt unslice, etc.)
@@ -97,7 +106,7 @@ typedef struct _VF_POINT
 typedef struct _DOMAIN
 {  
   UINT8   MaxRatio;
-  UINT8   VoltOverrideMode;
+  UINT8   VoltMode;
   
   UINT16  TargetVolts;
   INT16   OffsetVolts;

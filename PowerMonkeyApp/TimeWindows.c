@@ -49,22 +49,21 @@ UINT8 FindTauConsts(
         UINT64 entry = *ptbl;
         UINT64 shift = 22 + units;
 
-        ptbl++;
-
-        if ((entry>>shift) >= (UINT64)timeMs) 
-        {
+        if ((entry>>shift) >= (UINT64)timeMs)  {
+          
           *PX = xidx;
           *PY = yidx;
 
           return 1;
         }
+
+        ptbl++;
       }
     }
   }
   else {
     *PX = 2;
     *PY = 31;
-
     return 1;
   }
 

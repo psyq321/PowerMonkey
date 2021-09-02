@@ -102,16 +102,19 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
   // We will loop through all packages (processor sockets)
   // and override (program) things we like changed.
 
-  for (UINTN pidx = 0; pidx < sys->PkgCnt; pidx++)
-  {
+  for (UINTN pidx = 0; pidx < sys->PkgCnt; pidx++) {
+    
     PACKAGE* pk = sys->packages + pidx;
 
     /////////////////////////////////////
     /// Voltage / Frequency Overrides ///
     /////////////////////////////////////
     
-    pk->Domain[IACORE].VoltOverrideMode = 0;  // Adaptive
-    pk->Domain[IACORE].OffsetVolts =   -125;  // in mV (negative = undervolt)
+    pk->Domain[IACORE].VoltMode = V_IPOLATIVE;  // V_IPOLATIVE = Interpolate
+                                                // V_OVERRIDE =  Override
+
+    pk->Domain[IACORE].TargetVolts =  0;       // in mV (0 = do not use)
+    pk->Domain[IACORE].OffsetVolts =  -125;    // in mV (negative = undervolt)
 
     //
     // Note: some domains are sharing the same voltage plane! Check yours!
@@ -125,8 +128,19 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     // or smth. while in reality pcode is doing exactly nothing because cache
     // is programmed to 0 mV offset. Don't be that guy!
 
-    pk->Domain[RING].VoltOverrideMode = 0;   // IACORE linked, set to the same
-    pk->Domain[RING].OffsetVolts = -125;     // IACORE linked, set to the same
+    pk->Domain[RING].VoltMode = V_IPOLATIVE;  // V_IPOLATIVE = Interpolate
+                                              // V_OVERRIDE  = Override
+
+    pk->Domain[RING].TargetVolts = 0;         // in mV (0 = do not use)
+    pk->Domain[RING].OffsetVolts = -125;      // in mV (negative = undervolt)
+
+    ///////////////////////////
+    /// V/F Curve Adjustment //
+    ///////////////////////////
+    
+    ///
+    /// TBD
+    ///
 
     ////////////////////
     /// Turbo Ratios ///

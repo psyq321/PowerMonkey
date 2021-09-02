@@ -41,7 +41,7 @@
 //
 // Initialized at startup
 
-extern EFI_MP_SERVICES_PROTOCOL	*gMpServices;
+extern EFI_MP_SERVICES_PROTOCOL* gMpServices;
 
 /*******************************************************************************
  *
@@ -54,7 +54,7 @@ extern EFI_MP_SERVICES_PROTOCOL	*gMpServices;
 typedef struct _PACKAGE_DISPATCH_DATA
 {
   UINTN ApicID;
-  VOID *opaqueParam;    
+  VOID* opaqueParam;
 } PACKAGE_DISPATCH_DATA;
 
 
@@ -62,88 +62,88 @@ typedef struct _PACKAGE_DISPATCH_DATA
  * TBD / TODO: Needs Rewrite
  ******************************************************************************/
 
-EFI_STATUS EFIAPI RunOnPackageOrCore( 
-  const IN PLATFORM *Platform,
+EFI_STATUS EFIAPI RunOnPackageOrCore(
+  const IN PLATFORM* Platform,
   const IN UINTN ApicID,
   const IN EFI_AP_PROCEDURE proc,
-  IN VOID *param OPTIONAL )
-  {
-    EFI_STATUS status = EFI_SUCCESS;
+  IN VOID* param OPTIONAL)
+{
+  EFI_STATUS status = EFI_SUCCESS;
 
-    if(gMpServices) {
-      if(ApicID != Platform->BootProcessor) {
+  if (gMpServices) {
+    if (ApicID != Platform->BootProcessor) {
 
-        status = gMpServices->StartupThisAP(
-          gMpServices,
-          proc,
-          ApicID,
-          NULL,
-          1000000,
-          param,
-          NULL
-          );
+      status = gMpServices->StartupThisAP(
+        gMpServices,
+        proc,
+        ApicID,
+        NULL,
+        1000000,
+        param,
+        NULL
+      );
 
-			  if (EFI_ERROR(status)) {
+      if (EFI_ERROR(status)) {
 
-				  Print(L"[ERROR] Unable to exacute on CPU package %u,"
-            "status code: 0x%x\n", ApicID, status	);
-        }
-
-        return status;
+        Print(L"[ERROR] Unable to exacute on CPU package %u,"
+          "status code: 0x%x\n", ApicID, status);
       }
+
+      return status;
     }
-
-    //
-    // Platform has no MP services OR we are running on the desired package
-    // ... so instead of dispatching, we will just call
-
-    proc(param);
-
-    //
-    // And that's that
-
-    return status;
   }
+
+  //
+  // Platform has no MP services OR we are running on the desired package
+  // ... so instead of dispatching, we will just call
+
+  proc(param);
+
+  //
+  // And that's that
+
+  return status;
+}
 
 /*******************************************************************************
  * TBD / TODO: Needs Rewrite
  ******************************************************************************/
 
-EFI_STATUS EFIAPI RunOnAllProcessors( 
-  const IN PLATFORM *Platform,
+EFI_STATUS EFIAPI RunOnAllProcessors(
+  const IN PLATFORM* Platform,
   const IN EFI_AP_PROCEDURE proc,
-  IN VOID *param OPTIONAL )
+  IN VOID* param OPTIONAL)
 {
-    EFI_STATUS status = EFI_SUCCESS;
+  EFI_STATUS status = EFI_SUCCESS;
 
-    if(gMpServices) 
-    {
-      
-      status = gMpServices->StartupAllAPs(
-        gMpServices,
-        proc,
-        FALSE,
-        NULL,
-        1000000,
-        param,
-        NULL
-        );
+  if (gMpServices)
+  {
 
-  	  if (EFI_ERROR(status)) {
-	  	  Print(L"[ERROR] Unable to exacute all CPUs, status code: 0x%x\n", status	);
-      }
+    status = gMpServices->StartupAllAPs(
+      gMpServices,
+      proc,
+      FALSE,
+      NULL,
+      1000000,
+      param,
+      NULL
+    );
 
-      return status;
+    if (EFI_ERROR(status)) {
+      Print(L"[ERROR] Unable to exacute all CPUs, status code: 0x%x\n", status);
     }
-
-    //
-    // Platform has no MP services OR we are running on the desired package
-    // ... so instead of dispatching, we will just call
-
-    proc(param);
-
-    //
-    // And that's that
 
     return status;
   }
+
+  //
+  // Platform has no MP services OR we are running on the desired package
+  // ... so instead of dispatching, we will just call
+
+  proc(param);
+
+  //
+  // And that's that
+
+  return status;
+}

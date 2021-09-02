@@ -75,7 +75,7 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
   // Convert output to a format readable by a non-engineer
 
   dom->MaxRatio = (UINT8)(b->box.data & 0xff);
-  dom->VoltOverrideMode = (UINT8)((b->box.data >> 20) & 0x1);
+  dom->VoltMode = (UINT8)((b->box.data >> 20) & 0x1);
 
   INT16 OffsetVoltsFx = (INT16)((b->box.data >> 21) & 0x7ff);
   UINT16 TargetVoltsFx = (UINT16)((b->box.data >> 8 ) & 0xfff);
@@ -161,7 +161,7 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
 
   data =  dom->MaxRatio;
   data |= ((UINT32)(targetVoltsFx)) << 8;
-  data |= ((UINT32)(dom->VoltOverrideMode & bit1u8)) << 20;  
+  data |= ((UINT32)(dom->VoltMode & bit1u8)) << 20;  
   data |= (offsetVoltsFx) << 21;
 
   cmd = OcMailbox_BuildInterface(0x11, domIdx, 0x0); 

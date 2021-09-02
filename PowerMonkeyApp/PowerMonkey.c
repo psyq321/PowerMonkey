@@ -55,16 +55,16 @@ PLATFORM* gPlatform = NULL;
  * UefiInit
  ******************************************************************************/
 
-EFI_STATUS UefiInit(IN EFI_SYSTEM_TABLE *SystemTable)
+EFI_STATUS UefiInit(IN EFI_SYSTEM_TABLE* SystemTable)
 {
-	EFI_STATUS status = EFI_SUCCESS;
+  EFI_STATUS status = EFI_SUCCESS;
 
   //
   // Hook the BSP with our "SafeAsm" interrupt handler
-  
+
   if (gEnableSaferAsm) {
     InstallSafeAsmExceptionHandler();
-  }    
+  }
 
   //
   // Collect the addresses of the buses/devices/etc...
@@ -75,7 +75,7 @@ EFI_STATUS UefiInit(IN EFI_SYSTEM_TABLE *SystemTable)
   //
   // Set-up TSC timing
   // NOTE: not MP-proofed - multiple packages will use the same calibration
-  
+
   if (EFI_ERROR(InitializeTscVars())) {
     Print(L"[ERROR] Unable to initialize timing using"
       "CPUID leaf 0x15, error code: 0x%x\n", status);
@@ -84,23 +84,22 @@ EFI_STATUS UefiInit(IN EFI_SYSTEM_TABLE *SystemTable)
   //
   // Get handle to MP Services Protocol
 
-	status = SystemTable->BootServices->LocateProtocol(
-    	&gEfiMpServiceProtocolGuid,	NULL,	(VOID**)&gMpServices);
+  status = SystemTable->BootServices->LocateProtocol(
+    &gEfiMpServiceProtocolGuid, NULL, (VOID**)&gMpServices);
 
-	if (EFI_ERROR(status)) {
-		Print(L"[ERROR] Unable to locate firmware MP services"
-      "protocol, error code: 0x%x\n",	status );
-	}
+  if (EFI_ERROR(status)) {
+    Print(L"[ERROR] Unable to locate firmware MP services"
+      "protocol, error code: 0x%x\n", status);
+  }
 
   //
   // Disable UEFI watchdog timer (if requested)
 
-  if (gDisableFirwmareWDT)
-  {
+  if (gDisableFirwmareWDT) {
     SystemTable->BootServices->SetWatchdogTimer(0, 0, 0, NULL);
   }
 
-	return status;
+  return status;
 }
 
 /*******************************************************************************
@@ -133,12 +132,12 @@ VOID PrintBanner()
     " SPDX-License-Identifier: Apache-2.0\n"
     "\n"
   );
-  
+
   AsciiPrint(
     " WARNING: This code is a proof of concept for educative purposes. It can\n"
     " modify internal computer configuration parameters and cause malfunctions or\n"
     " even permanent damage. It has been tested on a limited range of target CPUs\n");
-  
+
   AsciiPrint(
     " and has minimal built-in failsafe mechanisms, thus making it unsuitable for\n"
     " recommended use by users not skilled in the art. Use it at your own risk.\n"
@@ -147,7 +146,7 @@ VOID PrintBanner()
 }
 
 /*******************************************************************************
- * The user Entry Point for Application. 
+ * The user Entry Point for Application.
  *
  * @param[in] ImageHandle    The firmware allocated handle for the EFI image.
  * @param[in] SystemTable    A pointer to the EFI System Table.
@@ -156,10 +155,10 @@ VOID PrintBanner()
  * @retval other             Some error occurs when executing this entry point.
  ******************************************************************************/
 
-EFI_STATUS EFIAPI UefiMain (
+EFI_STATUS EFIAPI UefiMain(
   IN EFI_HANDLE        ImageHandle,
-  IN EFI_SYSTEM_TABLE  *SystemTable
-  )
+  IN EFI_SYSTEM_TABLE* SystemTable
+)
 {
   ///
   /// Init
@@ -170,7 +169,7 @@ EFI_STATUS EFIAPI UefiMain (
   ///
   /// Print Banner
   ///
-  
+
   PrintBanner();
 
   ///
@@ -178,11 +177,11 @@ EFI_STATUS EFIAPI UefiMain (
   ///
 
   StartupPlatformInit(SystemTable, &gPlatform);
- 
+
   ///
   /// Program
   ///
-  
+
   ApplyPolicy(SystemTable, gPlatform);
 
   ///

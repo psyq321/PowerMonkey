@@ -54,14 +54,14 @@ EFI_STATUS ProbePackage(IN OUT PACKAGE* pkg)
   //
   // CPUID
 
-  AsmCpuid(0x01, 
-    &pkg->CpuID, 
+  AsmCpuid(0x01,
+    &pkg->CpuID,
     NULL, NULL, NULL);
 
   //
   // Initialize domains
 
-  for (UINT8 didx = 0; didx < MAX_DOMAINS; didx++) {    
+  for (UINT8 didx = 0; didx < MAX_DOMAINS; didx++) {
     DOMAIN* dom = pkg->Domain + didx;
 
     dom->parent = (void*)pkg;
@@ -78,25 +78,25 @@ EFI_STATUS ProbePackage(IN OUT PACKAGE* pkg)
 
   //
   // cTDP Levels
-  
+
   pkg->ConfigTdpControl = GetConfigTdpControl();
-  
-  GetCTDPLevel( 
-    &pkg->MaxCTDPLevel, 
+
+  GetCTDPLevel(
+    &pkg->MaxCTDPLevel,
     &pkg->TdpControLock);
 
   //
   // Power Limits and units
-  
+
   pkg->MsrPkgPowerLimits = GetPkgPowerLimits(
     &pkg->MsrPkgMaxTau,
     &pkg->MsrPkgMinPL1,
     &pkg->MsrPkgMaxPL1
-  );  
+  );
 
   pkg->PkgPowerUnits = GetPkgPowerUnits(
     &pkg->PkgTimeUnits,
-    &pkg->PkgEnergyUnits  );
+    &pkg->PkgEnergyUnits);
 
   return status;
 }
@@ -113,7 +113,7 @@ EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
   // Force max ratio for all turbo core counts
   // (if requested) 
 
-  if(pkg->ForcedRatioForAllCoreCounts) { 
+  if (pkg->ForcedRatioForAllCoreCounts) {
     IAPERF_ProgramMaxTurboRatios(pkg->ForcedRatioForAllCoreCounts);
   }
 
@@ -126,16 +126,16 @@ EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
   //
   // Program Config TDP Params
   // with no lock 
-  
+
   SetCTDPLevel(pkg->MaxCTDPLevel);
 
   ///////////////////
   // Power Limits  //
   /////////////////// 
-  
+
   //
   // PL1 and PL2
-  
+
   if (pkg->ProgramPL12_MSR) {
 
     SetPkgPowerLimit12_MSR(
@@ -155,7 +155,7 @@ EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
 
   //
   // PL3
-  
+
   if (pkg->ProgramPL3) {
 
     SetPlatformPowerLimit3(
@@ -177,7 +177,7 @@ EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
 
   //
   // PP0
-  
+
   if (pkg->ProgramPP0) {
 
     SetPP0PowerLimit(
@@ -208,7 +208,7 @@ EFI_STATUS ProgramPackage_Stage2(IN OUT PACKAGE* pkg)
 
   //
   // Power Limits MMIO Lock
-  
+
   if (pkg->LockMmioPkgPL12) {
     SetPL12MMIOLock(1);
   }
@@ -228,7 +228,7 @@ EFI_STATUS ProgramPackage_Stage1(IN OUT PACKAGE* pkg)
   // MMIO
   //
   // Power Limits (MMIO)
-  
+
   if (pkg->ProgramPL12_MMIO)
   {
     SetPkgPowerLimit12_MMIO(
@@ -239,7 +239,7 @@ EFI_STATUS ProgramPackage_Stage1(IN OUT PACKAGE* pkg)
       pkg->EnableMmioPkgPL2,
       pkg->PkgTimeUnits,
       pkg->PkgEnergyUnits,
-      pkg->PkgPowerUnits,      
+      pkg->PkgPowerUnits,
       pkg->ClampMmioPkgPL,
       pkg->MmioPkgPL_Time,
       pkg->MmioPkgPL1_Power,
@@ -254,11 +254,11 @@ EFI_STATUS ProgramPackage_Stage1(IN OUT PACKAGE* pkg)
  * DiscoverPackage
  ******************************************************************************/
 
-EFI_STATUS DetectPackages(IN OUT PLATFORM* Platform)
+EFI_STATUS DetectPackages(IN OUT PLATFORM* psys)
 {
   EFI_STATUS status = EFI_SUCCESS;
 
-  PACKAGE* pac = &Platform->packages[0];
+  PACKAGE* pac = &psys->packages[0];
   UINTN prevPackage = 0xFFFFFFF;
 
   UINTN nPackages = 0;
@@ -267,9 +267,9 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* Platform)
 
   UINTN localCoreOrThreadCount = 0;
 
-  pac->parent = Platform;
+  pac->parent = psys;
 
-  for (UINTN tidx = 0; tidx < Platform->LogicalProcessors; tidx++) {
+  for (UINTN tidx = 0; tidx < psys->LogicalProcessors; tidx++) {
 
     EFI_PROCESSOR_INFORMATION pi;
 
@@ -277,9 +277,9 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* Platform)
 
     pac->LogicalCores += 1;
     pac->PhysicalCores += (pi.Location.Thread == 0) ? 1 : 0;
-    pac->FirstCoreApicID = pi.ProcessorId;    
+    pac->FirstCoreApicID = pi.ProcessorId;
 
-    pac->Core[localCoreOrThreadCount].ApicID = pi.ProcessorId;    
+    pac->Core[localCoreOrThreadCount].ApicID = pi.ProcessorId;
 
     nThreadsTotal++;
     nCoresTotal += (pi.Location.Thread == 0) ? 1 : 0;
@@ -289,7 +289,7 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* Platform)
       //
       // New package detected
 
-      pac->parent = (VOID*)Platform;
+      pac->parent = (VOID*)psys;
 
       nPackages++;
       prevPackage = pi.Location.Package;
@@ -297,17 +297,17 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* Platform)
       pac++;
     }
   }
-  
-  Platform->LogicalProcessors = nThreadsTotal;
-  Platform->PkgCnt = nPackages;
+
+  psys->LogicalProcessors = nThreadsTotal;
+  psys->PkgCnt = nPackages;
 
   //
   // Hack - tbd, remove!
 
-  if (Platform->PkgCnt == 1) {
+  if (psys->PkgCnt == 1) {
     status = gMpServices->WhoAmI(
       gMpServices,
-      &Platform->packages[0].FirstCoreApicID);
+      &psys->packages[0].FirstCoreApicID);
   }
 
   return status;
@@ -315,11 +315,11 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* Platform)
 
 /*******************************************************************************
 * DiscoverPlatform
-* 
+*
 * TODO/TBD/HACK: multi-socket code needs rework.
 ******************************************************************************/
 
-EFI_STATUS EFIAPI DiscoverPlatform(IN OUT PLATFORM** Platform)
+EFI_STATUS EFIAPI DiscoverPlatform(IN OUT PLATFORM** ppsys)
 {
 
   EFI_STATUS status = EFI_SUCCESS;
@@ -327,13 +327,13 @@ EFI_STATUS EFIAPI DiscoverPlatform(IN OUT PLATFORM** Platform)
   //
   // Allocate memory that will hold platform info
 
-  *Platform = (PLATFORM*)AllocateZeroPool(sizeof(PLATFORM));
+  *ppsys = (PLATFORM*)AllocateZeroPool(sizeof(PLATFORM));
 
-  if (!*Platform) {
+  if (!*ppsys) {
     return EFI_OUT_OF_RESOURCES;
   }
 
-  PLATFORM* ppd = *Platform;
+  PLATFORM* ppd = *ppsys;
 
   //
   // Get bootstrap CPU
@@ -375,8 +375,8 @@ EFI_STATUS EFIAPI DiscoverPlatform(IN OUT PLATFORM** Platform)
     status = RunOnPackageOrCore(ppd, pac->FirstCoreApicID, ProbePackage, pac);
 
     if (EFI_ERROR(status)) {
-      Print(L"[ERROR] CPU package %u, status code: 0x%x\n", 
-        pac->FirstCoreApicID, 
+      Print(L"[ERROR] CPU package %u, status code: 0x%x\n",
+        pac->FirstCoreApicID,
         status);
 
       return status;
@@ -399,7 +399,7 @@ EFI_STATUS EFIAPI ProgramCoreLocks(PLATFORM* Platform)
 {
   //
   // Hack - assuming all packages are the same!!!!
-  
+
   PACKAGE* pk = &Platform->packages[0];
 
   //
@@ -414,7 +414,7 @@ EFI_STATUS EFIAPI ProgramCoreLocks(PLATFORM* Platform)
 
   if (pk->ProgramPL3) {
     SetPL3Lock(pk->LockMsrPkgPL3);
-  }  
+  }
 
   // PL4 Lock
 
@@ -427,16 +427,16 @@ EFI_STATUS EFIAPI ProgramCoreLocks(PLATFORM* Platform)
 
   if (pk->ProgramPP0) {
     SetPP0Lock(pk->LockMsrPP0);
-  }  
+  }
 
   //
   // cTDP Lock
-  
+
   SetCTDPLock(pk->TdpControLock);
 
   //
   // Overclocking Lock
-  
+
   IaCore_OcLock();
 
   return EFI_SUCCESS;
@@ -472,8 +472,8 @@ StartupPlatformInit(
  * TBD / TODO: Needs Rewrite
  ******************************************************************************/
 
-EFI_STATUS EFIAPI ApplyPolicy( IN EFI_SYSTEM_TABLE* SystemTable,
-  IN OUT PLATFORM* sys ) 
+EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
+  IN OUT PLATFORM* sys)
 {
   EFI_STATUS status = EFI_SUCCESS;
 
@@ -492,8 +492,8 @@ EFI_STATUS EFIAPI ApplyPolicy( IN EFI_SYSTEM_TABLE* SystemTable,
   //
   // So we will program every core, for the sake of completeness...
 
-  for (UINTN pidx = 0; pidx < sys->PkgCnt; pidx++)  
-  {    
+  for (UINTN pidx = 0; pidx < sys->PkgCnt; pidx++)
+  {
     PACKAGE* pk = sys->packages + pidx;
 
     for (UINTN cidx = 0; cidx < sys->LogicalProcessors; cidx++)
@@ -522,7 +522,7 @@ EFI_STATUS EFIAPI ApplyPolicy( IN EFI_SYSTEM_TABLE* SystemTable,
 
   //
   // MSR Locks
-  
+
   RunOnAllProcessors(sys, ProgramCoreLocks, sys);
 
   //
