@@ -8,7 +8,13 @@
 *                                                                       (____/
 * Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
 *
+* All trademarks, logos and brand names are the property of their respective
+* owners. All company, product and service names used are for identification
+* purposes only. Use of these names, trademarks and brands does not imply
+* endorsement.
+*
 * SPDX-License-Identifier: Apache-2.0
+* Full text of license (LICENSE-2.0.txt) is available in project directory
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -21,9 +27,6 @@
 #include <Uefi.h>
 #include <Library/BaseMemoryLib.h>
 #include "SaferAsmHdr.h"
-
-#pragma intrinsic(_disable)
-#pragma intrinsic(_enable)
 
 /*******************************************************************************
 * Interrupt Descriptor Table (IDT) and its corresponding register (IDTR)
@@ -167,7 +170,7 @@ VOID ApplyISRPatchTable( ISROVERRIDE *isrs,
   //
   // Probably a good idea to disable interrupts now...
   
-  _disable();
+  stop_interrupts_on_this_cpu();
 
   ///////////////////
   // (Un)patch the //
@@ -193,7 +196,7 @@ VOID ApplyISRPatchTable( ISROVERRIDE *isrs,
   
   gISRsPatched = 1;
   
-  _enable();
+  resume_interrupts_on_this_cpu();
 }
 
 
@@ -242,12 +245,12 @@ VOID RemoveAllInterruptOverrides()
   
   if (gISRsPatched) {
 
-    _disable();
+    stop_interrupts_on_this_cpu();
 
     CopyMem(sysIDT, &gBackupIDT[0], sizeof(IDT) * 256);
 
     gISRsPatched = 0;
 
-    _enable();
+    resume_interrupts_on_this_cpu();
   }
 }

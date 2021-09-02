@@ -8,7 +8,13 @@
 #                                                                       (____/
 # Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
 #
+# All trademarks, logos and brand names are the property of their respective
+# owners. All company, product and service names used are for identification
+# purposes only. Use of these names, trademarks and brands does not imply
+# endorsement.
+#
 # SPDX-License-Identifier: Apache-2.0
+# Full text of license (LICENSE-2.0.txt) is available in project directory
 #
 # WARNING: This code is a proof of concept for educative purposes. It can
 # modify internal computer configuration parameters and cause malfunctions or
@@ -19,24 +25,24 @@
 ################################################################################
 
 [Defines]
-  INF_VERSION                    = 0x00010005
-  BASE_NAME                      = PowerMonkey
-  MODULE_UNI_FILE                = PowerMonkey.uni
-  FILE_GUID                      = A94AC9AF-BA6D-4F79-AD8A-806D78CD4A0E
-  MODULE_TYPE                    = UEFI_APPLICATION
-  VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = UefiMain
+  INF_VERSION                   = 0x00010005
+  BASE_NAME                     = PowerMonkey
+  MODULE_UNI_FILE               = PowerMonkey.uni
+  FILE_GUID                     = A94AC9AF-BA6D-4F79-AD8A-806D78CD4A0E
+  MODULE_TYPE                   = UEFI_APPLICATION
+  VERSION_STRING                = 1.0
+  ENTRY_POINT                   = UefiMain
 
 #
 #  This flag specifies whether HII resource section is generated into PE image.
 #
 
-UEFI_HII_RESOURCE_SECTION      = FALSE
+UEFI_HII_RESOURCE_SECTION       = FALSE
 
 #
-# The following information is for reference only and not required by the build tools.
+# The following information is for reference only
 #
-VALID_ARCHITECTURES           = X64
+VALID_ARCHITECTURES             = X64
 
 [Sources]
   CONFIGURATION.c
@@ -68,6 +74,7 @@ VALID_ARCHITECTURES           = X64
   VFTuning.c
   VFTuning.h
   VoltTables.c
+  VoltTables.h
   ASMx64/SaferAsm.nasm
   
 [Packages]
@@ -75,12 +82,12 @@ VALID_ARCHITECTURES           = X64
   MdeModulePkg/MdeModulePkg.dec
 
 [LibraryClasses]
-  UefiApplicationEntryPoint
-  BaseLib
-  UefiLib
-  IoLib
-  MemoryAllocationLib
   DebugLib
+  UefiLib
+  BaseLib
+  IoLib
+  UefiApplicationEntryPoint
+  MemoryAllocationLib
   
 [Protocols]
   gEfiMpServiceProtocolGuid

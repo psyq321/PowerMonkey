@@ -28,6 +28,9 @@ extern "C" {
  * Below calls are implemented in SaferAsm.asm
  ******************************************************************************/
 
+VOID stop_interrupts_on_this_cpu();
+VOID resume_interrupts_on_this_cpu();
+
 UINT64 safer_rdmsr64(
     const UINT32 msr_idx,
     UINT32* is_err);
@@ -51,6 +54,12 @@ UINT32 safer_mmio_write32(
 VOID get_current_idtr(VOID* pidtr);
 
 UINT32 get_pciex_base_addr(VOID);
+
+UINT64 hlp_atomic_increment_u64(UINT64 *val);
+UINT64 hlp_atomic_decrement_u64(UINT64* val);
+
+UINT32 hlp_atomic_increment_u32(UINT32* val);
+UINT32 hlp_atomic_decrement_u32(UINT32* val);
 
 /*******************************************************************************
  * ISR entry points in SaferAsm.asm

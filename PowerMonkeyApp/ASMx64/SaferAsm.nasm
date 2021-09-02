@@ -9,6 +9,7 @@
 ; Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
 ;
 ; SPDX-License-Identifier: Apache-2.0
+; Full text of license (LICENSE-2.0.txt) is available in project directory
 ;
 ; WARNING: This code is a proof of concept for educative purposes. It can
 ; modify internal computer configuration parameters and cause malfunctions or
@@ -87,14 +88,156 @@
 ;
 ;------------------------------------------------------------------------------
 
-    global get_current_idtr
-    get_current_idtr:
+        global get_current_idtr
+        get_current_idtr:
 
-    ;
-    ; Store current IDT
+        ;
+        ; Store current IDT
 
-    sidt [rcx]
-    ret
+        sidt [rcx]
+        ret
+
+;------------------------------------------------------------------------------
+;
+; ROUTINE:
+;
+;   void stop_interrupts_on_this_cpu
+;
+; DESCRIPTION:
+;
+;       Portable solution (in an "operating environment" sense) as UEFI
+;       compiler flags prohibit _enable() / _disable() x86 intrinsics
+;
+;------------------------------------------------------------------------------
+
+        global stop_interrupts_on_this_cpu
+        stop_interrupts_on_this_cpu:
+        ;
+        ; Stop interrupts and return
+
+        cli
+        ret
+
+;------------------------------------------------------------------------------
+;
+; ROUTINE:
+;
+;   void resume_interrupts_on_this_cpu
+;
+; DESCRIPTION:
+;
+;       Portable solution (in an "operating environment" sense) as UEFI
+;       compiler flags prohibit _enable() / _disable() x86 intrinsics
+;
+;------------------------------------------------------------------------------
+
+        global resume_interrupts_on_this_cpu
+        resume_interrupts_on_this_cpu:
+        ;
+        ; Resume interrupts and return
+
+        sti
+        ret
+
+;------------------------------------------------------------------------------
+;
+; ROUTINE:
+;
+;   void hlp_atomic_increment_u64
+;
+; DESCRIPTION:
+;
+;   Increases 64-bit variable atomically and returns the new value
+;
+;------------------------------------------------------------------------------
+
+        global hlp_atomic_increment_u64
+        hlp_atomic_increment_u64:
+
+        mov rax, rcx
+        
+        cli
+        
+        lock inc qword [rax]
+        mov rax, [rax]
+        
+        sti
+        ret
+
+;------------------------------------------------------------------------------
+;
+; ROUTINE:
+;
+;   void hlp_atomic_increment_u32
+;
+; DESCRIPTION:
+;
+;   Increases 32-bit variable atomically and returns the new value
+;
+;------------------------------------------------------------------------------
+
+        global hlp_atomic_increment_u32
+        hlp_atomic_increment_u32:
+
+        mov r8, rcx
+        
+        cli
+        
+        lock inc dword [r8]
+        mov eax, dword [r8]
+        
+        sti
+        ret
+
+;------------------------------------------------------------------------------
+;
+; ROUTINE:
+;
+;   void hlp_atomic_decrement_u64
+;
+; DESCRIPTION:
+;
+;   Decrement 64-bit variable atomically and returns the new value
+;
+;------------------------------------------------------------------------------
+
+        global hlp_atomic_decrement_u64
+        hlp_atomic_decrement_u64:
+
+        mov r8, rcx
+        
+        cli
+        
+        lock dec qword [r8]
+        mov rax, [r8]
+        
+        sti
+        ret
+
+;------------------------------------------------------------------------------
+;
+; ROUTINE:
+;
+;   void hlp_atomic_decrement_u32
+;
+; DESCRIPTION:
+;
+;   Increases 32-bit variable atomically and returns the new value
+;
+;------------------------------------------------------------------------------
+
+        global hlp_atomic_decrement_u32
+        hlp_atomic_decrement_u32:
+
+        mov r8, rcx
+        
+        cli
+        
+        lock dec dword [r8]
+        mov eax, dword [r8]
+        
+        sti
+        ret
 
 ;------------------------------------------------------------------------------
 ; In order not to repeat boilerplate code by hand, we need three macros:
@@ -110,7 +253,7 @@
 %macro EXCEPT_ISR_ERRCODE_ABSENT 1
     global monkey_isr_ %+ %1
     monkey_isr_ %+ %1 :
-        align 16
+        align 8
         push rax
         mov rax, %1
         mov cr2, rax
@@ -125,7 +268,7 @@
 %macro EXCEPT_ISR_ERRCODE_PUSHED 1
     global monkey_isr_ %+ %1
     monkey_isr_ %+ %1 :
-        align 16
+        align 8
         push rax
         mov rax, %1
         mov cr2, rax
@@ -139,7 +282,7 @@
 %macro ISR_GENERIC_INTERRUPT 1
     global monkey_isr_ %+ %1
     monkey_isr_ %+ %1 :
-        align 16
+        align 8
         push rax
         mov rax, %1
         mov cr2, rax
@@ -178,7 +321,6 @@
     mov   [%2], 1                               ; error flag to [%2]
     jmp   %1 %+ _done
 %endmacro
-
 
 ;------------------------------------------------------------------------------
 ;  TEMPLATED INTERRUPT SERVICE ROUTINE STUBS
@@ -241,7 +383,7 @@ EXCEPT_ISR_ERRCODE_ABSENT       31      ; *** - Reserved
 ;  were and return execution to the offending code to handle its error state
 ;------------------------------------------------------------------------------
 
-align   16
+align   8
 
 safer_isr_common:
 
@@ -679,6 +821,40 @@ smo_error:
 smo_done:
 
         ret                           ; [EAX] = Error code
+
+;------------------------------------------------------------------------------
+; memset override?
+;
+; This is to prevent EDK2 builds from failing. MSVC is dead set on creating
+; object code that calls memset, which is non-existant in UEFI environment.
+; 
+; This is not the fastest (by far) method to do this, we use it because we are
+; zaroing out <100-500 bytes of local stuff
+;------------------------------------------------------------------------------
+        
+        ;
+        ; memset(void* dst, int val, size_t cnt)
+        ;
+        ;   dst = RCX
+        ;   val = EDX
+        ;   cnt = R8
+
+        global memset
+        memset:
+        
+        push    rdi
+
+        mov     eax, edx
+        mov     rdi, rcx
+        mov     r9, rcx
+        mov     rcx, r8
+
+        rep     stosb
+
+        mov     rax, r9
+        pop     rdi
+
+        ret
 
 section .data
 global safer_c_isr_fptr

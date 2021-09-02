@@ -8,7 +8,13 @@
 *                                                                       (____/
 * Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
 *
+* All trademarks, logos and brand names are the property of their respective
+* owners. All company, product and service names used are for identification
+* purposes only. Use of these names, trademarks and brands does not imply
+* endorsement.
+*
 * SPDX-License-Identifier: Apache-2.0
+* Full text of license (LICENSE-2.0.txt) is available in project directory
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -20,17 +26,20 @@
 
 #include <Uefi.h>
 #include <Library/UefiLib.h>
+#include <Library/BaseLib.h>
+
 #include "SaferAsmHdr.h"
 #include "LowLevel.h"
-
-#pragma intrinsic(_InterlockedIncrement64)
-#pragma intrinsic(_disable)
-#pragma intrinsic(_enable)
-#pragma intrinsic(_mm_pause)
 
 UINT64 gFatalErrorAsserted = 0;
 UINT32 gPCIeBaseAddr = 0;
 UINT32 gMCHBAR = 0;
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+
+#pragma warning( disable : 4090 )
 
 /*******************************************************************************
  * 
@@ -62,7 +71,7 @@ VOID EFIAPI HandleProbingFault(MINISTAT *pst)
   //
   // Ensure display happens only once
   
-  UINT64 cnt = _InterlockedIncrement64(&gFatalErrorAsserted);
+  UINT64 cnt = hlp_atomic_increment_u64(&gFatalErrorAsserted);
 
   if (cnt == 1)
   {
@@ -89,7 +98,7 @@ VOID EFIAPI HandleProbingFault(MINISTAT *pst)
   //
   // Freeze this CPU
   
-  _disable();
+  stop_interrupts_on_this_cpu();
 
   for (;;) {
     _mm_pause();
@@ -136,18 +145,14 @@ UINT64 pm_rdmsr64(const UINT32 msr_idx)
   UINT64 val = safer_rdmsr64(msr_idx, &err);
 
   if (err) {
-    
+
     MINISTAT bug = { 0 };
 
-    //
-    // jeez, strcpy!... whatever, we are already fubar-ed at this point
-    // so why not... 
-
-    AsciiStrCpy(&bug.errtxt[0], "rdmsr64");
+    AsciiStrCpyS(&bug.errtxt[0], 128, "rdmsr64");
     
     bug.param1 = 0;
     bug.param2 = (UINT64) msr_idx;
-    bug.param3 = 0;
+    bug.param3 = val;
 
     HandleProbingFault(&bug); 
   }
@@ -168,11 +173,7 @@ UINT32 pm_wrmsr64(const UINT32 msr_idx, const UINT64 value)
 
     MINISTAT bug = { 0 };
 
-    //
-    // jeez, strcpy!... whatever, we are already fubar-ed at this point
-    // so why not... 
-
-    AsciiStrCpy(&bug.errtxt[0], "wrmsr64");
+    AsciiStrCpyS(&bug.errtxt[0], 128, "wrmsr64");
 
     bug.param1 = 0;
     bug.param2 = (UINT64)msr_idx;
@@ -197,11 +198,7 @@ UINT32 pm_mmio_read32(const UINT32 addr)
 
     MINISTAT bug = { 0 };
 
-    //
-    // jeez, strcpy!... whatever, we are already fubar-ed at this point
-    // so why not... 
-
-    AsciiStrCpy(&bug.errtxt[0], "mmio_read32");
+    AsciiStrCpyS(&bug.errtxt[0], 128, "mmio_read32");
 
     bug.param1 = 0;
     bug.param2 = (UINT64)addr;
@@ -225,11 +222,7 @@ UINT32 pm_mmio_or32(const UINT32 addr, const UINT32 value)
 
     MINISTAT bug = { 0 };
 
-    //
-    // jeez, strcpy!... whatever, we are already fubar-ed at this point
-    // so why not... 
-
-    AsciiStrCpy(&bug.errtxt[0], "mmio_or32");
+    AsciiStrCpyS(&bug.errtxt[0], 128, "mmio_or32");
 
     bug.param1 = 0;
     bug.param2 = (UINT64)addr;
@@ -253,11 +246,7 @@ UINT32 pm_mmio_write32(const UINT32 addr, const UINT32 value)
 
     MINISTAT bug = { 0 };
 
-    //
-    // jeez, strcpy!... whatever, we are already fubar-ed at this point
-    // so why not... 
-
-    AsciiStrCpy(&bug.errtxt[0], "mmio_write32");
+    AsciiStrCpyS(&bug.errtxt[0], 128, "mmio_write32");
 
     bug.param1 = 0;
     bug.param2 = (UINT64)addr;

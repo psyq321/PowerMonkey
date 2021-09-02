@@ -8,7 +8,13 @@
 *                                                                       (____/
 * Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
 *
+* All trademarks, logos and brand names are the property of their respective
+* owners. All company, product and service names used are for identification
+* purposes only. Use of these names, trademarks and brands does not imply
+* endorsement.
+*
 * SPDX-License-Identifier: Apache-2.0
+* Full text of license (LICENSE-2.0.txt) is available in project directory
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -46,7 +52,7 @@
 
 EFI_STATUS EFIAPI CpuMailbox_MsrBusyWait(CpuMailbox *b)
 {
-  const UINT32 msrIdx = b->cfg.addr;
+  const UINT32 msrIdx =   b->cfg.addr;
   const UINT32 busyFlag = b->cfg.busyFlag;
   const UINT32 maxSpins = b->cfg.maxSpins;
 
@@ -91,7 +97,7 @@ EFI_STATUS EFIAPI CpuMailbox_MsrReadWrite( CpuMailbox *b )
   UINT32 nRetries = 0;
 
   do {
-    
+
     MailboxBody test;
     state = EFI_SUCCESS;
 

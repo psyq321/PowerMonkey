@@ -8,7 +8,13 @@
 *                                                                       (____/
 * Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
 *
+* All trademarks, logos and brand names are the property of their respective
+* owners. All company, product and service names used are for identification
+* purposes only. Use of these names, trademarks and brands does not imply
+* endorsement.
+*
 * SPDX-License-Identifier: Apache-2.0
+* Full text of license (LICENSE-2.0.txt) is available in project directory
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -139,7 +145,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     ////////////////////
     
     //
-    // Modify settings below only if you believe your, e.g.notebook, is over -
+    // Modify settings below only if you believe your, e.g.notebook, is over
     // aggressively limiting power(e.g.in 'desk' mode on AC).Please note
     // that many notebooks are very nicely configured, or their cooling system
     // cannot take more heat.Also, just because some value is higher (say,
@@ -171,20 +177,24 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     // emergency values.That would save you from melting your notebook, or
     // worse.There is no guide here to deal with this - please consult forums
     // if you do not have access to the relevant BWG doc.Or ignore all this
-    // noise and set everything to MAX_POWAH as many will promptly do:)
+    // noise and set everything to MAX_POWAH as many will promptly do).
+    // 
+    // MAX_POWAH is a dummy value indicating to the policy updater that the
+    // user prefers to set the value to "maximum allowed range". Useful for 
+    // isolating sources of throttling. But it will not magically allow your
+    // 13"-thin-and-light notebook to generate 500W of heat. Finding optimal
+    // PLx values is much better idea.
 
     //
     // Select which parameters you want to program
     // Other parameters will be ignored during programming step
 
-    pk->ProgramPL12_MSR = 1;                // [WRITE] Program MSR PL1/2
+    pk->ProgramPL12_MSR =  1;               // [WRITE] Program MSR PL1/2
     pk->ProgramPL12_MMIO = 1;               // [WRITE] Program MMIO PL1/2
     pk->ProgramPL12_PLAT = 1;               // [WRITE] Program Platform PLs
     pk->ProgramPL3 = 1;                     // [WRITE] Program PL3
     pk->ProgramPL4 = 1;                     // [WRITE] Program PL4
-
     pk->ProgramPP0 = 1;                     // [WRITE] Program PP0
-                                            // ^^^ check if supported!
 
     //////////////
     // Settings //
@@ -193,8 +203,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     //
     // Configurable TDP (cTDP)
 
-    pk->MaxCTDPLevel = 0;                   // this disables cTDP
-    pk->TdpControLock = 1;                  // and locks further modifications
+    pk->MaxCTDPLevel = 0;                   // 0 disables cTDP
+    pk->TdpControLock = 1;                  // Locks TDP config
 
     //
     // Package PL1/PL2 (MSR)
@@ -204,7 +214,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->MsrPkgPL1_Power = MAX_POWAH;        // PL1 in mW or MAX_POWAH
     pk->MsrPkgPL2_Power = MAX_POWAH;        // PL2 in mW or MAX_POWAH
     pk->MsrPkgPL_Time =   MAX_POWAH;        // Tau in ms or MAX_POWAH
-    pk->ClampMsrPkgPL =   0;
+    pk->ClampMsrPkgPL =   0;                // Allow clamping
     pk->LockMsrPkgPL12 =  1;                // Lock after programming
 
     //
@@ -214,8 +224,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->EnableMmioPkgPL2 = 1;               // Enable MMIO PL2
     pk->MmioPkgPL1_Power = MAX_POWAH;       // MMIO PL1 in mW or MAX_POWAH
     pk->MmioPkgPL2_Power = MAX_POWAH;       // MMIO PL2 in mW or MAX_POWAH
-    pk->MmioPkgPL_Time = MAX_POWAH;
-    pk->ClampMmioPkgPL = 0;
+    pk->MmioPkgPL_Time   = MAX_POWAH;       // Tau in ms or MAX_POWAH
+    pk->ClampMmioPkgPL =  0;                // Allow clamping
     pk->LockMmioPkgPL12 = 1;                // Lock after programming
 
     //
@@ -223,9 +233,9 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
 
     pk->EnablePlatformPL1 = 1;              // Enable MSR PL1 
     pk->EnablePlatformPL2 = 0;              // Enable MSR PL2
-    pk->PlatformPL1_Power = MAX_POWAH;      // MSR PL1 in mW or MAX_POWAH
-    pk->PlatformPL2_Power = 0;              // MSR PL2 in mW or MAX_POWAH
-    pk->PlatformPL_Time = MAX_POWAH;
+    pk->PlatformPL1_Power = MAX_POWAH;      // PSys PL1 in mW or MAX_POWAH
+    pk->PlatformPL_Time =   MAX_POWAH;
+    pk->PlatformPL2_Power = 0;              // PSys PL2 in mW or MAX_POWAH
     pk->ClampPlatformPL = 0;
     pk->LockPlatformPL = 1;                 // Lock after programming
 
@@ -239,6 +249,14 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
 
     //
     // Package PL4
+    //
+    // Note: I do not recommend pushing this setting up. It sits near the
+    // end of possible strategies to avoid power escalation. Setting it too
+    // high might bring your system so out of spec that physical damage can
+    // occur. While some systems have additional protections, one should not
+    // test this damage can be irreversible. I'd consider changing this only
+    // if I have strong reason to suspect it is too low (seeing CPU throwing
+    // a lot of "
 
     pk->EnableMsrPkgPL4 = 1;                // Enable PL4
     pk->MsrPkgPL4_Current = MAX_POWAH;      // MSR PL4 Amperes or MAX_POWAH
@@ -249,10 +267,9 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
 
     pk->EnableMsrPkgPP0 = 1;                // Enable MSR PP0
     pk->MsrPkgPP0_Power = MAX_POWAH;        // Power in mW or MAX_POWAH
-    pk->MsrPkgPP0_Time = MAX_POWAH;         // Time in ms or MAX_POWAH
+    pk->MsrPkgPP0_Time =  MAX_POWAH;        // Time in ms or MAX_POWAH
     pk->ClampMsrPP0 = 0;                    // Clamp
     pk->LockMsrPP0 = 1;                     // Lock after programming
-
   }
 }
 

@@ -8,7 +8,13 @@
 *                                                                       (____/
 * Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
 *
+* All trademarks, logos and brand names are the property of their respective
+* owners. All company, product and service names used are for identification
+* purposes only. Use of these names, trademarks and brands does not imply
+* endorsement.
+*
 * SPDX-License-Identifier: Apache-2.0
+* Full text of license (LICENSE-2.0.txt) is available in project directory
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -26,6 +32,7 @@
 #include "LowLevel.h"
 #include "DelayX86.h"
 #include "TimeWindows.h"
+#include "Constants.h"
 
 /*******************************************************************************
  * GetPkgPowerUnits
@@ -249,7 +256,6 @@ VOID EFIAPI SetPL12MMIOLock(const UINT8 lock)
   MicroStall(3);
 }
 
-
 /*******************************************************************************
  * SetPL3Lock
  ******************************************************************************/
@@ -268,6 +274,24 @@ VOID EFIAPI SetPL3Lock(const UINT8 lock)
 
   MicroStall(3);
 }
+
+/*******************************************************************************
+ * SetPL4Lock
+ ******************************************************************************/
+
+VOID EFIAPI SetPL4Lock(const UINT8 lock)
+{
+  QWORD msr = { 0 };
+
+  msr.u64 = pm_rdmsr64(MSR_VR_CURRENT_CONFIG);
+  
+  msr.u32.lo |= bit31u32;
+
+  pm_wrmsr64(MSR_VR_CURRENT_CONFIG, msr.u64);
+
+  MicroStall(3);
+}
+
 
 /*******************************************************************************
  * SetPP0Lock
@@ -597,10 +621,6 @@ VOID EFIAPI SetPlatformPowerLimit4(
     // PL4 //
     /////////
 
-    msr.u32.lo = (enablePL4 && (xform_pl4 != 0)) ?
-      msr.u32.lo | 0x00008000l :
-      msr.u32.lo & 0xffff7fffl;
-
     if (enablePL4 && (xform_pl4 != 0))
     {
       // POWER
@@ -611,7 +631,7 @@ VOID EFIAPI SetPlatformPowerLimit4(
       msr.u32.lo &= notvmask1;
     }
 
-    pm_wrmsr64(MSR_PL3_CONTROL, msr.u64);
+    pm_wrmsr64(MSR_VR_CURRENT_CONFIG, msr.u64);
 
     MicroStall(3);
   }
