@@ -9,8 +9,25 @@
   |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
                                                                         (____/
   Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+  
+  WARNING: This code is a proof of concept for educative purposes. It can
+  modify internal computer configuration parameters and cause malfunctions or
+  even permanent damage. It has been tested on a limited range of target CPUs
+  and has minimal built-in failsafe mechanisms, thus making it unsuitable for
+  recommended use by users not skilled in the art. Use it at your own risk.
 ```
 
+- [What is PowerMonkey?](#what-is-powermonkey)
+  - [Background](#background)
+  - [Challenges](#challenges)
+  - [How does PowerMonkey work?](#how-does-powermonkey-work)
+- [Enabled Features](#enabled-features)
+- [Getting Started](#getting-started)
+- [Build the binaries](#build-the-binaries)
+  - [Building - "Visual Studio" route](#building---visual-studio-route)
+  - [Building - EDK2 route](#building---edk2-route)
+- [Testing](#testing)
+  
 ## What is PowerMonkey?
 
 ### **Background**
@@ -27,7 +44,7 @@ Sadly, it has become increasingly difficult to optimize a typical notebook. Firs
 
 But new problems are in sight: Hypervisors such as Microsoft Hyper-V are now used even by end-user applications like WSL2 (Windows Subsystem for Linux). Because Hypervisor does not allow a Virtual Machine to modify most of the host hardware registers, applications like ThrottleStop or Intel’s XTU cannot adjust voltages.
 
- When application attempts to write to a hardware register, Hypervisor traps this attempt and does not perform the actual writing. It is  heoretically possible that Hypervisor vendor implements writing, but highly unlikely. This has created new barriers for undervolting and similar types of hardware tweaks.
+When application attempts to write to a hardware register, Hypervisor traps this attempt and does not perform the actual writing. It is  heoretically possible that Hypervisor vendor implements writing, but highly unlikely. This has created new barriers for undervolting and similar types of hardware tweaks.
 
 Nothing above would be a problem if OEMs allowed customers to adjust the settings in the firmware setup. However, most notebooks come with minimal configuration options, locking the owner of being able to adjust their hardware. PowerMonkey POC intends to fix precisely this problem, and this repository is the first “proof-of-concept” showing viability of such an approach.
 
@@ -36,6 +53,8 @@ Nothing above would be a problem if OEMs allowed customers to adjust the setting
 This proof-of-concept is using ability of UEFI firmwares to execute so-called "applications" before OS bootoader is invoked. At that moment (providing that the firmware did not lock) it is possible to (almost) fully adjust CPU frequency and voltages as well as power management configuration. This is later in the boot process (see below) as opposed to how OEM would do it, but since "advanced setup" is not an option, this is actually the second best place.
 
 Below picture explains where PowerMonkey.efi POC resides:
+
+![EfiGood](img/boot.svg)
 
 ## Enabled Features
 
