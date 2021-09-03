@@ -1,4 +1,4 @@
-# Reduce Notebook Thermal Waste and Gain Performance. Greener and Meaner!
+# Reduce CPU Power Waste and Gain Performance. Greener and Meaner!
 
 ```txt
    ______                            ______                 _
@@ -17,16 +17,20 @@
   recommended use by users not skilled in the art. Use it at your own risk.
 ```
 
-- [What is PowerMonkey?](#what-is-powermonkey)
-  - [Background](#background)
-  - [Challenges](#challenges)
-  - [How does PowerMonkey work?](#how-does-powermonkey-work)
-- [Enabled Features](#enabled-features)
-- [Getting Started](#getting-started)
-- [Build the binaries](#build-the-binaries)
-  - [Building - "Visual Studio" route](#building---visual-studio-route)
-  - [Building - EDK2 route](#building---edk2-route)
-- [Testing](#testing)
+
+  - [What is PowerMonkey?](#what-is-powermonkey)
+    - [Background](#background)
+    - [Challenges](#challenges)
+    - [How does PowerMonkey work?](#how-does-powermonkey-work)
+  - [Enabled Features](#enabled-features)
+  - [Getting Started](#getting-started)
+  - [Build the binaries](#build-the-binaries)
+    - [Building - "Visual Studio" route:](#building---visual-studio-route)
+    - [Building - EDK2 route:](#building---edk2-route)
+  - [Testing](#testing)
+  - [Cinebench R23](#cinebench-r23)
+  - [Extra 650 MHz and energy saved? Where is the catch?](#extra-650-mhz-and-energy-saved-where-is-the-catch)
+  - [Moving onto Hyper-V](#moving-onto-hyper-v)
   
 ## What is PowerMonkey?
 
@@ -107,7 +111,7 @@ This route is based on Alex Ionescu’s excellent [VisualUEFI project](https://g
     ├── openssl/
     ├── PowerMonkey/                           <––– Our Workspace
     │   ├── PowerMonkeyApp/                    <--- Source code and configuration
-    │   ├── LICENSE-2.0.txt
+    │   ├── LICENSE
     │   ├── PmWorkspace.default.props
     │   ├── PmWorkspace.props
     │   ├── PmWorksspace.sln                   <--- Visual Studio Solution File
@@ -170,4 +174,55 @@ If the computer is still alive and not frozen, you might proceed to your OS of c
 
 ![EfiGood](img/powah_ts1.png)
 
-This confirms that our settings have been applied including the locks (we locked the configuration so that it cannot be changed until the next reset). Now we can re-enable the Hypervisor and continue testing.
+This confirms that our settings have been applied including the locks (we locked the configuration so that it cannot be changed until the next reset). Before we
+go further, we shall check how much of a performance impact this has on our
+system.
+
+## Cinebench R23
+
+Cinebench is one of the quickest showcases of how effective undervolting can be. Its workload is CPU-heavy, solving a real-world problem (rendering) and not some artificial stressor designed solely to waste CPU cycles in a way no actual application would do. As a bonus, Cinebench results immediately show if PowerMonkey settings were applied or not.
+
+Without further ado, the results:
+
+![cinebench](img/diff.avif)
+
+**TL;DR** - By setting few knobs and dropping the voltage by 125 mV, **we just made the laptop 23% faster**. We did not "overclock" anything (although we did remove boost limits), CPU's own power management circuitry did it for us!
+
+Things become even more interesting if one logs the data and checks what has CPU been doing while running Cinebench benchmark:
+
+| DESCRIPTION                        |  FACTORY SETTINGS  | POWERMONKEY -125mV |
+| ---------------------------------- | ------------------ | ------------------ |
+| **Cinebench R23 (Multi Core)**     |        8299        |   10219 (+23.1%)   |
+|   Avg. all-core clock in test      |      3.35 GHz      |  3.99 GHz (+19.1%) |
+|   Total energy spent during test   |      1.0 (Rel)     |      1.35 (Rel)    |
+
+So, we gained 0.64 GHz in sustained 100% load, all while becoming 35% more energy efficient! Like like an advertisement, but this **IS** what is going on* 😊
+
+> (*) OK, it has to be told that -125 mV is considered a very aggressive undervolt
+> for an average Comet Lake H CPU specimen. Mine seems happy, but there is much
+> more to this story that I will cover some other time. For now, let me state that
+> observation has led me to believe that it is something else that makes these 
+> settings reported not stable, and that problem already has a fix (albeit just for 
+> fully unlocked ‘OC’ models atm.).
+
+THis particular CML-H model could *theoretically* sustain 4.2 GHz all-core load, as this is what it has been fused with as maximum. Looking at ThrottleStop logs it shows that now we are thermally limited. This particular laptop does look like it could benefit from re-pasting so *maybe* sustaining 4.2 GHz is doable.
+
+But... HOW?
+
+## Extra 650 MHz and energy saved? Where is the catch?
+
+There is no catch, just laws of physics. Notebook CPU is encased inside the scorching environment that cannot evacuate heat as effectively as, say, a server could. 
+
+Just looking at the dimensions of notebook parts (esp. the thermal solution,) it becomes apparent that we will not be pushing out hundreds of watts out of that space. The test system used here can deal with ~100-110W (internal measurements), if you are OK with your computer sounding like a jet engine. So this is our limit, but reasonable people would dial that down to 70-80W if they value their hearing.
+
+CPU usually gets part of that budget (sometimes dynamic), so it would typically get 45-60W. And then, its power management circuit **has to** stay within these bounds with some well-defined and very short-term exceptions.
+
+If we stayed with the original voltages, the power draw is significantly higher (remember, this is non-linear scaling!). So, the only thing a CPU could do is to dial its frequency down to stay within the power / thermal budget.
+
+Another point is the temperature. When undervolted, the number of times CPU must temporarily freeze its execution to cool down (“throttle”) is much lower or even zero. This also significantly boosts real-world speed.
+
+And that is all to it (complications aside): if you manage to drop CPU power draw, its PMC will thank you with higher operating points.
+
+## Moving onto Hyper-V
+
+Now that we know undervolting works as intended, we are ready to switch Hyper-V back and see how much (if anything) we would gain in WSL2 tasks. To be continued...
