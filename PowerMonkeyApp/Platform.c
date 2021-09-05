@@ -395,12 +395,19 @@ VOID PrintPlatformInfo(IN PLATFORM* Platform)
  * ProgramCoreLocks
  ******************************************************************************/
 
-EFI_STATUS EFIAPI ProgramCoreLocks(PLATFORM* Platform)
+EFI_STATUS EFIAPI ProgramCoreKnobs(PLATFORM* Platform)
 {
   //
   // Hack - assuming all packages are the same!!!!
 
   PACKAGE* pk = &Platform->packages[0];
+
+  //
+  // Power Control
+  
+  if (pk->ProgramPowerControl) {
+    ProgramPowerCtl(pk->EnableEETurbo, pk->EnableRaceToHalt);
+  }
 
   //
   // PL1/2 Lock (MSR)
@@ -523,7 +530,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   //
   // MSR Locks
 
-  RunOnAllProcessors(sys, ProgramCoreLocks, sys);
+  RunOnAllProcessors(sys, ProgramCoreKnobs, sys);
 
   //
   // MMIO locks

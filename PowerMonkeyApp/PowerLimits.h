@@ -192,3 +192,8 @@ VOID EFIAPI SetCTDPLevel(const UINT8 level);
 
 VOID EFIAPI SetCTDPLock(const UINT8 lock);
 
+/*******************************************************************************
+ * ProgramPowerCtl
+ ******************************************************************************/
+
+VOID EFIAPI ProgramPowerCtl(const UINT8 eeTurbo, const UINT8 rtHlt);

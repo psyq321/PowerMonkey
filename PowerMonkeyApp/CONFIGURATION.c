@@ -153,6 +153,18 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
 
     pk->ForcedRatioForAllCoreCounts = 51;
 
+    /////////////////////
+    /// Power Control ///
+    /////////////////////
+    
+    pk->ProgramPowerControl = 1;                // Enable programing
+
+    pk->EnableEETurbo = 1;                      // Energy Efficient
+                                                // turbo (0-1)
+
+    pk->EnableRaceToHalt = 1;                   // RTH
+
+
 
     ////////////////////
     /// Power Limits ///

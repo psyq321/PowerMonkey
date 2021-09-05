@@ -179,6 +179,14 @@ typedef struct _PACKAGE
   UINT8   ProgramPP0;                          // [WRITE] Program PP0
 
   //
+  // Power Control
+
+  UINT8 ProgramPowerControl;                   // Enable Programming of PowCtl
+  UINT8 EnableEETurbo;                         // Enable Energy Efficient Turbo
+  UINT8 EnableRaceToHalt;                      // Enable Race To Halt
+
+
+  //
   // MSR PL1/PL2 
 
   UINT8   EnableMsrPkgPL1;          // [WRITE] Enable MSR Pkg Power Limit 1

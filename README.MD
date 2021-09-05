@@ -79,6 +79,9 @@ NOTE: PowerMonkey is a POC and is **not tested** on anything other than few CML 
 |   Power and Time Limits adjustment (where possible)     |       Enabled      |
 |   Package and Platform (PSys) Domains                   |       Enabled      |
 |   MSR and MMIO Control                                  |       Enabled      |
+| **Power Control**                                       |                    |
+|   Enable / Disable Energy Efficient Turbo               |       Enabled      |
+|   Enable / Disable Race to Halt                         |       Enabled      |
 | **Lockdown**                                            |                    |
 |   Optional Overclocking Lockdown                        |       Enabled      |
 |   Fine-grained Lockdown of different Power registers    |       Enabled      |
@@ -110,7 +113,9 @@ This route is based on Alex Ionescu’s excellent [VisualUEFI project](https://g
     ├── edk2/
     ├── openssl/
     ├── PowerMonkey/                           <––– Our Workspace
-    │   ├── PowerMonkeyApp/                    <--- Source code and configuration
+    │   ├── PowerMonkeyApp/                    <--- Source code
+    │   │   ├── CONFIGURATION.c                <--- This is where settings are
+    │   │   └── ...
     │   ├── LICENSE
     │   ├── PmWorkspace.default.props
     │   ├── PmWorkspace.props
@@ -137,6 +142,8 @@ This route is based on Alex Ionescu’s excellent [VisualUEFI project](https://g
     │   │   ├── BootManagerMenuApp/
     │   │   ├── CapsuleApp/
     │   │   ├── PowerMonkeyApp/         <––– Our Project
+    │   │   │   ├── CONFIGURATION.c     <--- This is where settings are
+    │   │   │   └── ...
     │   │   └── UiApp/
     │   ├── Include/
     │   └── Library/

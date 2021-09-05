@@ -783,3 +783,28 @@ VOID EFIAPI SetCTDPLock(const UINT8 lock)
 
   pm_wrmsr64(MSR_CONFIG_TDP_CONTROL, val);
 }
+
+/*******************************************************************************
+ * ProgramPowerCtl
+ ******************************************************************************/
+
+VOID EFIAPI ProgramPowerCtl(const UINT8 eeTurbo, const UINT8 rtHlt)
+{
+  QWORD msr = { 0 };
+
+  msr.u64 = pm_rdmsr64(MSR_POWER_CONTROL);
+
+  if (eeTurbo < 2) {
+    msr.u32.lo = (eeTurbo) ?
+      msr.u32.lo | bit19u32 :
+      msr.u32.lo & ~bit19u32;
+  }
+
+  if (rtHlt < 2) {
+    msr.u32.lo = (rtHlt) ?
+      msr.u32.lo | bit20u32 :
+      msr.u32.lo & ~bit20u32;
+  }
+
+  pm_wrmsr64(MSR_POWER_CONTROL, msr.u64);
+}
