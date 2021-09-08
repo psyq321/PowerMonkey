@@ -188,7 +188,7 @@ Cinebench is one of the quickest showcases of how effective undervolting can be.
 
 Without further ado, the results:
 
-![cinebench](img/diff.avif)
+![cinebench](img/diff.png)
 
 **TL;DR** - By setting few knobs and dropping the voltage by 125 mV, **we just made the laptop 23% faster**. We did not "overclock" anything (although we did remove boost limits), CPU's own power management circuitry did it for us!
 
