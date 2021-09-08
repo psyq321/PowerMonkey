@@ -14,7 +14,7 @@
 * endorsement.
 *
 * SPDX-License-Identifier: Apache-2.0
-* Full text of license (LICENSE-2.0.txt) is available in project directory
+* Full text of the license is available in project root directory (LICENSE)
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -91,35 +91,35 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
 
   if (domIdx == IACORE) {
 
-    UINT8 pidx = 1;
+    UINT8 pidx = 0;
 
     do {
-      if (pidx > 0) {
 
-        //
-        // cmd2: Read, Domain#, VfPt#
-        
-        const UINT32 cmd2 = OcMailbox_BuildInterface(0x10, domIdx, pidx);     
+      //
+      // cmd2: Read, Domain#, VfPt#
+      // NOTE: OC Mailbox Indices are OUR_IDX+1, 
+      // as OC uBOx VFPT[0] is unused!
 
-        if (EFI_ERROR(OcMailbox_ReadWrite(cmd2, 0, &box))) {
-          return EFI_ABORTED;
-        }
+      const UINT32 cmd2 = OcMailbox_BuildInterface(0x10, domIdx, pidx+1);
 
-        //
-        // Check if the readout was with no error - if not, stop probing 
-        // Either V/F points are not supported or we reached the top V/F point
+      if (EFI_ERROR(OcMailbox_ReadWrite(cmd2, 0, &box))) {
+        return EFI_ABORTED;
+      }
 
-        if (box.status == 0) {
+      //
+      // Check if the readout was with no error - if not, stop probing 
+      // Either V/F points are not supported or we reached the top V/F point
 
-          VF_POINT* vp = &dom->vfPoint[dom->nVfPoints];
+      if (box.status == 0) {
 
-          INT16 voltOffsetFx = (INT16)((b->box.data >> 21) & 0x7ff);
+        VF_POINT* vp = &dom->vfPoint[dom->nVfPoints];
 
-          vp->FusedRatio = (UINT8)(b->box.data & 0xff);
-          vp->OffsetVolts = cvrt_offsetvolts_fxto_i16(voltOffsetFx);
+        INT16 voltOffsetFx = (INT16)((b->box.data >> 21) & 0x7ff);
 
-          dom->nVfPoints++;
-        }
+        vp->FusedRatio = (UINT8)(b->box.data & 0xff);
+        vp->OffsetVolts = cvrt_offsetvolts_fxto_i16(voltOffsetFx);
+
+        dom->nVfPoints++;
       }
 
       pidx++;

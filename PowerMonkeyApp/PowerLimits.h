@@ -8,7 +8,13 @@
 *                                                                       (____/
 * Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
 *
+* All trademarks, logos and brand names are the property of their respective
+* owners. All company, product and service names used are for identification
+* purposes only. Use of these names, trademarks and brands does not imply
+* endorsement.
+*
 * SPDX-License-Identifier: Apache-2.0
+* Full text of the license is available in project root directory (LICENSE)
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -74,7 +80,8 @@ VOID EFIAPI SetPL12MSRLock(const UINT8 lock);
 
 VOID EFIAPI SetPlatformPowerLimit3(
   const UINT8 enablePL3,
-  const UINT32 units,
+  const UINT32 unitsT,
+  const UINT32 unitsW,
   const UINT32 pl3t,
   const UINT32 pl3w);
 
@@ -95,6 +102,12 @@ VOID EFIAPI SetPL4Lock(const UINT8 lock);
  ******************************************************************************/
 
 VOID EFIAPI SetPP0Lock(const UINT8 lock);
+
+/*******************************************************************************
+ * SetPSysLock
+ ******************************************************************************/
+
+VOID EFIAPI SetPSysLock(const UINT8 lock);
 
 /*******************************************************************************
  * SetPlatformPowerLimit4

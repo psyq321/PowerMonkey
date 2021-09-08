@@ -14,7 +14,7 @@
 * endorsement.
 *
 * SPDX-License-Identifier: Apache-2.0
-* Full text of license (LICENSE-2.0.txt) is available in project directory
+* Full text of the license is available in project root directory (LICENSE)
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -37,6 +37,7 @@
 #include "LowLevel.h"
 #include "DelayX86.h"
 #include "InterruptHook.h"
+#include "MiniLog.h"
 
 /*******************************************************************************
  * Globals
@@ -50,6 +51,7 @@ extern UINT8 gDisableFirwmareWDT;
 
 EFI_MP_SERVICES_PROTOCOL* gMpServices = NULL;
 PLATFORM* gPlatform = NULL;
+UINTN gBootCpu = 0;
 
 /*******************************************************************************
  * UefiInit
@@ -58,6 +60,23 @@ PLATFORM* gPlatform = NULL;
 EFI_STATUS UefiInit(IN EFI_SYSTEM_TABLE* SystemTable)
 {
   EFI_STATUS status = EFI_SUCCESS;
+
+  //
+  // Get handle to MP Services Protocol
+
+  status = SystemTable->BootServices->LocateProtocol(
+    &gEfiMpServiceProtocolGuid, NULL, (VOID**)&gMpServices);
+
+  if (EFI_ERROR(status)) {
+    Print(L"[ERROR] Unable to locate firmware MP services"
+      "protocol, error code: 0x%x\n", status);
+  }
+
+  if (gMpServices) {
+    gMpServices->WhoAmI(gMpServices, &gBootCpu);
+  }
+
+  InitTrace();
 
   //
   // Hook the BSP with our "SafeAsm" interrupt handler
@@ -79,17 +98,6 @@ EFI_STATUS UefiInit(IN EFI_SYSTEM_TABLE* SystemTable)
   if (EFI_ERROR(InitializeTscVars())) {
     Print(L"[ERROR] Unable to initialize timing using"
       "CPUID leaf 0x15, error code: 0x%x\n", status);
-  }
-
-  //
-  // Get handle to MP Services Protocol
-
-  status = SystemTable->BootServices->LocateProtocol(
-    &gEfiMpServiceProtocolGuid, NULL, (VOID**)&gMpServices);
-
-  if (EFI_ERROR(status)) {
-    Print(L"[ERROR] Unable to locate firmware MP services"
-      "protocol, error code: 0x%x\n", status);
   }
 
   //
@@ -123,7 +131,7 @@ VOID PrintBanner()
     " |  ____// _ \\ | | | | / _  ) / __)| || || | / _ \\ |  _ \\ | | / )/ _  )| | | |\n"
     " | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |\n"
     " |_|     \\___/  \\____| \\____)|_|   |_||_||_| \\___/ |_| |_||_| \\_)\\____) \\__  |\n"
-    "                                                                       (____/\n"
+    "                                                         Version 0.1.1 (____/\n"
   );
 
   AsciiPrint(

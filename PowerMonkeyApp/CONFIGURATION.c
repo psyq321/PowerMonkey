@@ -14,7 +14,7 @@
 * endorsement.
 *
 * SPDX-License-Identifier: Apache-2.0
-* Full text of license (LICENSE-2.0.txt) is available in project directory
+* Full text of the license is available in project root directory (LICENSE)
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -113,8 +113,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->Domain[IACORE].VoltMode = V_IPOLATIVE;  // V_IPOLATIVE = Interpolate
                                                 // V_OVERRIDE =  Override
 
-    pk->Domain[IACORE].TargetVolts =  0;       // in mV (0 = do not use)
-    pk->Domain[IACORE].OffsetVolts =  -125;    // in mV (negative = undervolt)
+    pk->Domain[IACORE].TargetVolts =  0;        // in mV (0 = do not use)
+    pk->Domain[IACORE].OffsetVolts = -125;      // in mV (negative = undervolt)
 
     //
     // Note: some domains are sharing the same voltage plane! Check yours!
@@ -126,13 +126,13 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     // user so it appears everything went as planned. Some might believe they 
     // won the 'chip lottery' seeing their CPU seemingly undervolt to -250 mV 
     // or smth. while in reality pcode is doing exactly nothing because cache
-    // is programmed to 0 mV offset. Don't be that guy!
+    // is programmed to 0 mV offset. Don't be that guy (or girl)!
 
-    pk->Domain[RING].VoltMode = V_IPOLATIVE;  // V_IPOLATIVE = Interpolate
-                                              // V_OVERRIDE  = Override
+    pk->Domain[RING].VoltMode = V_IPOLATIVE;   // V_IPOLATIVE = Interpolate
+                                               // V_OVERRIDE  = Override
 
-    pk->Domain[RING].TargetVolts = 0;         // in mV (0 = do not use)
-    pk->Domain[RING].OffsetVolts = -125;      // in mV (negative = undervolt)
+    pk->Domain[RING].TargetVolts = 0;          // in mV (0 = do not use)
+    pk->Domain[RING].OffsetVolts = -125;       // in mV (negative = undervolt)
 
     ///////////////////////////
     /// V/F Curve Adjustment //
@@ -157,13 +157,14 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     /// Power Control ///
     /////////////////////
     
-    pk->ProgramPowerControl = 1;                // Enable programing
+    pk->ProgramPowerControl = 1;                // Enable programing of power
+                                                // control knobs
 
-    pk->EnableEETurbo = 1;                      // Energy Efficient
-                                                // turbo (0-1)
+    pk->EnableEETurbo = 1;                      // Energy Efficient Turbo
+                                                // (0=disable, 1=enable)
 
-    pk->EnableRaceToHalt = 1;                   // RTH
-
+    pk->EnableRaceToHalt = 1;                   // Race To Halt
+                                                // (0=disable, 1=enable)
 
 
     ////////////////////
@@ -209,15 +210,19 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     // user prefers to set the value to "maximum allowed range". Useful for 
     // isolating sources of throttling. But it will not magically allow your
     // 13"-thin-and-light notebook to generate 500W of heat. Finding optimal
-    // PLx values is much better idea.
+    // PLx values is much better idea. MAX_POWAH can also be dangerous when
+    // platform does not have PECI-enforced failsafe (one could configure PLs
+    // to be unsafe electrically)
 
     //
     // Select which parameters you want to program
-    // Other parameters will be ignored during programming step
+    // If ProgramXXX flag is set to 0, entire knob will not be touched
+    // This is also true for lock bits (if you wish to lock PL1, you need
+    // to set ProgramPL12xx to 1)
 
     pk->ProgramPL12_MSR =  1;               // [WRITE] Program MSR PL1/2
     pk->ProgramPL12_MMIO = 1;               // [WRITE] Program MMIO PL1/2
-    pk->ProgramPL12_PLAT = 1;               // [WRITE] Program Platform PLs
+    pk->ProgramPL12_PSys = 1;               // [WRITE] Program Platform PLs
     pk->ProgramPL3 = 1;                     // [WRITE] Program PL3
     pk->ProgramPL4 = 1;                     // [WRITE] Program PL4
     pk->ProgramPP0 = 1;                     // [WRITE] Program PP0
@@ -240,7 +245,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->MsrPkgPL1_Power = MAX_POWAH;        // PL1 in mW or MAX_POWAH
     pk->MsrPkgPL2_Power = MAX_POWAH;        // PL2 in mW or MAX_POWAH
     pk->MsrPkgPL_Time =   MAX_POWAH;        // Tau in ms or MAX_POWAH
-    pk->ClampMsrPkgPL =   0;                // Allow clamping
+    pk->ClampMsrPkgPL =   1;                // Allow clamping
     pk->LockMsrPkgPL12 =  1;                // Lock after programming
 
     //
@@ -251,18 +256,18 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->MmioPkgPL1_Power = MAX_POWAH;       // MMIO PL1 in mW or MAX_POWAH
     pk->MmioPkgPL2_Power = MAX_POWAH;       // MMIO PL2 in mW or MAX_POWAH
     pk->MmioPkgPL_Time   = MAX_POWAH;       // Tau in ms or MAX_POWAH
-    pk->ClampMmioPkgPL =  0;                // Allow clamping
+    pk->ClampMmioPkgPL =  1;                // Allow clamping
     pk->LockMmioPkgPL12 = 1;                // Lock after programming
 
     //
     // Platform (PSys) PL1/PL2 
 
-    pk->EnablePlatformPL1 = 1;              // Enable MSR PL1 
-    pk->EnablePlatformPL2 = 0;              // Enable MSR PL2
+    pk->EnablePlatformPL1 = 1;              // Enable PSys PL1 
+    pk->EnablePlatformPL2 = 1;              // Enable PSys PL2
     pk->PlatformPL1_Power = MAX_POWAH;      // PSys PL1 in mW or MAX_POWAH
-    pk->PlatformPL_Time =   MAX_POWAH;
-    pk->PlatformPL2_Power = 0;              // PSys PL2 in mW or MAX_POWAH
-    pk->ClampPlatformPL = 0;
+    pk->PlatformPL_Time =   MAX_POWAH;      // RAW VALUE 0-127 (or MAX_POWAH)
+    pk->PlatformPL2_Power = MAX_POWAH;      // PSys PL2 in mW or MAX_POWAH
+    pk->ClampPlatformPL = 1;                // Allow clamping
     pk->LockPlatformPL = 1;                 // Lock after programming
 
     //
@@ -281,8 +286,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     // high might bring your system so out of spec that physical damage can
     // occur. While some systems have additional protections, one should not
     // test this damage can be irreversible. I'd consider changing this only
-    // if I have strong reason to suspect it is too low (seeing CPU throwing
-    // a lot of "
+    // if I have strong reason to suspect it is too low (seeing CPU reporting
+    // too many throttling events)
 
     pk->EnableMsrPkgPL4 = 1;                // Enable PL4
     pk->MsrPkgPL4_Current = MAX_POWAH;      // MSR PL4 Amperes or MAX_POWAH
@@ -294,7 +299,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->EnableMsrPkgPP0 = 1;                // Enable MSR PP0
     pk->MsrPkgPP0_Power = MAX_POWAH;        // Power in mW or MAX_POWAH
     pk->MsrPkgPP0_Time =  MAX_POWAH;        // Time in ms or MAX_POWAH
-    pk->ClampMsrPP0 = 0;                    // Clamp
+    pk->ClampMsrPP0 = 1;                    // Allow clamping
     pk->LockMsrPP0 = 1;                     // Lock after programming
   }
 }

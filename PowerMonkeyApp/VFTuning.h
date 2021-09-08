@@ -14,7 +14,7 @@
 * endorsement.
 *
 * SPDX-License-Identifier: Apache-2.0
-* Full text of license (LICENSE-2.0.txt) is available in project directory
+* Full text of the license is available in project root directory (LICENSE)
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -29,7 +29,7 @@
 #include "Platform.h"
 
 /*******************************************************************************
- * 
+ * MSRs
  ******************************************************************************/
 
 #define MSR_OC_MAILBOX                  0x150
@@ -44,6 +44,13 @@
 #define MSR_PP0_POWER_LIMIT             0x638
 #define MSR_PLATFORM_POWER_LIMIT        0x65C
 #define MSR_CONFIG_TDP_CONTROL          0x64B
+
+ /*******************************************************************************
+  * MCHBAR Registers
+  ******************************************************************************/
+
+#define MMIO_PACKAGE_POWER_LIMIT        0x59A0
+#define MMIO_PACKAGE_POWER_LIMIT_HI     0x59A4
 
 
 /*******************************************************************************

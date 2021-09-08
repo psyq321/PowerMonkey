@@ -14,7 +14,7 @@
 * endorsement.
 *
 * SPDX-License-Identifier: Apache-2.0
-* Full text of license (LICENSE-2.0.txt) is available in project directory
+* Full text of the license is available in project root directory (LICENSE)
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -112,7 +112,7 @@ typedef struct _DOMAIN
   INT16   OffsetVolts;
 
   UINTN    nVfPoints;                     // Number of V/F points supported by the package [READ ONLY]
-  VF_POINT vfPoint[MAX_VF_POINTS];        // V/F Point Data
+  VF_POINT vfPoint[MAX_VF_POINTS+1];      // V/F Point Data
 
   void* parent;
 
@@ -173,7 +173,7 @@ typedef struct _PACKAGE
 
   UINT8   ProgramPL12_MSR;                     // [WRITE] Program MSR PL1/2
   UINT8   ProgramPL12_MMIO;                    // [WRITE] Program MMIO PL1/2
-  UINT8   ProgramPL12_PLAT;                    // [WRITE] Program Platform PLs
+  UINT8   ProgramPL12_PSys;                    // [WRITE] Program Platform PLs
   UINT8   ProgramPL3;                          // [WRITE] Program PL3
   UINT8   ProgramPL4;                          // [WRITE] Program PL4
   UINT8   ProgramPP0;                          // [WRITE] Program PP0

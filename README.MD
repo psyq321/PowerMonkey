@@ -79,9 +79,6 @@ NOTE: PowerMonkey is a POC and is **not tested** on anything other than few CML 
 |   Power and Time Limits adjustment (where possible)     |       Enabled      |
 |   Package and Platform (PSys) Domains                   |       Enabled      |
 |   MSR and MMIO Control                                  |       Enabled      |
-| **Power Control**                                       |                    |
-|   Enable / Disable Energy Efficient Turbo               |       Enabled      |
-|   Enable / Disable Race to Halt                         |       Enabled      |
 | **Lockdown**                                            |                    |
 |   Optional Overclocking Lockdown                        |       Enabled      |
 |   Fine-grained Lockdown of different Power registers    |       Enabled      |
@@ -201,16 +198,16 @@ Things become even more interesting if one logs the data and checks what has CPU
 | ---------------------------------- | ------------------ | ------------------ |
 | **Cinebench R23 (Multi Core)**     |        8299        |   10219 (+23.1%)   |
 |   Avg. all-core clock in test      |      3.35 GHz      |  3.99 GHz (+19.1%) |
-|   Total energy spent during test   |      1.0 (Rel)     |      1.35 (Rel)    |
+|   Total energy spent during test   |      1.35 (Rel)    |      1.0 (Rel)     |
 
-So, we gained 0.64 GHz in sustained 100% load, all while becoming 35% more energy efficient! Like like an advertisement, but this **IS** what is going on* 😊
+So, we gained 0.64 GHz in sustained 100% load, all while becoming 35% more energy efficient! Like like an advertisement, but this **IS** what is going on*!
 
 > (*) OK, it has to be told that -125 mV is considered a very aggressive undervolt
 > for an average Comet Lake H CPU specimen. Mine seems happy, but there is much
 > more to this story that I will cover some other time. For now, let me state that
 > observation has led me to believe that it is something else that makes these 
 > settings reported not stable, and that problem already has a fix (albeit just for 
-> fully unlocked ‘OC’ models atm.).
+> fully unlocked 'OC' models atm.).
 
 THis particular CML-H model could *theoretically* sustain 4.2 GHz all-core load, as this is what it has been fused with as maximum. Looking at ThrottleStop logs it shows that now we are thermally limited. This particular laptop does look like it could benefit from re-pasting so *maybe* sustaining 4.2 GHz is doable.
 
@@ -226,10 +223,19 @@ CPU usually gets part of that budget (sometimes dynamic), so it would typically 
 
 If we stayed with the original voltages, the power draw is significantly higher (remember, this is non-linear scaling!). So, the only thing a CPU could do is to dial its frequency down to stay within the power / thermal budget.
 
-Another point is the temperature. When undervolted, the number of times CPU must temporarily freeze its execution to cool down (“throttle”) is much lower or even zero. This also significantly boosts real-world speed.
+Another point is the temperature. When undervolted, the number of times CPU must temporarily freeze its execution to cool down ("throttle") is much lower or even zero. This also significantly boosts real-world speed.
 
 And that is all to it (complications aside): if you manage to drop CPU power draw, its PMC will thank you with higher operating points.
 
 ## Moving onto Hyper-V
 
-Now that we know undervolting works as intended, we are ready to switch Hyper-V back and see how much (if anything) we would gain in WSL2 tasks. To be continued...
+Now that we know undervolting works as intended, we are ready to switch Hyper-V back and see how much (if anything) we would gain in WSL2 tasks. To be continued. For now, please find very preliminary results testing Linux kernel compilation (Linux kernel is WSL2 + extra config flags and modules):
+
+Things become even more interesting if one logs the data and checks what has CPU been doing while running Cinebench benchmark:
+
+| DESCRIPTION                        |  FACTORY SETTINGS  | POWERMONKEY -125mV |
+| ---------------------------------- | ------------------ | ------------------ |
+| **WSL2 Custom Linux Kernel Build** |                    |                    |
+|   Total Build Time                 |      18m18.203s    |      17m21.769s    |
+
+Differences are less drastic compared to Cinebench, which is to be expected as Linux kernel build is not so CPU-heavy. Still, it is almost a minute faster and, as originally intended: serves to prove that custom CPU settings are active under Hyper-V.

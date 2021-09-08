@@ -14,7 +14,7 @@
 * endorsement.
 *
 * SPDX-License-Identifier: Apache-2.0
-* Full text of license (LICENSE-2.0.txt) is available in project directory
+* Full text of the license is available in project root directory (LICENSE)
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -35,8 +35,8 @@
 UINT8 FindTauConsts(
   IN const UINT32 timeMs,         // Input: time in 1/1000s (ms) or MAX_POWAH
   IN const UINT8 units,           // from MSR
-  OUT UINT8* PX,                  // [OUT] Calculated
-  OUT UINT8* PY                   // [OUT] Calculated
+  OUT UINT8* PX,                  // [OUT] Calculated X
+  OUT UINT8* PY                   // [OUT] Calculated Y
 )
 {
   const UINT64* ptbl = &lookup_taus_5b2b_x1000_shl22[0];
@@ -47,7 +47,7 @@ UINT8 FindTauConsts(
       for (UINT8 xidx = 0; xidx < 4; xidx++) {
 
         UINT64 entry = *ptbl;
-        UINT64 shift = 22 + units;
+        UINT64 shift = (UINT64)22 + units;
 
         if ((entry>>shift) >= (UINT64)timeMs)  {
           
@@ -62,7 +62,7 @@ UINT8 FindTauConsts(
     }
   }
   else {
-    *PX = 2;
+    *PX = 3;
     *PY = 31;
     return 1;
   }

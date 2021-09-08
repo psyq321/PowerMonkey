@@ -14,7 +14,7 @@
 * endorsement.
 *
 * SPDX-License-Identifier: Apache-2.0
-* Full text of license (LICENSE-2.0.txt) is available in project directory
+* Full text of the license is available in project root directory (LICENSE)
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -23,7 +23,6 @@
 * recommended use by users not skilled in the art. Use it at your own risk.
 *
 *******************************************************************************/
-
 
 #include <Uefi.h>
 #include <Library/TimerLib.h>

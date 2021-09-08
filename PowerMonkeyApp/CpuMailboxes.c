@@ -14,7 +14,7 @@
 * endorsement.
 *
 * SPDX-License-Identifier: Apache-2.0
-* Full text of license (LICENSE-2.0.txt) is available in project directory
+* Full text of the license is available in project root directory (LICENSE)
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -44,7 +44,6 @@
  * V/F Curve theory-of-operation (for wide audience) can be seen explained
  * in this ScatterBencher video: https://www.youtube.com/watch?v=0TGcKyXBQ6U
  ******************************************************************************/
-
 
 /*******************************************************************************
  * CpuMailbox_BusyWait_MSR
@@ -90,8 +89,8 @@ EFI_STATUS EFIAPI CpuMailbox_MsrReadWrite( CpuMailbox *b )
 
   const UINT32 statusBits = b->cfg.statusBits;
   const UINT32 maxRetries = b->cfg.maxRetries;
+  const UINT32 boxLatency = b->cfg.latency;
   const UINT32 busyFlag = b->cfg.busyFlag;
-  const UINT32 latency = b->cfg.latency;
   const UINT32 msrIdx = b->cfg.addr;
 
   UINT32 nRetries = 0;
@@ -111,7 +110,7 @@ EFI_STATUS EFIAPI CpuMailbox_MsrReadWrite( CpuMailbox *b )
 
     b->b.u64 = pm_rdmsr64(msrIdx);
 
-    MicroStall(latency);
+    MicroStall(boxLatency);
 
     test.u64 = pm_rdmsr64(msrIdx);
 
@@ -144,7 +143,7 @@ EFI_STATUS EFIAPI CpuMailbox_ReadWrite(CpuMailbox* b)
 {
   switch (b->cfg.type)
   {
-    case MSR:
+    case MAILBOX_MSR:
     {
       return CpuMailbox_MsrReadWrite(b);
     }

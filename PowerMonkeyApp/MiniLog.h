@@ -27,29 +27,57 @@
 #pragma once
 
 /*******************************************************************************
- * InitializeTscVars() gets and stores the characteristics of the TSC counter 
- * this is necessary for accurate timing
+ * Configuration
  ******************************************************************************/
 
-EFI_STATUS EFIAPI InitializeTscVars(VOID);
+//#define ENABLE_MINILOG_TRACING
+#define MINILOG_TRACE_TARGET_FILE
 
 /*******************************************************************************
- * StallCpu
- * Stalls the CPU for specific number of TICKS
+ * MiniLogEntry - 128 bits, can be cmpxchg16b-ed
  ******************************************************************************/
 
-VOID EFIAPI StallCpu(const UINT64 ticks);
+typedef struct _MiniLogEntry {
+  UINT16  cpuIdx;                           // Index of the CPU (core, unique)
+  UINT16  operId;                           // Operation ID
+  UINT16  logCode;                          // Log Code
+  UINT16  data16;                           // Data1 - 16-bit
+  UINT64  data64;                           // Data2 - 64-bit
+} MiniLogEntry;
 
 /*******************************************************************************
- * nsDelay
- * Stalls the CPU for specific number of ns (nanoseconds)
+ * Operation IDs
  ******************************************************************************/
 
-VOID EFIAPI NanoStall(const UINT64 ns);
+#define MINILOG_OPID_FREE_MSG                                   0x0000
+#define MINILOG_OPID_RDMSR64                                    0x0001
+#define MINILOG_OPID_WRMSR64                                    0x0002
+#define MINILOG_OPID_MMIO_READ32                                0x0003
+#define MINILOG_OPID_MMIO_WRITE32                               0x0004
+#define MINILOG_OPID_MMIO_OR32                                  0x0005
+
+ /*******************************************************************************
+  * Log Codes
+  ******************************************************************************/
+
+#define MINILOG_LOGCODE_TRACE                                   0x0000
 
 /*******************************************************************************
- * usDelay
- * Stalls the CPU for specific number of ns (microseconds)
+ *
  ******************************************************************************/
 
-VOID EFIAPI MicroStall(const UINT64 us);
+#ifdef ENABLE_MINILOG_TRACING
+
+void InitTrace();
+
+void MiniTrace(const UINT16 operId,
+  const UINT16 data16,
+  const UINT64 data64,
+  const UINT8 dangerous );
+
+#else
+
+#define InitTrace(a)
+#define MiniTrace(a, b, c, d)
+
+#endif

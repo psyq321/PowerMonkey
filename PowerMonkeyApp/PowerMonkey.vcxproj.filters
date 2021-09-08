@@ -17,6 +17,7 @@
     <ClCompile Include="VoltTables.c" />
     <ClCompile Include="VisualUefi.c" />
     <ClCompile Include="TimeWindows.c" />
+    <ClCompile Include="MiniLog.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ASMx64">
@@ -73,6 +74,9 @@
       <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="TimeWindows.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="MiniLog.h">
       <Filter>Include</Filter>
     </ClInclude>
   </ItemGroup>

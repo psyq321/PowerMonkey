@@ -14,7 +14,7 @@
 * endorsement.
 *
 * SPDX-License-Identifier: Apache-2.0
-* Full text of license (LICENSE-2.0.txt) is available in project directory
+* Full text of the license is available in project root directory (LICENSE)
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -37,6 +37,10 @@
 #include "TurboRatioLimits.h"
 #include "PowerLimits.h"
 #include "DelayX86.h"
+
+/*******************************************************************************
+ * Globals
+ ******************************************************************************/
 
 //
 // Initialized at startup
@@ -160,6 +164,7 @@ EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
 
     SetPlatformPowerLimit3(
       pkg->EnableMsrPkgPL3,
+      pkg->PkgTimeUnits,
       pkg->PkgPowerUnits,
       pkg->MsrPkgPL3_Time,
       pkg->MsrPkgPL3_Power);
@@ -209,8 +214,8 @@ EFI_STATUS ProgramPackage_Stage2(IN OUT PACKAGE* pkg)
   //
   // Power Limits MMIO Lock
 
-  if (pkg->LockMmioPkgPL12) {
-    SetPL12MMIOLock(1);
+  if (pkg->ProgramPL12_MMIO) {
+    SetPL12MMIOLock(pkg->LockMmioPkgPL12);
   }
 
   return status;
@@ -244,6 +249,21 @@ EFI_STATUS ProgramPackage_Stage1(IN OUT PACKAGE* pkg)
       pkg->MmioPkgPL_Time,
       pkg->MmioPkgPL1_Power,
       pkg->MmioPkgPL2_Power);
+  }
+
+  //
+  // Platform (PSys) Power Limits
+  
+  if (pkg->ProgramPL12_PSys) 
+  {
+    SetPlatformPowerLimit12(
+      pkg->EnablePlatformPL1,
+      pkg->EnablePlatformPL2,
+      pkg->PkgTimeUnits,
+      pkg->ClampPlatformPL,
+      pkg->PlatformPL_Time,
+      pkg->PlatformPL1_Power,
+      pkg->PlatformPL2_Power);
   }
 
   return status;
@@ -303,6 +323,8 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* psys)
 
   //
   // Hack - tbd, remove!
+  // 
+  AsciiPrint("Packages: %d\n", psys->PkgCnt);
 
   if (psys->PkgCnt == 1) {
     status = gMpServices->WhoAmI(
@@ -434,6 +456,12 @@ EFI_STATUS EFIAPI ProgramCoreKnobs(PLATFORM* Platform)
 
   if (pk->ProgramPP0) {
     SetPP0Lock(pk->LockMsrPP0);
+  }
+
+  // PSys Lock
+
+  if (pk->ProgramPL12_PSys) {
+    SetPSysLock(pk->LockPlatformPL);
   }
 
   //

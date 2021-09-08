@@ -14,7 +14,7 @@
 * endorsement.
 *
 * SPDX-License-Identifier: Apache-2.0
-* Full text of license (LICENSE-2.0.txt) is available in project directory
+* Full text of the license is available in project root directory (LICENSE)
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -30,6 +30,17 @@
 
 #include "SaferAsmHdr.h"
 #include "LowLevel.h"
+#include "MiniLog.h"
+
+/*******************************************************************************
+ * Compiler Overrides
+ ******************************************************************************/
+
+#pragma warning( disable : 4090 )
+
+/*******************************************************************************
+ * Globals
+ ******************************************************************************/
 
 UINT64 gFatalErrorAsserted = 0;
 UINT32 gPCIeBaseAddr = 0;
@@ -37,12 +48,6 @@ UINT32 gMCHBAR = 0;
 
 /*******************************************************************************
  *
- ******************************************************************************/
-
-#pragma warning( disable : 4090 )
-
-/*******************************************************************************
- * 
  ******************************************************************************/
 
 typedef struct _MINISTAT {
@@ -139,10 +144,11 @@ VOID EFIAPI InitializeMMIO()
  ******************************************************************************/
 
 UINT64 pm_rdmsr64(const UINT32 msr_idx)
-{
+{ 
   UINT32 err = 0;
-
   UINT64 val = safer_rdmsr64(msr_idx, &err);
+
+  MiniTrace(MINILOG_OPID_RDMSR64, (UINT16)msr_idx, (err)?0xBAAD : val, 0);
 
   if (err) {
 
@@ -166,6 +172,7 @@ UINT64 pm_rdmsr64(const UINT32 msr_idx)
 
 UINT32 pm_wrmsr64(const UINT32 msr_idx, const UINT64 value)
 {
+  MiniTrace(MINILOG_OPID_WRMSR64, (UINT16)msr_idx, value, 1);
 
   UINT32 err = safer_wrmsr64(msr_idx, value);
 
@@ -190,9 +197,11 @@ UINT32 pm_wrmsr64(const UINT32 msr_idx, const UINT64 value)
  ******************************************************************************/
 
 UINT32 pm_mmio_read32(const UINT32 addr)
-{
+{  
   UINT32 err = 0;
   UINT32 val = safer_mmio_read32(addr, &err);
+
+  MiniTrace(MINILOG_OPID_MMIO_READ32, 0, (UINT64)((err) ? 0xBAAD : (UINT64)val) | (UINT64)addr<<32, 0);
 
   if (err) {
 
@@ -216,6 +225,8 @@ UINT32 pm_mmio_read32(const UINT32 addr)
 
 UINT32 pm_mmio_or32(const UINT32 addr, const UINT32 value)
 {
+  MiniTrace(MINILOG_OPID_MMIO_OR32, 0, (UINT64)value | (UINT64)addr<<32, 1);
+
   UINT32 err = safer_mmio_or32(addr, value);
 
   if (err) {
@@ -240,6 +251,8 @@ UINT32 pm_mmio_or32(const UINT32 addr, const UINT32 value)
 
 UINT32 pm_mmio_write32(const UINT32 addr, const UINT32 value)
 {
+  MiniTrace(MINILOG_OPID_MMIO_WRITE32, 0, (UINT64)value | (UINT64)addr << 32, 1);
+
   UINT32 err = safer_mmio_write32(addr, value);
 
   if (err) {

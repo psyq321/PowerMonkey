@@ -14,7 +14,7 @@
 * endorsement.
 *
 * SPDX-License-Identifier: Apache-2.0
-* Full text of license (LICENSE-2.0.txt) is available in project directory
+* Full text of the license is available in project root directory (LICENSE)
 *
 * WARNING: This code is a proof of concept for educative purposes. It can
 * modify internal computer configuration parameters and cause malfunctions or
@@ -32,8 +32,7 @@
 /*******************************************************************************
  * Layout of the CPU overclocking mailbox can be found in academic papers:
  * 
- * DOI: 10.1109/SP40000.2020.00057
- * 
+ * DOI:10.1109/SP40000.2020.00057
  * "Figure 1: Layout of the undocumented undervolting MSR with address 0x150"
  *         
  * Command IDs are also often mentioned in BIOS or in officially released Intel
@@ -70,9 +69,9 @@ EFI_STATUS EFIAPI OcMailbox_InitializeAsMSR(CpuMailbox* b)
   EFI_STATUS state = EFI_SUCCESS;
 
   b->status = 0;
-  b->b.u64 = 0;
+  b->b.u64 =  0;
   
-  b->cfg.type =       MSR;  
+  b->cfg.type =       MAILBOX_MSR;  
   b->cfg.addr =       MSR_OC_MAILBOX;
   b->cfg.busyFlag =   OC_MAILBOX_BUSY_FLAG_BIT;
   b->cfg.cmdBits =    OC_MAILBOX_COMPLETION_MASK;

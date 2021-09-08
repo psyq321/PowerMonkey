@@ -24,9 +24,58 @@
 *
 *******************************************************************************/
 
-#pragma once
+#include <PiPei.h>
+#include <Uefi.h>
+#include <Library/UefiLib.h>
+#include <Library/DebugLib.h>
+#include <Protocol/MpService.h>
+#include <Library/SynchronizationLib.h>
 
-extern const UINT64 OverrdVolts_U12[640];
-extern const UINT64 OffsetVolts_S11[256];
+#include "MiniLog.h"
 
-extern const UINT64 lookup_taus_5b2b_x1000_shl22[128];
+/*******************************************************************************
+ * Globals
+ ******************************************************************************/
+
+extern EFI_MP_SERVICES_PROTOCOL* gMpServices;
+extern UINTN gBootCpu;
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+
+#ifdef ENABLE_MINILOG_TRACING
+
+/*******************************************************************************
+ * InitTrace
+ ******************************************************************************/
+
+void InitTrace()
+{
+}
+
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+
+void MiniTrace(const UINT16 operId,
+  const UINT16 data16,
+  const UINT64 data64,
+  const UINT8 dangerous)
+{
+  UINTN thisCpu;
+  gMpServices->WhoAmI(gMpServices, &thisCpu);
+
+  if (thisCpu == gBootCpu)
+  {
+    AsciiPrint("[0x%x][0x%x][0x%x][0x%llx]\n",
+      operId,
+      MINILOG_LOGCODE_TRACE,
+      data16,
+      data64);
+  }
+}
+
+
+#endif

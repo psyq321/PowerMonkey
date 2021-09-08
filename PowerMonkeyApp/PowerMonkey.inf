@@ -75,6 +75,8 @@ VALID_ARCHITECTURES             = X64
   VFTuning.h
   VoltTables.c
   VoltTables.h
+  MiniLog.c
+  MiniLog.h
   ASMx64/SaferAsm.nasm
   
 [Packages]

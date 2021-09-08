@@ -43,6 +43,7 @@
     <ClCompile Include="CpuMailboxes.c" />
     <ClCompile Include="DelayX86.c" />
     <ClCompile Include="FixedPoint.c" />
+    <ClCompile Include="MiniLog.c" />
     <ClCompile Include="TimeWindows.c" />
     <ClCompile Include="VFTuning.c" />
     <ClCompile Include="InterruptHook.c" />
@@ -62,6 +63,7 @@
     <ClInclude Include="ASMx64\ComboHell_AVX2.h" />
     <ClInclude Include="DelayX86.h" />
     <ClInclude Include="FixedPoint.h" />
+    <ClInclude Include="MiniLog.h" />
     <ClInclude Include="SaferAsmHdr.h" />
     <ClInclude Include="InterruptHook.h" />
     <ClInclude Include="LowLevel.h" />
