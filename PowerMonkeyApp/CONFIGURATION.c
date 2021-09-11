@@ -143,7 +143,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
                                                 // V_OVERRIDE =  Override
 
     pk->Domain[IACORE].TargetVolts =  0;        // in mV (absolute)
-    pk->Domain[IACORE].OffsetVolts = -130;      // in mV (negative = undervolt)
+    pk->Domain[IACORE].OffsetVolts = -125;      // in mV (negative = undervolt)
 
     //
     // Values for V/F Overrides: CORE
@@ -163,7 +163,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
                                                // V_OVERRIDE  = Override
 
     pk->Domain[RING].TargetVolts = 0;          // in mV (absolute)
-    pk->Domain[RING].OffsetVolts = -130;       // in mV (negative = undervolt)
+    pk->Domain[RING].OffsetVolts = -125;       // in mV (negative = undervolt)
 
     ///////////////////////////
     /// V/F Curve Adjustment //
