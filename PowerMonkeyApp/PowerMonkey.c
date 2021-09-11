@@ -46,6 +46,10 @@
 
 extern UINT8 gEnableSaferAsm;
 extern UINT8 gDisableFirwmareWDT;
+extern UINT8 gEmergencyExit;
+
+extern EFI_BOOT_SERVICES* gBS;
+extern EFI_SYSTEM_TABLE*  gST;
 
 //
 // Initialized at startup
@@ -113,6 +117,64 @@ EFI_STATUS UefiInit(IN EFI_SYSTEM_TABLE* SystemTable)
 }
 
 /*******************************************************************************
+ * EmergencyExit
+ ******************************************************************************/
+
+BOOLEAN EmergencyExit()
+{
+  if (gEmergencyExit) {
+
+    EFI_STATUS         Status;
+    EFI_EVENT          TimerEvent;
+    EFI_EVENT          WaitList[2];
+    EFI_INPUT_KEY      Key;
+    UINTN              Index;
+
+    gST->ConOut->SetAttribute(gST->ConOut, EFI_YELLOW);
+
+    Print(
+      L" IMPORTANT: PowerMonkey is about to program the custom CPU voltage/frequency\n"
+      " settings. Programming will start in 3 seconds. If you wish to skip programming\n"
+      " press ESC key on your keyboard within the next 3 seconds.\n\n");
+
+    gST->ConOut->SetAttribute(gST->ConOut, EFI_LIGHTGRAY);
+
+    Status = gBS->CreateEvent(
+      EVT_TIMER, TPL_NOTIFY, NULL, NULL, &TimerEvent);
+
+    //
+    // 3 second timeout
+
+    Status = gBS->SetTimer(
+      TimerEvent, TimerRelative, 30000000);
+
+    //
+    // Wait for a keystroke OR timeout
+
+    WaitList[0] = gST->ConIn->WaitForKey;
+    WaitList[1] = TimerEvent;
+
+    Status = gBS->WaitForEvent(2, WaitList, &Index);
+
+    if (!EFI_ERROR(Status) && Index == 1) {
+      Status = EFI_TIMEOUT;
+    }
+
+    gBS->CloseEvent(TimerEvent);
+    gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
+
+    if (Key.ScanCode == SCAN_ESC) {      
+      AsciiPrint(
+        " Aborting.\n");
+
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/*******************************************************************************
  * PrintBanner
  ******************************************************************************/
 
@@ -171,16 +233,24 @@ EFI_STATUS EFIAPI UefiMain(
 )
 {
   ///
-  /// Init
-  ///
-
-  UefiInit(SystemTable);
-
-  ///
   /// Print Banner
   ///
 
   PrintBanner();
+
+  ///
+  /// Emergency Exit
+  /// 
+  
+  if (EmergencyExit()) {
+    return EFI_SUCCESS;
+  }
+
+  ///
+  /// Init
+  ///
+
+  UefiInit(SystemTable);
 
   ///
   /// Discover platform

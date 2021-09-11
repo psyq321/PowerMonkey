@@ -66,6 +66,15 @@
  ******************************************************************************/
 
 ///
+/// Enable / Disable "Emergency Exit"
+/// Enabling this option adds 3 second delay with possibility to abort
+/// by pressing ESC key. Disable it only if you are absolutely sure that your
+/// configuration is stable and you want to save 3 seconds of boot time
+///
+
+UINT8 gEmergencyExit = 1;
+
+///
 /// Enable safer hardware probing (default: 1)
 /// If PowerMonkey.efi cannot start but hangs your system, try disabling this 
 /// flag as its mechanism is involving low-level hooking of system interrupts
