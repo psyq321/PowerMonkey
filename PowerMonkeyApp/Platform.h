@@ -34,7 +34,7 @@
 
 #define MAX_PACKAGES    8                        // Maximum Packages
 #define MAX_CORES       128                      // Max cores per package
-#define MAX_DOMAINS     4
+#define MAX_DOMAINS     5
 #define MAX_VF_POINTS   15
 
 #define MAX_POWAH       0xFFFFFFFF
@@ -147,6 +147,8 @@ typedef struct _PACKAGE
   // (per voltage domain)  //
   /////////////////////////// 
   
+  UINT8 Program_VF_Overrides[MAX_DOMAINS];     // Domains to program
+
   DOMAIN Domain[MAX_DOMAINS];                  // IA Cores, Ring, SA, ...
 
   //
@@ -184,7 +186,6 @@ typedef struct _PACKAGE
   UINT8 ProgramPowerControl;                   // Enable Programming of PowCtl
   UINT8 EnableEETurbo;                         // Enable Energy Efficient Turbo
   UINT8 EnableRaceToHalt;                      // Enable Race To Halt
-
 
   //
   // MSR PL1/PL2 

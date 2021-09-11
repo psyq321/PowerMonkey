@@ -77,7 +77,10 @@ VALID_ARCHITECTURES             = X64
   VoltTables.h
   MiniLog.c
   MiniLog.h
+  SelfTest.c
+  SelfTest.h
   ASMx64/SaferAsm.nasm
+  ASMx64/ComboHell_AVX2.nasm
   
 [Packages]
   MdePkg/MdePkg.dec

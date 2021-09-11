@@ -17,16 +17,17 @@
   recommended use by users not skilled in the art. Use it at your own risk.
 ```
 
-
+- [Reduce CPU Power Waste and Gain Performance. Greener and Meaner!](#reduce-cpu-power-waste-and-gain-performance-greener-and-meaner)
   - [What is PowerMonkey?](#what-is-powermonkey)
-    - [Background](#background)
-    - [Challenges](#challenges)
-    - [How does PowerMonkey work?](#how-does-powermonkey-work)
+    - [**Background**](#background)
+    - [**Challenges**](#challenges)
+    - [**How does PowerMonkey work?**](#how-does-powermonkey-work)
+  - [Who is the target user of PowerMonkey?](#who-is-the-target-user-of-powermonkey)
   - [Enabled Features](#enabled-features)
   - [Getting Started](#getting-started)
   - [Build the binaries](#build-the-binaries)
-    - [Building - "Visual Studio" route:](#building---visual-studio-route)
-    - [Building - EDK2 route:](#building---edk2-route)
+    - [**Building - "Visual Studio" route:**](#building---visual-studio-route)
+    - [**Building - EDK2 route:**](#building---edk2-route)
   - [Testing](#testing)
   - [Cinebench R23](#cinebench-r23)
   - [Extra 650 MHz and energy saved? Where is the catch?](#extra-650-mhz-and-energy-saved-where-is-the-catch)
@@ -59,6 +60,10 @@ This proof-of-concept is using ability of UEFI firmwares to execute so-called "a
 Below picture explains where PowerMonkey.efi POC resides:
 
 ![EfiGood](img/boot.svg)
+
+## Who is the target user of PowerMonkey?
+
+PowerMonkey.efi is currently proof-of-concept for expert users who have systems that do not allow Voltage/Frequency override configuration in their firmware setup modules, yet firmware is either OC/CFG unlocked or can be made so by some means (e.g. NVRAM EFI variable editing). Primary purpose of PowerMonkey.efi is to allow V/F overrides on such systems when usage of Hypervisor is also desired.
 
 ## Enabled Features
 
@@ -188,7 +193,7 @@ Cinebench is one of the quickest showcases of how effective undervolting can be.
 
 Without further ado, the results:
 
-![cinebench](img/diff.png)
+![cinebench](img/diff.avif)
 
 **TL;DR** - By setting few knobs and dropping the voltage by 125 mV, **we just made the laptop 23% faster**. We did not "overclock" anything (although we did remove boost limits), CPU's own power management circuitry did it for us!
 
@@ -200,14 +205,14 @@ Things become even more interesting if one logs the data and checks what has CPU
 |   Avg. all-core clock in test      |      3.35 GHz      |  3.99 GHz (+19.1%) |
 |   Total energy spent during test   |      1.35 (Rel)    |      1.0 (Rel)     |
 
-So, we gained 0.64 GHz in sustained 100% load, all while becoming 35% more energy efficient! Like like an advertisement, but this **IS** what is going on*!
+So, we gained 0.64 GHz in sustained 100% load, all while becoming 35% more energy efficient! Like like an advertisement, but this **IS** what is going on* 😊
 
 > (*) OK, it has to be told that -125 mV is considered a very aggressive undervolt
 > for an average Comet Lake H CPU specimen. Mine seems happy, but there is much
 > more to this story that I will cover some other time. For now, let me state that
 > observation has led me to believe that it is something else that makes these 
 > settings reported not stable, and that problem already has a fix (albeit just for 
-> fully unlocked 'OC' models atm.).
+> fully unlocked ‘OC’ models atm.).
 
 THis particular CML-H model could *theoretically* sustain 4.2 GHz all-core load, as this is what it has been fused with as maximum. Looking at ThrottleStop logs it shows that now we are thermally limited. This particular laptop does look like it could benefit from re-pasting so *maybe* sustaining 4.2 GHz is doable.
 
@@ -223,7 +228,7 @@ CPU usually gets part of that budget (sometimes dynamic), so it would typically 
 
 If we stayed with the original voltages, the power draw is significantly higher (remember, this is non-linear scaling!). So, the only thing a CPU could do is to dial its frequency down to stay within the power / thermal budget.
 
-Another point is the temperature. When undervolted, the number of times CPU must temporarily freeze its execution to cool down ("throttle") is much lower or even zero. This also significantly boosts real-world speed.
+Another point is the temperature. When undervolted, the number of times CPU must temporarily freeze its execution to cool down (“throttle”) is much lower or even zero. This also significantly boosts real-world speed.
 
 And that is all to it (complications aside): if you manage to drop CPU power draw, its PMC will thank you with higher operating points.
 

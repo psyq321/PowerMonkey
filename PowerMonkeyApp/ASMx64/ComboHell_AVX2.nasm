@@ -1,3 +1,6 @@
+DEFAULT REL
+BITS 64
+
 ;-------------------------------------------------------------------------------
 ;  ______                            ______                 _
 ; (_____ \                          |  ___ \               | |
@@ -32,31 +35,51 @@
 ; ENVIRONMENT. USAGE COULD DAMAGE HARDWARE OR VOID WARRANTIES!!!
 ;-------------------------------------------------------------------------------
 
+section .text
+align 16
+
 ;-------------------------------------------------------------------------------
-; Theory of operation
+; combohell_avx2_kernel - theory of operation:
 ;
-; Simple: perform a tight loop of instructions designed to utilize as much of
-; available EUs as possible (ALUs, AGUs, etc.) with minimal dependencies so
-; that we reach very high efficiency % (target >99.5%)
+; Perform a tight loop of instructions designed to utilize as much of
+; available EUs as possible (ALUs, AGUs, etc.) with minimal dependencies
+; so that we reach very high efficiency % (target >99.5%)
 ;
 ; On top of that, we want the routine to serve as a validator of correct CPU
 ; operation - so we will need to use some data transformation that is possible
 ; to attest for correctness.
 ;-------------------------------------------------------------------------------
 
-BITS 64
-DEFAULT REL
-        ;
-        ; Globals
-
         global combohell_avx2_kernel
-
-        section .text
-
-combohell_avx2_kernel:
+        combohell_avx2_kernel:
 
         push rsi
 
+        ;
+        ; Need to enable AVX on this CPU core, since we run on the bare metal
+        ; and UEFI does not care about AVX. We will restore original state
+        ; after we are done.
+
+        ;push rcx
+        ;push rax
+
+        ;xor rcx, rcx
+        ;xgetbv
+        
+        ;mov [ComboHell_SavedRdx], rdx
+        ;mov [ComboHell_SavedRax], rax
+
+        ;or rax, 0x7                                 ; Enable AVX
+        ;xsetbv
+
+        ;pop rax;
+        ;pop rcx;
+
+        ;
+        ; Initialize ComboHell_AVX2
+
+        xor  rdx, rdx
+        
         mov  r10, [ComboHell_StopRequestPtr]
         mov  r11, [ComboHell_ErrorCounterPtr]
 
@@ -96,18 +119,13 @@ combohell_avx2_kernel:
 combohell:
 
         ;
-        ; This is a completely useless instruction which 
-        ; is put inside to also keep AGUs busy while we crunch
+        ; For this job, this is a completely useless instruction 
+        ; which we put inside to also keep AGUs busy while we CRUNCH...
 
         vmovaps ymm15, [rcx]
 
         ;
-        ; Work packages posible for all ALUs 
-
-        ;vpxor ymm11, ymm4, ymm11
-        ;vpxor ymm12, ymm5, ymm12
-        ;vpxor ymm13, ymm6, ymm13
-        ;vpxor ymm14, ymm7, ymm14
+        ; Work packages suitable for all ALUs 
 
         vpxor ymm0, ymm4, ymm0
         vpxor ymm1, ymm5, ymm1
@@ -130,17 +148,27 @@ combohell:
         vpxor ymm13, ymm6, ymm13
         vpxor ymm14, ymm7, ymm14
 
+        ;
+        ; Another heavy job for capable EUs
+
         vdpps ymm8, ymm9, ymm10, 0xFF        
 
         sub esi, 1
         jnz combohell
 
+        ;
+        ; Outer-loop
+
+        add rdx, 1
+        cmp rdx, [ComboHell_MaxRuns]
+        jg done
+
 errcheck:
 
         ;
         ; Compare:
-        ; [ymm0==ymm11] [ymm1==ymm12]
-        ; [ymm2==ymm13] [ymm3==ymm14]
+        ; (ymm0==ymm11) && (ymm1==ymm12) &&
+        ; (ymm2==ymm13) && (ymm3==ymm14)
         
         vpcmpeqd ymm11, ymm0, ymm11
         vpcmpeqd ymm12, ymm1, ymm12
@@ -157,6 +185,14 @@ errcheck:
         jne cmperr
 
         ;
+        ; Restore destroyed values
+
+        vmovdqa ymm11, ymm0
+        vmovdqa ymm12, ymm1
+        vmovdqa ymm13, ymm2
+        vmovdqa ymm14, ymm3
+
+        ;
         ; Check for stop request
         ; and continue if no stop is requested
 
@@ -170,45 +206,84 @@ errcheck:
         xor eax, eax
 
 done:
-        ; Store the result 
-        ; (might be needed for printouts, debugging, etc.)
+        ;
+        ; Restore original value of extended CR
 
-        vmovdqa [rdx], ymm0
-        vmovdqa [rdx + 32], ymm1
-        vmovdqa [rdx + 64], ymm2
-        vmovdqa [rdx + 96], ymm3     
+        ;push rcx
+        ;push rdx
+        ;push rax
+
+        ;xor rcx, rcx
+        ;mov rdx, [ComboHell_SavedRdx]
+        ;mov rax, [ComboHell_SavedRax]
+        ;xsetbv
+
+        ;pop rax;
+        ;pop rdx;
+        ;pop rcx;
+
+        ;
+        ; Bye...
 
         pop rsi
-
         ret
 cmperr:
         
         ;
         ; We found an error, increase the error counter
         
-        lock inc qword [r11]
+        mov r8, 1
+        lock xadd qword [r11], r8
+
+        ;
+        ; Shall we terminate immediately?
+
+        mov r8, ComboHell_TerminateOnError
+        test r8, r8
+        jnz errcleanup        
 
         ;
         ; Check for stop request
         ; and continue if no stop is requested
-
+        
         mov  r9d, [r10]
         test r9d, r9d
         jz combohell
 
+seterr:
         ;
         ; Terminate with error code
 
         mov eax, 0xBADDC0DE                   ; nonzero = errors detected
         jmp done
 
-       
-        section .data
+errcleanup:
 
-nloops:  equ    0x10000000                    ; Number of XorHell iterations
+        ;
+        ; This code is only reached if "stop on error"
+        ; condition exists. In this case, we will do a small trick:
+        ; we will set tue stop flag so all other threads exit.
+        ; this is needed for enviroments with spartan MP support (UEFI)
+
+        mov  qword [r10], 1
+        jmp  seterr
+        
+section .data
+align 16
 
 global ComboHell_StopRequestPtr
-ComboHell_StopRequestPtr: dq 0
+ComboHell_StopRequestPtr: dq 0                ; Stop Request (external)
 
 global ComboHell_ErrorCounterPtr
-ComboHell_ErrorCounterPtr: dq 0
+ComboHell_ErrorCounterPtr: dq 0               ; Number of errors detected
+
+global ComboHell_MaxRuns
+ComboHell_MaxRuns: dq 0                       ; Max. number of runs
+
+global ComboHell_TerminateOnError
+ComboHell_TerminateOnError: dq 0              ; Terminate on Error?
+
+nloops:  equ    0x10000000                    ; Number of inner ComboHell runs
+
+ComboHell_SavedRdx: dq 0                      ; Used for saving extended CR
+ComboHell_SavedRax: dq 0                      ; Used for saving extended CR

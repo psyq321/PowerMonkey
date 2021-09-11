@@ -21,8 +21,10 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(SolutionDir)..\EDK-II\MSBuild\nasm.targets" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
     <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
@@ -36,6 +38,7 @@
       <LanguageStandard_C Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdc17</LanguageStandard_C>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
       <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Speed</FavorSizeOrSpeed>
+      <EnablePREfast Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnablePREfast>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -44,6 +47,7 @@
     <ClCompile Include="DelayX86.c" />
     <ClCompile Include="FixedPoint.c" />
     <ClCompile Include="MiniLog.c" />
+    <ClCompile Include="SelfTest.c" />
     <ClCompile Include="TimeWindows.c" />
     <ClCompile Include="VFTuning.c" />
     <ClCompile Include="InterruptHook.c" />
@@ -63,6 +67,7 @@
     <ClInclude Include="ASMx64\ComboHell_AVX2.h" />
     <ClInclude Include="DelayX86.h" />
     <ClInclude Include="FixedPoint.h" />
+    <ClInclude Include="SelfTest.h" />
     <ClInclude Include="MiniLog.h" />
     <ClInclude Include="SaferAsmHdr.h" />
     <ClInclude Include="InterruptHook.h" />

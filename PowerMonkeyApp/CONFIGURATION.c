@@ -32,6 +32,7 @@
 #include "MpDispatcher.h"
 #include "VFTuning.h"
 #include "TurboRatioLimits.h"
+#include "SelfTest.h"
 
 /*******************************************************************************
  *                   !!! WARNING - ACHTUNG - VNIMANIE !!!
@@ -80,6 +81,13 @@ UINT8 gEnableSaferAsm = 1;
 
 UINT8 gDisableFirwmareWDT = 0;
 
+///
+/// SELF TEST (STRESS TEST) - MAX RUNS
+/// Set this to a value higher than 0 to enable stress self-testing
+/// Typical values: 0 (no stress testing); 10 (very short); 100+ (longer)
+
+UINT64 gSelfTestMaxRuns = 0; /// DO NOT ENABLE YET (WIP)
+
 /*******************************************************************************
  * ApplyComputerOwnersPolicy()
  * 
@@ -109,14 +117,37 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     /////////////////////////////////////
     /// Voltage / Frequency Overrides ///
     /////////////////////////////////////
+
+    //
+    // Select which domains are to be programmed
     
+    pk->Program_VF_Overrides[IACORE] =    1;    // Enable programming of VF
+                                                // Overrides for IA Cores
+
+    pk->Program_VF_Overrides[RING] =      1;    // Enable programming of VF
+                                                // Overrides for Ring / Cache
+
+    pk->Program_VF_Overrides[UNCORE] =    0;    // Enable programming of VF
+                                                // Overrides for Uncore (SA)
+
+    pk->Program_VF_Overrides[GTSLICE] =   0;    // Enable programming of VF
+                                                // Overrides for GT Slice
+
+    pk->Program_VF_Overrides[GTUNSLICE] = 0;    // Enable programming of VF
+                                                // Overrides for GT Unslice
+
+    //
+    // Values for V/F Overrides: CORE
+
     pk->Domain[IACORE].VoltMode = V_IPOLATIVE;  // V_IPOLATIVE = Interpolate
                                                 // V_OVERRIDE =  Override
 
-    pk->Domain[IACORE].TargetVolts =  0;        // in mV (0 = do not use)
-    pk->Domain[IACORE].OffsetVolts = -125;      // in mV (negative = undervolt)
+    pk->Domain[IACORE].TargetVolts =  0;        // in mV (absolute)
+    pk->Domain[IACORE].OffsetVolts = -130;      // in mV (negative = undervolt)
 
     //
+    // Values for V/F Overrides: CORE
+
     // Note: some domains are sharing the same voltage plane! Check yours!
     // 
     // E.g.: for CML-H, IACORE (CPU cores) and RING (cache) share a common VR
@@ -131,8 +162,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->Domain[RING].VoltMode = V_IPOLATIVE;   // V_IPOLATIVE = Interpolate
                                                // V_OVERRIDE  = Override
 
-    pk->Domain[RING].TargetVolts = 0;          // in mV (0 = do not use)
-    pk->Domain[RING].OffsetVolts = -125;       // in mV (negative = undervolt)
+    pk->Domain[RING].TargetVolts = 0;          // in mV (absolute)
+    pk->Domain[RING].OffsetVolts = -130;       // in mV (negative = undervolt)
 
     ///////////////////////////
     /// V/F Curve Adjustment //
@@ -165,7 +196,6 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
 
     pk->EnableRaceToHalt = 1;                   // Race To Halt
                                                 // (0=disable, 1=enable)
-
 
     ////////////////////
     /// Power Limits ///

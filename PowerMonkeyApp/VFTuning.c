@@ -89,7 +89,7 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
 
   dom->nVfPoints = 0;
 
-  if (domIdx == IACORE) {
+  if ((domIdx==IACORE)||(domIdx==RING)) {
 
     UINT8 pidx = 0;
 

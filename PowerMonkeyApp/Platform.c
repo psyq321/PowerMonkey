@@ -70,7 +70,7 @@ EFI_STATUS ProbePackage(IN OUT PACKAGE* pkg)
 
     dom->parent = (void*)pkg;
 
-    if ((didx == IACORE) || (didx == RING)) {
+    if (pkg->Program_VF_Overrides[didx]) {
       IAPERF_ProbeDomainVF(didx, dom);
     }
   }
@@ -124,8 +124,13 @@ EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
   //
   // Program V/F overrides
 
-  IAPERF_ProgramDomainVF(IACORE, &pkg->Domain[IACORE]);
-  IAPERF_ProgramDomainVF(RING, &pkg->Domain[RING]);
+  for (UINT8 didx = 0; didx < MAX_DOMAINS; didx++) {
+    DOMAIN* dom = pkg->Domain + didx;
+
+    if (pkg->Program_VF_Overrides[didx]) {
+      IAPERF_ProgramDomainVF(didx, dom);
+    }
+  }
 
   //
   // Program Config TDP Params
@@ -324,7 +329,6 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* psys)
   //
   // Hack - tbd, remove!
   // 
-  AsciiPrint("Packages: %d\n", psys->PkgCnt);
 
   if (psys->PkgCnt == 1) {
     status = gMpServices->WhoAmI(
@@ -417,12 +421,12 @@ VOID PrintPlatformInfo(IN PLATFORM* Platform)
  * ProgramCoreLocks
  ******************************************************************************/
 
-EFI_STATUS EFIAPI ProgramCoreKnobs(PLATFORM* Platform)
+EFI_STATUS EFIAPI ProgramCoreKnobs(PLATFORM* psys)
 {
   //
   // Hack - assuming all packages are the same!!!!
 
-  PACKAGE* pk = &Platform->packages[0];
+  PACKAGE* pk = &psys->packages[0];
 
   //
   // Power Control
@@ -558,7 +562,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   //
   // MSR Locks
 
-  RunOnAllProcessors(sys, ProgramCoreKnobs, sys);
+  RunOnAllProcessors(ProgramCoreKnobs, (void *)sys);
 
   //
   // MMIO locks

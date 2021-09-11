@@ -18,6 +18,7 @@
     <ClCompile Include="VisualUefi.c" />
     <ClCompile Include="TimeWindows.c" />
     <ClCompile Include="MiniLog.c" />
+    <ClCompile Include="SelfTest.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ASMx64">
@@ -77,6 +78,9 @@
       <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="MiniLog.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="SelfTest.h">
       <Filter>Include</Filter>
     </ClInclude>
   </ItemGroup>

@@ -26,18 +26,14 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/*******************************************************************************
+ * Globals
+ ******************************************************************************/
 
-  UINT64 combohell_avx2_kernel( void *in, void *out );
-  
-  extern void* ComboHell_StopRequestPtr;  // set this so ASM kernel can watch it
-  extern void* ComboHell_ErrorCounterPtr; // set this so ASM kernel can populate
-  
-  extern UINT64 ComboHell_MaxRuns;        // set to UINT64_MAX for infinite
-  extern UINT64 ComboHell_TerminateOnError;
+extern UINT64 gSelfTestMaxRuns;
 
-#ifdef __cplusplus
-}
-#endif
+/*******************************************************************************
+ *
+ ******************************************************************************/
+
+EFI_STATUS PM_SelfTest();

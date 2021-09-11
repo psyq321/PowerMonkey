@@ -37,6 +37,7 @@
 #include "LowLevel.h"
 #include "DelayX86.h"
 #include "InterruptHook.h"
+#include "SelfTest.h"
 #include "MiniLog.h"
 
 /*******************************************************************************
@@ -50,6 +51,7 @@ extern UINT8 gDisableFirwmareWDT;
 // Initialized at startup
 
 EFI_MP_SERVICES_PROTOCOL* gMpServices = NULL;
+
 PLATFORM* gPlatform = NULL;
 UINTN gBootCpu = 0;
 
@@ -131,7 +133,7 @@ VOID PrintBanner()
     " |  ____// _ \\ | | | | / _  ) / __)| || || | / _ \\ |  _ \\ | | / )/ _  )| | | |\n"
     " | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |\n"
     " |_|     \\___/  \\____| \\____)|_|   |_||_||_| \\___/ |_| |_||_| \\_)\\____) \\__  |\n"
-    "                                                         Version 0.1.1 (____/\n"
+    "                                                         Version 0.1.2 (____/\n"
   );
 
   AsciiPrint(
@@ -193,6 +195,14 @@ EFI_STATUS EFIAPI UefiMain(
   ApplyPolicy(SystemTable, gPlatform);
 
   ///
+  /// Self test
+  ///
+
+  if (gSelfTestMaxRuns) {
+    PM_SelfTest();
+  }
+
+  ///
   /// Teardown
   /// 
 
@@ -200,7 +210,7 @@ EFI_STATUS EFIAPI UefiMain(
     RemoveAllInterruptOverrides();
   }
 
-  AsciiPrint("Finished. Returning to Boot Selector.\n");
+  AsciiPrint("Finished.\n");
 
   return EFI_SUCCESS;
 }

@@ -36,7 +36,6 @@ EFI_STATUS EFIAPI RunOnPackageOrCore(
 );
 
 EFI_STATUS EFIAPI RunOnAllProcessors( 
-  const IN PLATFORM *Platform,
   const IN EFI_AP_PROCEDURE proc,
   IN VOID *param OPTIONAL 
 );

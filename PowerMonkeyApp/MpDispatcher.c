@@ -42,6 +42,7 @@
 // Initialized at startup
 
 extern EFI_MP_SERVICES_PROTOCOL* gMpServices;
+extern EFI_BOOT_SERVICES* gBS;
 
 /*******************************************************************************
  *
@@ -84,8 +85,7 @@ EFI_STATUS EFIAPI RunOnPackageOrCore(
       );
 
       if (EFI_ERROR(status)) {
-
-        Print(L"[ERROR] Unable to exacute on CPU package %u,"
+        Print(L"[ERROR] Unable to execute on CPU %u,"
           "status code: 0x%x\n", ApicID, status);
       }
 
@@ -95,55 +95,83 @@ EFI_STATUS EFIAPI RunOnPackageOrCore(
 
   //
   // Platform has no MP services OR we are running on the desired package
-  // ... so instead of dispatching, we will just call
+  // ... so instead of dispatching, we will just do the work now
 
   proc(param);
 
   //
-  // And that's that
+  // ... and that's that
 
   return status;
 }
 
 /*******************************************************************************
- * TBD / TODO: Needs Rewrite
+ *
  ******************************************************************************/
 
 EFI_STATUS EFIAPI RunOnAllProcessors(
-  const IN PLATFORM* Platform,
   const IN EFI_AP_PROCEDURE proc,
   IN VOID* param OPTIONAL)
 {
   EFI_STATUS status = EFI_SUCCESS;
+  EFI_EVENT mpEvent = NULL;
+  UINTN eventIdx = 0;
 
-  if (gMpServices)
-  {
+  ///
+  /// Start other processors with our workload 
+  ///
 
-    status = gMpServices->StartupAllAPs(
-      gMpServices,
-      proc,
-      FALSE,
+  if (gMpServices) {
+
+    status = gBS->CreateEvent(
+      EVT_NOTIFY_SIGNAL,
+      TPL_NOTIFY,
+      EfiEventEmptyFunction,
       NULL,
-      1000000,
-      param,
-      NULL
-    );
+      &mpEvent);
 
     if (EFI_ERROR(status)) {
-      Print(L"[ERROR] Unable to exacute all CPUs, status code: 0x%x\n", status);
+      Print(L"[ERROR] Unable to create EFI_EVENT, code: 0x%x\n", status);
+      mpEvent = NULL;
     }
+    else {
 
-    return status;
+      status = gMpServices->StartupAllAPs(
+        gMpServices,
+        proc,
+        FALSE,
+        &mpEvent,
+        0,
+        param,
+        NULL
+      );
+
+      if (EFI_ERROR(status)) {
+        Print(L"[ERROR] Unable to execute all CPUs, code: 0x%x\n", status);
+        gBS->CloseEvent(mpEvent);
+        mpEvent = NULL;
+      }
+    }
   }
 
-  //
-  // Platform has no MP services OR we are running on the desired package
-  // ... so instead of dispatching, we will just call
-
+  ///
+  /// Execute workload on this CPU (BSP)
+  ///
+  
   proc(param);
+  
+  ///
+  /// Wait until work is done
+  ///
 
-  //
-  // And that's that
+  if ((gMpServices) && (mpEvent) && (!EFI_ERROR(status))) {
+
+    //
+    // Wait for APs to finish
+
+    gBS->WaitForEvent(1, &mpEvent, &eventIdx);
+    gBS->CloseEvent(mpEvent);
+  }
 
   return status;
 }

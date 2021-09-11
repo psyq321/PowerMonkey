@@ -77,7 +77,7 @@ void MiniTrace(const UINT16 operId,
 
 #else
 
-#define InitTrace(a)
+#define InitTrace()
 #define MiniTrace(a, b, c, d)
 
 #endif
