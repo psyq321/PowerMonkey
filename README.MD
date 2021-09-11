@@ -17,21 +17,20 @@
   recommended use by users not skilled in the art. Use it at your own risk.
 ```
 
-- [Reduce CPU Power Waste and Gain Performance. Greener and Meaner!](#reduce-cpu-power-waste-and-gain-performance-greener-and-meaner)
-  - [What is PowerMonkey?](#what-is-powermonkey)
-    - [**Background**](#background)
-    - [**Challenges**](#challenges)
-    - [**How does PowerMonkey work?**](#how-does-powermonkey-work)
-  - [Who is the target user of PowerMonkey?](#who-is-the-target-user-of-powermonkey)
-  - [Enabled Features](#enabled-features)
-  - [Getting Started](#getting-started)
-  - [Build the binaries](#build-the-binaries)
-    - [**Building - "Visual Studio" route:**](#building---visual-studio-route)
-    - [**Building - EDK2 route:**](#building---edk2-route)
-  - [Testing](#testing)
-  - [Cinebench R23](#cinebench-r23)
-  - [Extra 650 MHz and energy saved? Where is the catch?](#extra-650-mhz-and-energy-saved-where-is-the-catch)
-  - [Moving onto Hyper-V](#moving-onto-hyper-v)
+- [What is PowerMonkey?](#what-is-powermonkey)
+  - [**Background**](#background)
+  - [**Challenges**](#challenges)
+  - [**How does PowerMonkey work?**](#how-does-powermonkey-work)
+- [Who is the target user of PowerMonkey?](#who-is-the-target-user-of-powermonkey)
+- [Enabled Features](#enabled-features)
+- [Getting Started](#getting-started)
+- [Build the binaries](#build-the-binaries)
+  - [**Building - "Visual Studio" route:**](#building---visual-studio-route)
+  - [**Building - EDK2 route:**](#building---edk2-route)
+- [Testing](#testing)
+- [Cinebench R23](#cinebench-r23)
+- [Extra 650 MHz and energy saved? Where is the catch?](#extra-650-mhz-and-energy-saved-where-is-the-catch)
+- [Moving onto Hyper-V](#moving-onto-hyper-v)
   
 ## What is PowerMonkey?
 
