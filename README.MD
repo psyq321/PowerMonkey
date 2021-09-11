@@ -18,15 +18,16 @@
 ```
 
 - [What is PowerMonkey?](#what-is-powermonkey)
-  - [**Background**](#background)
-  - [**Challenges**](#challenges)
-  - [**How does PowerMonkey work?**](#how-does-powermonkey-work)
+  - [Background](#background)
+  - [Challenges](#challenges)
+  - [How does PowerMonkey work?](#how-does-powermonkey-work)
 - [Who is the target user of PowerMonkey?](#who-is-the-target-user-of-powermonkey)
 - [Enabled Features](#enabled-features)
 - [Getting Started](#getting-started)
 - [Build the binaries](#build-the-binaries)
-  - [**Building - "Visual Studio" route:**](#building---visual-studio-route)
-  - [**Building - EDK2 route:**](#building---edk2-route)
+  - [Building - "Visual Studio" route](#building---visual-studio-route)
+  - [Building - EDK2 route](#building---edk2-route)
+- [Deployment](#deployment)
 - [Testing](#testing)
 - [Cinebench R23](#cinebench-r23)
 - [Extra 650 MHz and energy saved? Where is the catch?](#extra-650-mhz-and-energy-saved-where-is-the-catch)
@@ -97,7 +98,7 @@ Because PowerMonkey is in the “proof-of-concept” stage right now. It is also
 
 2. Decide if you want to build `PowerMonkey.efi` using ‘official’ UEFI EDK (TianoCore), or if you wish to handle everything in Visual Studio?
 
-After you have decided how to build PowerMonkey, please take some time to review and understand `CONFIGURATION.c` file where the entire configuration interface and options reside. Configuration process is exactly the same for both build methods and does not depend on the choice of build toolchain.
+After you have decided how to build PowerMonkey, please take some time to review and understand `CONFIGURATION.c` file where the entire configuration interface and options reside. Configuration process is exactly the same for both build methods and does not depend on the choice of build toolchain. Simply edit `CONFIGURATION.c` with your overrides and build the PowerMonkey.efi executable
 
 ### **Building - "Visual Studio" route:**
 
@@ -161,6 +162,10 @@ This route is based on Alex Ionescu’s excellent [VisualUEFI project](https://g
     ```
 
 4. Building process that follows is identical as for any other EDK2 project (edksetup.bat, build, ...).
+
+## Deployment
+
+The easiest way, and the recommended route during testing is to copy ```PowerMonkey.efi``` to your EFI system partition and test it from UEFI shell. Once you are sure the settings work and are stable, you can add ```PowerMonkey.efi``` to the UEFI boot manager and set it to load first, before the OS bootloader (if supported by youur platform firmware). If direct loading by firmware is not possible, you can use boot manager scripting to load before OS bootloader.
 
 ## Testing
 
