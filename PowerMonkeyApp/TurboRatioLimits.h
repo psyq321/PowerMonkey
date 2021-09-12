@@ -30,7 +30,7 @@
  * GetTurboRatioLimits
  ******************************************************************************/
 
-UINT64 GetTurboRatioLimits();
+UINT64 GetTurboRatioLimits(VOID);
 
 /*******************************************************************************
  * SetTurboRatioLimits

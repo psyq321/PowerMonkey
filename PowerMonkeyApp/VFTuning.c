@@ -135,9 +135,9 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
 ******************************************************************************/
 
 EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx, 
-  IN OUT DOMAIN *dom )
+  IN OUT DOMAIN *dom, IN const UINT8 programVfPoints)
 {
-  CpuMailbox box;
+  CpuMailbox box;  
   OcMailbox_InitializeAsMSR(&box);
 
   //
@@ -177,6 +177,39 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
     
     return EFI_ABORTED;
   }
+
+  ///////////////
+  // VF Points //
+  ///////////////
+
+  if (programVfPoints == 1) {
+    for (UINT8 vidx = 0; vidx < dom->nVfPoints; vidx++) {
+      VF_POINT *vp = dom->vfPoint + vidx;
+
+      if (vp->FusedRatio > 0) {
+
+        data = cmd = 0;
+        
+        //
+        // Convert voltage offset to mbox format:
+
+        offsetVoltsFx = (UINT32)cvrt_offsetvolts_i16_tofix(
+          vp->OffsetVolts) & 0x7ff;
+
+        //
+        // Compose the command for the OC mailbox
+
+        data = vp->FusedRatio;
+        data |= (offsetVoltsFx) << 21;
+
+        cmd = OcMailbox_BuildInterface(0x11, domIdx, vidx + 1);
+
+        if (EFI_ERROR(OcMailbox_ReadWrite(cmd, data, &box))) {
+          return EFI_ABORTED;
+        }
+      }
+    }
+  }
   
   return EFI_SUCCESS;
 }
@@ -185,8 +218,8 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
 * IaCore_OcLock
 ******************************************************************************/
 
-VOID IaCore_OcLock()
-{                                 
+VOID IaCore_OcLock(VOID)
+{
   QWORD flexRatioMsr;
   
   flexRatioMsr.u64 = pm_rdmsr64(MSR_FLEX_RATIO);

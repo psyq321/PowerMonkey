@@ -120,7 +120,7 @@ EFI_STATUS UefiInit(IN EFI_SYSTEM_TABLE* SystemTable)
  * EmergencyExit
  ******************************************************************************/
 
-BOOLEAN EmergencyExit()
+BOOLEAN EmergencyExit(VOID)
 {
   if (gEmergencyExit) {
 
@@ -178,7 +178,7 @@ BOOLEAN EmergencyExit()
  * PrintBanner
  ******************************************************************************/
 
-VOID PrintBanner()
+VOID PrintBanner(VOID)
 {
 
   //
@@ -195,7 +195,7 @@ VOID PrintBanner()
     " |  ____// _ \\ | | | | / _  ) / __)| || || | / _ \\ |  _ \\ | | / )/ _  )| | | |\n"
     " | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |\n"
     " |_|     \\___/  \\____| \\____)|_|   |_||_||_| \\___/ |_| |_||_| \\_)\\____) \\__  |\n"
-    "                                                         Version 0.1.2 (____/\n"
+    "                                                         Version 0.1.3 (____/\n"
   );
 
   AsciiPrint(

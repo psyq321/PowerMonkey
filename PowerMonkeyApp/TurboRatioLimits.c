@@ -71,7 +71,7 @@
  * GetTurboRatioLimits
  ******************************************************************************/
 
-UINT64 GetTurboRatioLimits()
+UINT64 GetTurboRatioLimits(VOID)
 {
   return pm_rdmsr64(MSR_TURBO_RATIO_LIMIT);
 }

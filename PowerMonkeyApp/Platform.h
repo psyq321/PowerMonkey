@@ -95,7 +95,7 @@ typedef union _QWORD
 typedef struct _VF_POINT
 {
   UINT8   FusedRatio;               // Read Only
-  INT16   OffsetVolts;              // R/W if supported and if V/F point valid
+  INT16   OffsetVolts;              // R/W if supported and if V/F point valid  
 } VF_POINT;
 
 /*******************************************************************************
@@ -146,10 +146,13 @@ typedef struct _PACKAGE
   //    V/F Overrides      //
   // (per voltage domain)  //
   /////////////////////////// 
-  
+
   UINT8 Program_VF_Overrides[MAX_DOMAINS];     // Domains to program
 
   DOMAIN Domain[MAX_DOMAINS];                  // IA Cores, Ring, SA, ...
+
+  UINT8 Program_VF_Points;                     // Program individual VF Points
+                                               // (VF Curve Points)
 
   //
   // Turbo Ratio Limits

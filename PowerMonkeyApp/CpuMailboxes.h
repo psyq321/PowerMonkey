@@ -83,7 +83,7 @@ typedef struct _MailboxCfg
   UINT32  maxRetries;                     // Max. retries before aborting
 
   UINT8   type;                           // Mailbox type: MSR or MMIO
-
+  UINT8   pad[3];
 } MailboxCfg;
 
 /*******************************************************************************
@@ -95,6 +95,7 @@ typedef struct _CpuMailbox
   MailboxBody b;
   MailboxCfg  cfg;
   UINT32 status;
+  UINT8 pad[4];
 } CpuMailbox;
 
 /*******************************************************************************

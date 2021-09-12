@@ -30,10 +30,10 @@
 * InstallSafeAsmExceptionHandler()
 ******************************************************************************/
 
-VOID InstallSafeAsmExceptionHandler();
+VOID InstallSafeAsmExceptionHandler(VOID);
 
 /*******************************************************************************
 * RemoveSafeAsmExceptionHandler()
 ******************************************************************************/
 
-VOID RemoveAllInterruptOverrides();
+VOID RemoveAllInterruptOverrides(VOID);

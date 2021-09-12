@@ -36,4 +36,4 @@ extern UINT64 gSelfTestMaxRuns;
  *
  ******************************************************************************/
 
-EFI_STATUS PM_SelfTest();
+EFI_STATUS PM_SelfTest(VOID);

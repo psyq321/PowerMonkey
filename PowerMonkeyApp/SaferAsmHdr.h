@@ -34,8 +34,8 @@ extern "C" {
  * Below calls are implemented in SaferAsm.asm
  ******************************************************************************/
 
-VOID stop_interrupts_on_this_cpu();
-VOID resume_interrupts_on_this_cpu();
+VOID stop_interrupts_on_this_cpu(VOID);
+VOID resume_interrupts_on_this_cpu(VOID);
 
 UINT64 safer_rdmsr64(
     const UINT32 msr_idx,

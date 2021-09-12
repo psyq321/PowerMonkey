@@ -117,7 +117,7 @@ VOID EFIAPI PM_ComboHell_Thread(IN OUT VOID* Buffer)
  * PM_SelfTest
  ******************************************************************************/
 
-EFI_STATUS PM_SelfTest()
+EFI_STATUS PM_SelfTest(VOID)
 {
   EFI_STATUS status = EFI_SUCCESS;
 

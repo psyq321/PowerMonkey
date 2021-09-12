@@ -807,7 +807,7 @@ void SetPP0PowerLimit(
  * GetConfigTdpControl
  ******************************************************************************/
 
-UINT64 EFIAPI GetConfigTdpControl()
+UINT64 EFIAPI GetConfigTdpControl(VOID)
 {
   UINT64 val = pm_rdmsr64(MSR_CONFIG_TDP_CONTROL);
   return val;

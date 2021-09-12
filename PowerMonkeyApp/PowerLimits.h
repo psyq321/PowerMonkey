@@ -185,7 +185,7 @@ void SetPP0PowerLimit(
  * GetConfigTdpControl
  ******************************************************************************/
 
-UINT64 EFIAPI GetConfigTdpControl();
+UINT64 EFIAPI GetConfigTdpControl(VOID);
 
 /*******************************************************************************
   GetCTDPLevel

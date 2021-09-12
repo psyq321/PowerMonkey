@@ -210,7 +210,7 @@ VOID ApplyISRPatchTable( ISROVERRIDE *isrs,
 * IDT like bandits and get away with it. There is no OS below us to complain.
 ******************************************************************************/
 
-VOID InstallSafeAsmExceptionHandler()
+VOID InstallSafeAsmExceptionHandler(VOID)
 {
   //
   // Locate current IDTR
@@ -238,7 +238,7 @@ VOID InstallSafeAsmExceptionHandler()
 * RemoveAllInterruptOverrides()
 ******************************************************************************/
 
-VOID RemoveAllInterruptOverrides()
+VOID RemoveAllInterruptOverrides(VOID)
 {
   //
   // gISRsPatched == 1 means there is a valid IDT backup

@@ -24,15 +24,7 @@
 *
 *******************************************************************************/
 
-#include <PiPei.h>
-#include <Uefi.h>
-#include <Library/UefiLib.h>
-
 #include "Platform.h"
-#include "MpDispatcher.h"
-#include "VFTuning.h"
-#include "TurboRatioLimits.h"
-#include "SelfTest.h"
 
 /*******************************************************************************
  *                   !!! WARNING - ACHTUNG - VNIMANIE !!!
@@ -100,7 +92,7 @@ UINT64 gSelfTestMaxRuns = 0; /// DO NOT ENABLE YET (WIP)
 /*******************************************************************************
  * ApplyComputerOwnersPolicy()
  * 
- * This is where it is done. With no external config. Party like it's 1981.
+ * This is where it is done. With no external config. Party like it's 1979.
  * 
  * NOTE: Voltage offsets are limited to +/- 250 mV. Please see VoltTables.c
  * if you wish to do more dangerous volt-mod, you will need to adapt the code
@@ -145,17 +137,19 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->Program_VF_Overrides[GTUNSLICE] = 0;    // Enable programming of VF
                                                 // Overrides for GT Unslice
 
-    //
-    // Values for V/F Overrides: CORE
-
+    ///
+    /// V/F OVERRIDES FOR DOMAIN: CORE
+    ///
+    
     pk->Domain[IACORE].VoltMode = V_IPOLATIVE;  // V_IPOLATIVE = Interpolate
                                                 // V_OVERRIDE =  Override
 
     pk->Domain[IACORE].TargetVolts =  0;        // in mV (absolute)
     pk->Domain[IACORE].OffsetVolts = -125;      // in mV (negative = undervolt)
 
-    //
-    // Values for V/F Overrides: CORE
+    ///
+    /// V/F OVERRIDES FOR DOMAIN: RING
+    ///
 
     // Note: some domains are sharing the same voltage plane! Check yours!
     // 
@@ -174,14 +168,80 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->Domain[RING].TargetVolts = 0;          // in mV (absolute)
     pk->Domain[RING].OffsetVolts = -125;       // in mV (negative = undervolt)
 
+
+    ///
+    /// V/F OVERRIDES FOR DOMAIN: SA
+    ///
+    
+    // Add your adjustments here if needed    
+
+    ///
+    /// V/F OVERRIDES FOR DOMAIN: GT SLICE
+    ///
+
+    // Add your adjustments here if needed
+
+    ///
+    /// V/F OVERRIDES FOR DOMAIN: GT UNSLICE
+    ///
+
+    // Add your adjustments here if needed
+
     ///////////////////////////
     /// V/F Curve Adjustment //
     ///////////////////////////
     
     ///
-    /// TBD
+    /// VF Curve Point (VF Point) Adjustment has been introduced in CML
+    /// This feature does not work in older generations. At the moment, only
+    /// "OC Unlocked" parts allow adjusting (or even just reading!) of VF
+    /// curve points. You can program VF curve here, or use setting of "2"
+    /// to just print the current VF curve. There are up to 15 VF points
+    /// and you need to probe the CPU to see how many points your has and
+    /// what are the frequencies (ratios) of each point.
+    /// 
+    /// You cannot modify the ratios (they are read-only) and the only allowed
+    /// voltage format is "offset mode".
     ///
+    /// VF Curve Adjustment is only supported by CORE and RING domains
+    /// and for CML and RKL (at least) you must ensure that the same values
+    /// are programmed for both domains! (they are sharing the same VR)
 
+    pk->Program_VF_Points = 0;                      // 0 - Do not program
+                                                    // 1 - Program
+                                                    // 2 - Print current values
+                                                    //     (2 does not program)
+
+    ///
+    /// Change to your CPU config!
+    /// NOTE: VF Points here are ZERO INDEXED and can go from VP[0] to VP[14] !
+    /// 
+    /// Uncomment below block (lines 220/224)
+/*
+    pk->Domain[IACORE].vfPoint[0].OffsetVolts =
+      pk->Domain[RING].vfPoint[0].OffsetVolts = 0;      // 800 MHz (Example)
+
+    pk->Domain[IACORE].vfPoint[1].OffsetVolts =
+      pk->Domain[RING].vfPoint[1].OffsetVolts = -50;    // 2500 MHz (Example)
+
+    pk->Domain[IACORE].vfPoint[2].OffsetVolts =
+      pk->Domain[RING].vfPoint[2].OffsetVolts = -100;   // 3500 MHz (Example)
+
+    pk->Domain[IACORE].vfPoint[3].OffsetVolts =
+      pk->Domain[RING].vfPoint[3].OffsetVolts = -130;   // 4300 MHz (Example)
+
+    pk->Domain[IACORE].vfPoint[4].OffsetVolts =
+      pk->Domain[RING].vfPoint[4].OffsetVolts = -110;   // 4800 MHz (Example)
+
+    pk->Domain[IACORE].vfPoint[5].OffsetVolts =
+      pk->Domain[RING].vfPoint[5].OffsetVolts = -100;   // 5100 MHz (Example)
+
+    pk->Domain[IACORE].vfPoint[6].OffsetVolts =
+      pk->Domain[RING].vfPoint[6].OffsetVolts = -100;   // 5200 MHz (Example)
+
+    pk->Domain[IACORE].vfPoint[7].OffsetVolts =
+      pk->Domain[RING].vfPoint[7].OffsetVolts = -100;   // 5200 MHz (Example)
+ */
     ////////////////////
     /// Turbo Ratios ///
     ////////////////////
@@ -251,7 +311,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     // 13"-thin-and-light notebook to generate 500W of heat. Finding optimal
     // PLx values is much better idea. MAX_POWAH can also be dangerous when
     // platform does not have PECI-enforced failsafe (one could configure PLs
-    // to be unsafe electrically)
+    // to be unsafe electrically and damage the system physically or worse)
 
     //
     // Select which parameters you want to program
@@ -259,12 +319,12 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     // This is also true for lock bits (if you wish to lock PL1, you need
     // to set ProgramPL12xx to 1)
 
-    pk->ProgramPL12_MSR =  1;               // [WRITE] Program MSR PL1/2
-    pk->ProgramPL12_MMIO = 1;               // [WRITE] Program MMIO PL1/2
-    pk->ProgramPL12_PSys = 1;               // [WRITE] Program Platform PLs
-    pk->ProgramPL3 = 1;                     // [WRITE] Program PL3
-    pk->ProgramPL4 = 1;                     // [WRITE] Program PL4
-    pk->ProgramPP0 = 1;                     // [WRITE] Program PP0
+    pk->ProgramPL12_MSR =  1;               // Program MSR PL1/2
+    pk->ProgramPL12_MMIO = 1;               // Program MMIO PL1/2
+    pk->ProgramPL12_PSys = 1;               // Program Platform PLs
+    pk->ProgramPL3 = 1;                     // Program PL3
+    pk->ProgramPL4 = 1;                     // Program PL4
+    pk->ProgramPP0 = 1;                     // Program PP0
 
     //////////////
     // Settings //
@@ -273,7 +333,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     //
     // Configurable TDP (cTDP)
 
-    pk->MaxCTDPLevel = 0;                   // 0 disables cTDP
+    pk->MaxCTDPLevel =  0;                  // 0 = disables cTDP
     pk->TdpControLock = 1;                  // Locks TDP config
 
     //
@@ -295,8 +355,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->MmioPkgPL1_Power = MAX_POWAH;       // MMIO PL1 in mW or MAX_POWAH
     pk->MmioPkgPL2_Power = MAX_POWAH;       // MMIO PL2 in mW or MAX_POWAH
     pk->MmioPkgPL_Time   = MAX_POWAH;       // Tau in ms or MAX_POWAH
-    pk->ClampMmioPkgPL =  1;                // Allow clamping
-    pk->LockMmioPkgPL12 = 1;                // Lock after programming
+    pk->ClampMmioPkgPL =   1;               // Allow clamping
+    pk->LockMmioPkgPL12 =  1;               // Lock after programming
 
     //
     // Platform (PSys) PL1/PL2 
@@ -306,8 +366,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->PlatformPL1_Power = MAX_POWAH;      // PSys PL1 in mW or MAX_POWAH
     pk->PlatformPL_Time =   MAX_POWAH;      // RAW VALUE 0-127 (or MAX_POWAH)
     pk->PlatformPL2_Power = MAX_POWAH;      // PSys PL2 in mW or MAX_POWAH
-    pk->ClampPlatformPL = 1;                // Allow clamping
-    pk->LockPlatformPL = 1;                 // Lock after programming
+    pk->ClampPlatformPL =   1;              // Allow clamping
+    pk->LockPlatformPL =    1;              // Lock after programming
 
     //
     // Package PL3
@@ -315,7 +375,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->EnableMsrPkgPL3 = 1;                // Enable MSR PL4
     pk->MsrPkgPL3_Power = MAX_POWAH;        // PL3 in mW or MAX_POWAH
     pk->MsrPkgPL3_Time  = MAX_POWAH;        // Tau in ms or MAX_POWAH
-    pk->LockMsrPkgPL3 = 1;                  // Lock PL1 after programming
+    pk->LockMsrPkgPL3 =   1;                // Lock PL1 after programming
 
     //
     // Package PL4
@@ -338,8 +398,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->EnableMsrPkgPP0 = 1;                // Enable MSR PP0
     pk->MsrPkgPP0_Power = MAX_POWAH;        // Power in mW or MAX_POWAH
     pk->MsrPkgPP0_Time =  MAX_POWAH;        // Time in ms or MAX_POWAH
-    pk->ClampMsrPP0 = 1;                    // Allow clamping
-    pk->LockMsrPP0 = 1;                     // Lock after programming
+    pk->ClampMsrPP0 =     1;                // Allow clamping
+    pk->LockMsrPP0 =      1;                // Lock after programming
   }
 }
-

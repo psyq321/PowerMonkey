@@ -115,7 +115,7 @@ VOID EFIAPI HandleProbingFault(MINISTAT *pst)
  * GetPCIeBaseAddress
  ******************************************************************************/
 
-VOID EFIAPI InitializeMMIO()
+VOID EFIAPI InitializeMMIO(VOID)
 {
 
   //

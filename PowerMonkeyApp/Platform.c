@@ -48,6 +48,37 @@
 extern EFI_MP_SERVICES_PROTOCOL* gMpServices;
 
 /*******************************************************************************
+ * PrintVFPoints
+ ******************************************************************************/
+
+VOID PrintVFPoints(IN PLATFORM* psys)
+{
+  for (UINTN pidx = 0; pidx < psys->PkgCnt; pidx++)
+  {
+    PACKAGE* pac = psys->packages + pidx;
+
+    if (pac->Program_VF_Points == 2)
+    {
+      DOMAIN* dom = &pac->Domain[IACORE];
+
+      AsciiPrint("[Package: %u] Number of VF Points: %u\n",
+        pidx, dom->nVfPoints);
+
+      for (UINTN vidx = 0; vidx < dom->nVfPoints; vidx++)
+      {
+        VF_POINT* vp = dom->vfPoint + vidx;
+
+        AsciiPrint("[Package: %u][VF Point %u] Fused Ratio: %u\n",
+          pidx, vidx, vp->FusedRatio);
+
+        AsciiPrint("[Package: %u][VF Point %u] Voltage Offset: %u mV\n",
+          pidx, vidx, vp->OffsetVolts);
+      }
+    }
+  }
+}
+
+/*******************************************************************************
  * ProbePackage
  ******************************************************************************/
 
@@ -128,7 +159,7 @@ EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
     DOMAIN* dom = pkg->Domain + didx;
 
     if (pkg->Program_VF_Overrides[didx]) {
-      IAPERF_ProgramDomainVF(didx, dom);
+      IAPERF_ProgramDomainVF(didx, dom, pkg->Program_VF_Points);
     }
   }
 
@@ -412,10 +443,15 @@ EFI_STATUS EFIAPI DiscoverPlatform(IN OUT PLATFORM** ppsys)
   return EFI_SUCCESS;
 }
 
-VOID PrintPlatformInfo(IN PLATFORM* Platform)
+/*******************************************************************************
+ * PrintPlatformInfo 
+ ******************************************************************************/
+
+VOID PrintPlatformInfo(IN PLATFORM* psys)
 {
 
 }
+
 
 /*******************************************************************************
  * ProgramCoreLocks
@@ -573,7 +609,10 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
     RunOnPackageOrCore(sys, pk->FirstCoreApicID, ProgramPackage_Stage2, pk);
   }
 
+  //
+  // 
+  
+  PrintVFPoints(sys);
+
   return status;
 }
-
-

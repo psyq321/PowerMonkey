@@ -61,6 +61,6 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(
   IN const UINT8 domain, OUT DOMAIN *desc );
 
 EFI_STATUS EFIAPI IAPERF_ProgramDomainVF(
-  IN const UINT8 domain, OUT DOMAIN *desc );
+  IN const UINT8 domain, IN OUT DOMAIN *desc, IN const UINT8 programVfPoints);
 
-VOID IaCore_OcLock();
+VOID IaCore_OcLock(VOID);
