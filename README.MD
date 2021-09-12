@@ -80,6 +80,9 @@ NOTE: PowerMonkey is a POC and is **not tested** on anything other than few CML 
 |   Interpolative voltage mode                            |         YES        |
 |   Voltage offset                                        |         YES        |
 |   Voltage adjustment on individual VF Curve Points      |    YES (Preview)   |
+| **IccMax**                                              |                    |
+|   Programmable IccMax for all domains (OC Mailbox)      |         YES        |
+|   RKL/TGL/ICL+ Unlimited IccMax                         |         TBD        |
 | **Turbo Bins**                                          |                    |
 |   Max. Turbo Ratio for all turbo configurations         |         YES        |
 |   Invididual (per # cores) turbo ratio configuration    |         TBD        |

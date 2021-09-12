@@ -59,13 +59,28 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
   CpuMailbox box;
   MailboxBody* b = &box.b;
   EFI_STATUS status = EFI_SUCCESS;
+  UINT32 cmd = 0;
 
   OcMailbox_InitializeAsMSR(&box);
 
+  /////////////////////////////////
+  // Read IccMax for this domain //
+  /////////////////////////////////
+
+  cmd = OcMailbox_BuildInterface(0x16, dom->VRaddr, 0);
+
+  if (!EFI_ERROR(OcMailbox_ReadWrite(cmd, 0, &box))) {
+    dom->IccMax = b->box.data & 0x3ff;
+  }
+
+  ///////////////////
+  // Read V/F Info //
+  ///////////////////
+  
   //
   // cmd: Read, Domain#, 0
 
-  const UINT32 cmd = OcMailbox_BuildInterface(0x10, domIdx, 0x0);
+  cmd = OcMailbox_BuildInterface(0x10, domIdx, 0x0);
 
   if (EFI_ERROR(OcMailbox_ReadWrite(cmd, 0, &box))) {
     return EFI_ABORTED;
@@ -135,7 +150,8 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
 ******************************************************************************/
 
 EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx, 
-  IN OUT DOMAIN *dom, IN const UINT8 programVfPoints)
+  IN OUT DOMAIN *dom, IN const UINT8 programVfPoints, 
+  IN const UINT8 programIccMax)
 {
   CpuMailbox box;  
   OcMailbox_InitializeAsMSR(&box);
@@ -146,6 +162,31 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
   
   UINT32 data = 0;
   UINT32 cmd = 0;
+
+  ////////////
+  // IccMax //
+  ////////////
+  
+  if (programIccMax) {
+    
+    //
+    // Sanity
+        
+    dom->IccMax = (dom->IccMax > 0x3FF) ? 0x3FF : dom->IccMax;
+    dom->IccMax = (dom->IccMax < 0x4) ? 0x4 : dom->IccMax;
+
+    //
+    // TBD: RKL/ICL/TGL - handle "Unlimited IccMax"! 
+    
+    data = dom->IccMax;    
+    
+    cmd = OcMailbox_BuildInterface(0x17, dom->VRaddr, 0);
+    OcMailbox_ReadWrite(cmd, data, &box);
+  }
+
+  //////////////////
+  // V/F (Legacy) //
+  //////////////////
     
   //
   // Convert the desired voltages in OC Mailbox format

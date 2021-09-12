@@ -38,6 +38,7 @@
 #define MAX_VF_POINTS   15
 
 #define MAX_POWAH       0xFFFFFFFF
+#define MAX_AMPS        0xFFFF
 
 /*******************************************************************************
  * OC Mailbox - Voltage Domains (NOTE: some might be linked!)
@@ -51,7 +52,6 @@ enum VoltDomains
   GTUNSLICE = 0x03,           // GT Unslice
   UNCORE =    0x04            // Uncore (SA)
 };
-
 
 /*******************************************************************************
  * OC Mailbox - Voltage Adjustment Modes
@@ -105,16 +105,28 @@ typedef struct _VF_POINT
 
 typedef struct _DOMAIN
 {  
-  UINT8   MaxRatio;
-  UINT8   VoltMode;
+  UINT8  MaxRatio;
+  UINT8  VoltMode;
   
-  UINT16  TargetVolts;
-  INT16   OffsetVolts;
+  UINT16 TargetVolts;
+  INT16  OffsetVolts;
 
-  UINTN    nVfPoints;                     // Number of V/F points supported by the package [READ ONLY]
+  UINT16 IccMax;                          // IccMax (in 1/4A Units)
+  UINT8  UnlimitedIccMax;                 // Unlimited IccMax (RKL/ICL/TGL+ Only!)
+
+  UINTN  nVfPoints;                       // Number of V/F points supported 
+                                          // by the package [READ ONLY]
+
   VF_POINT vfPoint[MAX_VF_POINTS+1];      // V/F Point Data
 
   void* parent;
+
+  /////////////
+  // VR Info //
+  /////////////
+  
+  UINT8 VRaddr;                           // VR address
+  UINT8 VRtype;                           // VR type (0=SVID; 1=NO SVID)
 
 } DOMAIN;
 
@@ -148,6 +160,7 @@ typedef struct _PACKAGE
   /////////////////////////// 
 
   UINT8 Program_VF_Overrides[MAX_DOMAINS];     // Domains to program
+  UINT8 Program_IccMax[MAX_DOMAINS];           // Program IccMax for a domain
 
   DOMAIN Domain[MAX_DOMAINS];                  // IA Cores, Ring, SA, ...
 
@@ -186,9 +199,9 @@ typedef struct _PACKAGE
   //
   // Power Control
 
-  UINT8 ProgramPowerControl;                   // Enable Programming of PowCtl
-  UINT8 EnableEETurbo;                         // Enable Energy Efficient Turbo
-  UINT8 EnableRaceToHalt;                      // Enable Race To Halt
+  UINT8 ProgramPowerControl;        // Enable Programming of PowCtl
+  UINT8 EnableEETurbo;              // Enable Energy Efficient Turbo
+  UINT8 EnableRaceToHalt;           // Enable Race To Halt
 
   //
   // MSR PL1/PL2 
@@ -252,14 +265,14 @@ typedef struct _PACKAGE
   //
   // cTDP Levels
 
-  UINT64  ConfigTdpControl;                    // [READ] MSR_CONFIG_TDP_CONTROL
+  UINT64  ConfigTdpControl;         // [READ] MSR_CONFIG_TDP_CONTROL
 
-  UINT8   MaxCTDPLevel;                        // [READ/WRITE] Set max TDP level 
-  UINT8   TdpControLock;                       // [READ/WRITE] Set TDP Control Lock 
+  UINT8   MaxCTDPLevel;             // [READ/WRITE] Set max TDP level 
+  UINT8   TdpControLock;            // [READ/WRITE] Set TDP Control Lock 
 
   ///////////////////////////
   // General Package Stuff //
-  ///////////////////////////    
+  ///////////////////////////
 
   CPUCORE Core[MAX_CORES];
 

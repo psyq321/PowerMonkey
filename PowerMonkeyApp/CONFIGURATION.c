@@ -242,6 +242,27 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->Domain[IACORE].vfPoint[7].OffsetVolts =
       pk->Domain[RING].vfPoint[7].OffsetVolts = -100;   // 5200 MHz (Example)
  */
+ 
+    /////////////
+    // ICC Max //
+    /////////////
+
+    //
+    // Note: check the capabilities of your CPU
+    // Do not program too high value as damage might occur!
+
+    pk->Program_IccMax[RING] =      1;  // Enable IccMax override for Ring/$
+    pk->Program_IccMax[IACORE] =    1;  // Enable IccMax override for IA Cores
+    pk->Program_IccMax[UNCORE] =    0;  // Enable IccMax override for SA/Uncore
+    pk->Program_IccMax[GTSLICE] =   0;  // Enable IccMax override for GT Slice
+    pk->Program_IccMax[GTUNSLICE] = 0;  // Enable IccMax override for GT Unslice
+
+    //
+    // IccMax Values
+    
+    pk->Domain[IACORE].IccMax = 
+      pk->Domain[RING].IccMax = MAX_AMPS;      // 1/4 Amps Unit or MAX_AMPS
+
     ////////////////////
     /// Turbo Ratios ///
     ////////////////////

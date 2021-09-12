@@ -52,7 +52,6 @@
 #define MMIO_PACKAGE_POWER_LIMIT        0x59A0
 #define MMIO_PACKAGE_POWER_LIMIT_HI     0x59A4
 
-
 /*******************************************************************************
  *
  ******************************************************************************/
@@ -60,7 +59,17 @@
 EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(
   IN const UINT8 domain, OUT DOMAIN *desc );
 
-EFI_STATUS EFIAPI IAPERF_ProgramDomainVF(
-  IN const UINT8 domain, IN OUT DOMAIN *desc, IN const UINT8 programVfPoints);
+/*******************************************************************************
+ *
+ ******************************************************************************/
+
+EFI_STATUS EFIAPI IAPERF_ProgramDomainVF(IN const UINT8 domIdx,
+  IN OUT DOMAIN* dom, 
+  IN const UINT8 programVfPoints,
+  IN const UINT8 programIccMax);
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
 
 VOID IaCore_OcLock(VOID);

@@ -36,6 +36,8 @@
 
 #include "TurboRatioLimits.h"
 #include "PowerLimits.h"
+#include "Constants.h"
+#include "OcMailbox.h"
 #include "DelayX86.h"
 
 /*******************************************************************************
@@ -79,6 +81,63 @@ VOID PrintVFPoints(IN PLATFORM* psys)
 }
 
 /*******************************************************************************
+ * DiscoverVRTopology
+ ******************************************************************************/
+
+EFI_STATUS DiscoverVRTopology(IN OUT PACKAGE *pkg)
+{
+  EFI_STATUS status = EFI_SUCCESS;
+
+  //
+  // Using OC Mailbox here
+
+  CpuMailbox box;
+  MailboxBody* b = &box.b;
+
+  OcMailbox_InitializeAsMSR(&box);
+
+  UINT32 cmd = OcMailbox_BuildInterface(0x04, 0x0, 0x0);
+
+  status = OcMailbox_ReadWrite(cmd, 0, &box);
+
+  if (!EFI_ERROR(status)) {
+
+    //
+    // SA
+
+    pkg->Domain[UNCORE].VRaddr = (UINT8)((b->box.data & 0x0F));
+    pkg->Domain[UNCORE].VRtype = (UINT8)((b->box.data & bit4u32) ? 1 : 0);
+
+    //
+    // IACORE
+
+    pkg->Domain[IACORE].VRaddr = (UINT8)((b->box.data & 0x1E0)>>5);
+    pkg->Domain[IACORE].VRtype = (UINT8)((b->box.data & bit9u32) ? 1 : 0);
+
+    //
+    // RING
+
+    pkg->Domain[RING].VRaddr = (UINT8)((b->box.data & 0x3C00)>>10);
+    pkg->Domain[RING].VRtype = (UINT8)((b->box.data & bit14u32) ? 1 : 0);
+
+    //
+    // GT UNSLICE
+
+    pkg->Domain[GTUNSLICE].VRaddr = (UINT8)((b->box.data & 0x78000)>>15);
+    pkg->Domain[GTUNSLICE].VRtype = (UINT8)((b->box.data & bit19u32) ? 1 : 0);
+
+    //
+    // GT SLICE
+
+    pkg->Domain[GTSLICE].VRaddr = (UINT8)((b->box.data & 0xF00000)>>20);
+    pkg->Domain[GTSLICE].VRtype = (UINT8)((b->box.data & bit24u32) ? 1 : 0);
+  }
+
+  return status;
+}
+
+
+/*******************************************************************************
  * ProbePackage
  ******************************************************************************/
 
@@ -93,8 +152,15 @@ EFI_STATUS ProbePackage(IN OUT PACKAGE* pkg)
     &pkg->CpuID,
     NULL, NULL, NULL);
 
-  //
-  // Initialize domains
+  //////////////////////////
+  // Discover VR Topology //
+  //////////////////////////
+  
+  DiscoverVRTopology(pkg);
+
+  ////////////////////////
+  // Initialize domains //
+  ////////////////////////
 
   for (UINT8 didx = 0; didx < MAX_DOMAINS; didx++) {
     DOMAIN* dom = pkg->Domain + didx;
@@ -159,7 +225,8 @@ EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
     DOMAIN* dom = pkg->Domain + didx;
 
     if (pkg->Program_VF_Overrides[didx]) {
-      IAPERF_ProgramDomainVF(didx, dom, pkg->Program_VF_Points);
+      IAPERF_ProgramDomainVF(didx, dom, pkg->Program_VF_Points,
+        pkg->Program_IccMax[didx]);
     }
   }
 
