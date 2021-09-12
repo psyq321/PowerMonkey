@@ -72,37 +72,40 @@ NOTE: PowerMonkey is a POC and is **not tested** on anything other than few CML 
 | Feature                                                 |       Status       |
 | ------------------------------------------------------- | ------------------ |
 | **Voltage / Frequency Overrides**                       |                    |
-|   Voltage Override for entire VF Curve                  |       Enabled      |
-|   Targetted voltage mode                                |       Enabled      |
-|   Interpolative voltage mode                            |       Enabled      |
-|   Voltage offset                                        |       Enabled      |
-|   Voltage adjustment on individual VF Points            |     In Progress    |
+|   Voltage Override for entire VF Curve                  |    Configurable    |
+|   Targetted voltage mode                                |    Configurable    |
+|   Interpolative voltage mode                            |    Configurable    |
+|   Voltage offset                                        |    Configurable    |
+|   Voltage adjustment on individual VF Points            |    Coming Soon!    |
 | **Turbo Bins**                                          |                    |
-|   Max. Turbo Ratios for different core counts           |       Enabled      |
+|   Max. Turbo Ratios for different core counts           |    Configurable    |
 | **Power Limits**                                        |                    |
-|   Enable/Disable/Lock PL1/PL2/PL3/PL4/PP0/...           |       Enabled      |
-|   Power and Time Limits adjustment (where possible)     |       Enabled      |
-|   Package and Platform (PSys) Domains                   |       Enabled      |
-|   MSR and MMIO Control                                  |       Enabled      |
+|   Enable/Disable/Lock PL1/PL2/PL3/PL4/PP0/...           |    Configurable    |
+|   Power and Time Limits adjustment (where possible)     |    Configurable    |
+|   Package and Platform (PSys) Domains                   |    Configurable    |
+|   MSR and MMIO Control                                  |    Configurable    |
+| **Power Control**                                       |                    |
+|   Race to Halt                                          |    Configurable    |
+|   Energy Efficient Turbo                                |    Configurable    |
 | **Lockdown**                                            |                    |
-|   Optional Overclocking Lockdown                        |       Enabled      |
+|   Optional Overclocking Lockdown                        |    Configurable    |
 |   Fine-grained Lockdown of different Power registers    |       Enabled      |
 
 ## Getting Started
 
 ## Build the binaries
 
-Because PowerMonkey is in the “proof-of-concept” stage right now. It is also necessary to adjust the CPU voltage/frequency/power override parameters to match your CPU. It is essential to build PowerMonkey from the source code.
+Because PowerMonkey is in the "proof-of-concept" stage right now. It is also necessary to adjust the CPU voltage/frequency/power override parameters to match your CPU. It is essential to build PowerMonkey from the source code.
 
 1. Clone PowerMoneky repository (this repository)
 
-2. Decide if you want to build `PowerMonkey.efi` using ‘official’ UEFI EDK (TianoCore), or if you wish to handle everything in Visual Studio?
+2. Decide if you want to build `PowerMonkey.efi` using 'official' UEFI EDK (TianoCore), or if you wish to handle everything in Visual Studio?
 
 After you have decided how to build PowerMonkey, please take some time to review and understand `CONFIGURATION.c` file where the entire configuration interface and options reside. Configuration process is exactly the same for both build methods and does not depend on the choice of build toolchain. Simply edit `CONFIGURATION.c` with your overrides and build the PowerMonkey.efi executable
 
 ### **Building - "Visual Studio" route:**
 
-This route is based on Alex Ionescu’s excellent [VisualUEFI project](https://github.com/ionescu007/VisualUefi). The advantage of this approach is that you do not need to deal with the EDK2 build system and its config files.
+This route is based on Alex Ionescu's excellent [VisualUEFI project](https://github.com/ionescu007/VisualUefi). The advantage of this approach is that you do not need to deal with the EDK2 build system and its config files.
 
 1. Fetch VisualUEFI from [https://github.com/ionescu007/VisualUefi](https://github.com/ionescu007/VisualUefi) and build its prerequisites (follow the instructions)
 
@@ -216,7 +219,7 @@ So, we gained 0.64 GHz in sustained 100% load, all while becoming 35% more energ
 > more to this story that I will cover some other time. For now, let me state that
 > observation has led me to believe that it is something else that makes these 
 > settings reported not stable, and that problem already has a fix (albeit just for 
-> fully unlocked ‘OC’ models atm.).
+> fully unlocked 'OC' models atm.).
 
 THis particular CML-H model could *theoretically* sustain 4.2 GHz all-core load, as this is what it has been fused with as maximum. Looking at ThrottleStop logs it shows that now we are thermally limited. This particular laptop does look like it could benefit from re-pasting so *maybe* sustaining 4.2 GHz is doable.
 
