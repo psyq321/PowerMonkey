@@ -58,6 +58,8 @@ Nothing above would be a problem if OEMs allowed customers to adjust the setting
 
 This proof-of-concept is using ability of UEFI firmwares to execute so-called "applications" before OS bootoader is invoked. At that moment (providing that the firmware did not lock) it is possible to (almost) fully adjust CPU frequency and voltages as well as power management configuration. This is later in the boot process (see below) as opposed to how OEM would do it, but since "advanced setup" is not an option, this is actually the second best place.
 
+***NOTE: PowerMonkey is fully usable only with systems using S0iX ("Connected Standby" / "Modern Standby" / "S0 Standby") modes. Systems using legacy S3 sleep will revert to the platform-hardcoded settings upon resuming from S3 sleep. Since UEFI DXE drivers/applications are not reloaded during S3 resume flow, no overrides could be applied before Hypervisor resumes.***
+
 Below picture explains where PowerMonkey.efi POC resides:
 
 ![EfiGood](img/boot.svg)
