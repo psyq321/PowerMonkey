@@ -29,6 +29,7 @@
   - [Building - EDK2 route](#building---edk2-route)
 - [Deployment](#deployment)
 - [Testing](#testing)
+  - [Emergency Exit](#emergency-exit)
 - [Cinebench R23](#cinebench-r23)
 - [Extra 650 MHz and energy saved? Where is the catch?](#extra-650-mhz-and-energy-saved-where-is-the-catch)
 - [Moving onto Hyper-V](#moving-onto-hyper-v)
@@ -37,7 +38,7 @@
 
 ### **Background**
 
-By the 2020s, everybody knows what ‘overclocking’ is: bringing the system to its limits by increasing its working frequency, voltage or both. This process used to be very error-prone but it got perfected in the meantime, with even some big-name systems coming “factory overclocked” out of the box.
+By the 2020s, everybody knows what 'overclocking' is: bringing the system to its limits by increasing its working frequency, voltage or both. This process used to be very error-prone but it got perfected in the meantime, with even some big-name systems coming “factory overclocked” out of the box.
 
 However, much fewer people have heard about its cousin: **undervolting**. Undervolting is, in a way, an opposite process from overclocking: reducing CPU voltage to the point, CPU consumes much less power and generates way less heat.
 
@@ -69,31 +70,40 @@ PowerMonkey.efi is currently proof-of-concept for expert users who have systems 
 
 NOTE: PowerMonkey is a POC and is **not tested** on anything other than few CML (10th Gen) systems. At this stage, usage is recommended only to developers and experts under precautions. There are no checks for CPU compatibility so crashes could occur. It can brick computers or cause them to fail in all kinds of ways!
 
-| Feature                                                 |       Status       |
+|                          Feature                        |    Configurable    |
 | ------------------------------------------------------- | ------------------ |
 | **Voltage / Frequency Overrides**                       |                    |
-|   Voltage Override for entire VF Curve                  |    Configurable    |
-|   Targetted voltage mode                                |    Configurable    |
-|   Interpolative voltage mode                            |    Configurable    |
-|   Voltage offset                                        |    Configurable    |
-|   Voltage adjustment on individual VF Points            |    Coming Soon!    |
+|   Voltage Override for entire VF Curve                  |         YES        |
+|   Targetted voltage mode                                |         YES        |
+|   Interpolative voltage mode                            |         YES        |
+|   Voltage offset                                        |         YES        |
+|   Voltage adjustment on individual VF Curve Points      |    YES (Preview)   |
 | **Turbo Bins**                                          |                    |
-|   Max. Turbo Ratios for different core counts           |    Configurable    |
+|   Max. Turbo Ratio for all turbo configurations         |         YES        |
+|   Invididual (per # cores) turbo ratio configuration    |         TBD        |
 | **Power Limits**                                        |                    |
-|   Enable/Disable/Lock PL1/PL2/PL3/PL4/PP0/...           |    Configurable    |
-|   Power and Time Limits adjustment (where possible)     |    Configurable    |
-|   Package and Platform (PSys) Domains                   |    Configurable    |
-|   MSR and MMIO Control                                  |    Configurable    |
+|   Enable/Disable/Lock PL1/PL2/PL3/PL4/PP0/...           |         YES        |
+|   Power and Time Limits adjustment (where possible)     |         YES        |
+|   Package and Platform (PSys) Domains                   |         YES        |
+|   MSR and MMIO Control                                  |         YES        |
 | **Power Control**                                       |                    |
-|   Race to Halt                                          |    Configurable    |
-|   Energy Efficient Turbo                                |    Configurable    |
+|   Race to Halt                                          |         YES        |
+|   Energy Efficient Turbo                                |         YES        |
 | **Lockdown**                                            |                    |
-|   Optional Overclocking Lockdown                        |    Configurable    |
-|   Fine-grained Lockdown of different Power registers    |       Enabled      |
+|   Optional Overclocking Lockdown                        |         YES        |
+|   Fine-grained Lockdown of different Power registers    |         YES        |
+| **Stability Testing**                                   |                    |
+|   After-programming Stress Tester                       |         TBD        |
 
 ## Getting Started
 
-## Build the binaries
+### Configuration
+
+All relevant configuration options are stored in the file `CONFIGURATION.c` where the entire configuration interface and options reside. Configuration process is exactly the same for all build methods and does not depend on the choice of build toolchain. Simply edit `CONFIGURATION.c` with your overrides and build the PowerMonkey.efi executable afterwards!
+
+Note: this guide is not 'Undervolting HowTo' - it is assumed you already know the optimal settings for your system. If not, please check some of the excellent guides like [ThrottleStop guide](https://www.ultrabookreview.com/31385-the-throttlestop-guide/) or [Guide on NotebookReview Forums](http://forum.notebookreview.com/threads/the-undervolting-guide.235824/)
+
+### Build the binaries
 
 Because PowerMonkey is in the "proof-of-concept" stage right now. It is also necessary to adjust the CPU voltage/frequency/power override parameters to match your CPU. It is essential to build PowerMonkey from the source code.
 
@@ -101,15 +111,13 @@ Because PowerMonkey is in the "proof-of-concept" stage right now. It is also nec
 
 2. Decide if you want to build `PowerMonkey.efi` using 'official' UEFI EDK (TianoCore), or if you wish to handle everything in Visual Studio?
 
-After you have decided how to build PowerMonkey, please take some time to review and understand `CONFIGURATION.c` file where the entire configuration interface and options reside. Configuration process is exactly the same for both build methods and does not depend on the choice of build toolchain. Simply edit `CONFIGURATION.c` with your overrides and build the PowerMonkey.efi executable
-
-### **Building - "Visual Studio" route:**
+#### **Building - "Visual Studio" route:**
 
 This route is based on Alex Ionescu's excellent [VisualUEFI project](https://github.com/ionescu007/VisualUefi). The advantage of this approach is that you do not need to deal with the EDK2 build system and its config files.
 
 1. Fetch VisualUEFI from [https://github.com/ionescu007/VisualUefi](https://github.com/ionescu007/VisualUefi) and build its prerequisites (follow the instructions)
 
-2. Store PowerMonkey directory (and its subdirectories) directly in the root of the VisualUEFI repo:
+2. Store PowerMonkey directory (and its subdirectories) directly in the root of the cloned VisualUEFI repo:
 
     ```bash
     VisualUEFI
@@ -132,7 +140,7 @@ This route is based on Alex Ionescu's excellent [VisualUEFI project](https://git
 
 3. Open ```PmWorkspace.sln``` and build the project directly in Visual Studio. This process shall generate no warnings or errors. The result should be an EFI executable ```/PowerMonkey/x64/Release/PowerMonkey.efi```
 
-### **Building - EDK2 route:**
+#### **Building - EDK2 route:**
 
 1. Download EDK2 source from [https://github.com/tianocore/edk2](https://github.com/tianocore/edk2) - ideally, the EDK2 version shall match your computer firmware “baseline EDK2 version” in case your UEFI firmware is based on TianoCore.
 
@@ -166,7 +174,7 @@ This route is based on Alex Ionescu's excellent [VisualUEFI project](https://git
 
 4. Building process that follows is identical as for any other EDK2 project (edksetup.bat, build, ...).
 
-## Deployment
+### Deployment
 
 The easiest way, and the recommended route during testing is to copy ```PowerMonkey.efi``` to your EFI system partition and test it from UEFI shell. Once you are sure the settings work and are stable, you can add ```PowerMonkey.efi``` to the UEFI boot manager and set it to load first, before the OS bootloader (if supported by youur platform firmware). If direct loading by firmware is not possible, you can use boot manager scripting to load before OS bootloader.
 
@@ -179,6 +187,12 @@ In order to prevent reboot-loops it is highly advisable to first test ```PowerMo
 In case of failure, you will probably either see a crash information or a frozen computer. If everything worked, the view from the EFI shell should look like this:
 
 ![EfiGood](img/efigood.png)
+
+### Emergency Exit
+
+PowerMonkey has an "Emergency Exit" feature enabled by default: it waits 3 seconds before programming starts allowing user to press ESC key to abort programming. This option is useful when PowerMonkey.efi is installed as Transient Boot Loader - executing before OS bootloader. If ESC key is pressed, CPU is not programmed and the response looks like this:
+
+![Aborted](img/aborting.png)
 
 If the computer is still alive and not frozen, you might proceed to your OS of choice to confirm that the settings have been applied. Do not forget to disable Hypervisor first, as one enabled, you will not be able to actually see the voltages from a VM. Settingfs form the ```CONFIGURATION.c``` applied to my CPU result in the following (pictures of ThrottleStop and XTU just reading the values from the CPU):
 
@@ -194,7 +208,7 @@ This confirms that our settings have been applied including the locks (we locked
 go further, we shall check how much of a performance impact this has on our
 system.
 
-## Cinebench R23
+### Cinebench R23
 
 Cinebench is one of the quickest showcases of how effective undervolting can be. Its workload is CPU-heavy, solving a real-world problem (rendering) and not some artificial stressor designed solely to waste CPU cycles in a way no actual application would do. As a bonus, Cinebench results immediately show if PowerMonkey settings were applied or not.
 
@@ -225,7 +239,7 @@ THis particular CML-H model could *theoretically* sustain 4.2 GHz all-core load,
 
 But... HOW?
 
-## Extra 650 MHz and energy saved? Where is the catch?
+### Extra 650 MHz and energy saved? Where is the catch?
 
 There is no catch, just laws of physics. Notebook CPU is encased inside the scorching environment that cannot evacuate heat as effectively as, say, a server could. 
 
@@ -239,7 +253,7 @@ Another point is the temperature. When undervolted, the number of times CPU must
 
 And that is all to it (complications aside): if you manage to drop CPU power draw, its PMC will thank you with higher operating points.
 
-## Moving onto Hyper-V
+### Moving onto Hyper-V
 
 Now that we know undervolting works as intended, we are ready to switch Hyper-V back and see how much (if anything) we would gain in WSL2 tasks. To be continued. For now, please find very preliminary results testing Linux kernel compilation (Linux kernel is WSL2 + extra config flags and modules):
 
