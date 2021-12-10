@@ -33,52 +33,51 @@
 #include "Platform.h"
 #include "MpDispatcher.h"
 #include "VFTuning.h"
+#include "MiniLog.h"
 
 #include "TurboRatioLimits.h"
 #include "PowerLimits.h"
 #include "Constants.h"
 #include "OcMailbox.h"
 #include "DelayX86.h"
+#include "PrintStats.h"
+#include "CpuData.h"
 
 /*******************************************************************************
  * Globals
  ******************************************************************************/
 
-//
-// Initialized at startup
+ //
+ // Initialized at startup
 
 extern EFI_MP_SERVICES_PROTOCOL* gMpServices;
+extern UINT8 gPrintPackageConfig;
+extern UINT8 gPostProgrammingOcLock;
+extern PLATFORM* gPlatform;
 
 /*******************************************************************************
- * PrintVFPoints
+ * CoreIdxMap
  ******************************************************************************/
 
-VOID PrintVFPoints(IN PLATFORM* psys)
+UINTN gNumCores = 0;
+VOID* CoreIdxMap[MAX_CORES * MAX_PACKAGES] = { 0 };
+UINTN CoreApicIDs[MAX_CORES * MAX_PACKAGES] = { 0 };
+
+/*******************************************************************************
+ * ApicIdToCoreNumber
+ ******************************************************************************/
+
+UINTN ApicIdToCoreNumber(const UINTN ApicID)
 {
-  for (UINTN pidx = 0; pidx < psys->PkgCnt; pidx++)
-  {
-    PACKAGE* pac = psys->packages + pidx;
-
-    if (pac->Program_VF_Points == 2)
-    {
-      DOMAIN* dom = &pac->Domain[IACORE];
-
-      AsciiPrint("[Package: %u] Number of VF Points: %u\n",
-        pidx, dom->nVfPoints);
-
-      for (UINTN vidx = 0; vidx < dom->nVfPoints; vidx++)
-      {
-        VF_POINT* vp = dom->vfPoint + vidx;
-
-        AsciiPrint("[Package: %u][VF Point %u] Fused Ratio: %u\n",
-          pidx, vidx, vp->FusedRatio);
-
-        AsciiPrint("[Package: %u][VF Point %u] Voltage Offset: %u mV\n",
-          pidx, vidx, vp->OffsetVolts);
-      }
+  for (UINTN ccount = 0; ccount < gNumCores; ccount++) {
+    if (CoreApicIDs[ccount] == ApicID) {
+      return ccount;
     }
   }
+
+  return 0;
 }
+
 
 /*******************************************************************************
  * DiscoverVRTopology
@@ -94,46 +93,116 @@ EFI_STATUS DiscoverVRTopology(IN OUT PACKAGE *pkg)
   CpuMailbox box;
   MailboxBody* b = &box.b;
 
+  MiniTraceEx("Detecting VR Topology");
+
   OcMailbox_InitializeAsMSR(&box);
-
   UINT32 cmd = OcMailbox_BuildInterface(0x04, 0x0, 0x0);
-
   status = OcMailbox_ReadWrite(cmd, 0, &box);
 
   if (!EFI_ERROR(status)) {
 
-    //
-    // SA
+    if (gActiveCpuData->HasEcores) {
 
-    pkg->Domain[UNCORE].VRaddr = (UINT8)((b->box.data & 0x0F));
-    pkg->Domain[UNCORE].VRtype = (UINT8)((b->box.data & bit4u32) ? 1 : 0);
+      //////////////////////////
+      // Alder Lake & Friends //
+      //////////////////////////
 
-    //
-    // IACORE
+      //
+      // SA
 
-    pkg->Domain[IACORE].VRaddr = (UINT8)((b->box.data & 0x1E0)>>5);
-    pkg->Domain[IACORE].VRtype = (UINT8)((b->box.data & bit9u32) ? 1 : 0);
+      pkg->planes[UNCORE].VRaddr = 0;
+      pkg->planes[UNCORE].VRtype = 1;
 
-    //
-    // RING
+      //
+      // IACORE
 
-    pkg->Domain[RING].VRaddr = (UINT8)((b->box.data & 0x3C00)>>10);
-    pkg->Domain[RING].VRtype = (UINT8)((b->box.data & bit14u32) ? 1 : 0);
+      pkg->planes[IACORE].VRaddr = (UINT8)((b->box.data & 0xF00) >> 8);
+      pkg->planes[IACORE].VRtype = (UINT8)((b->box.data & bit12u32) ? 1 : 0);
 
-    //
-    // GT UNSLICE
+      //
+      // ECORE
 
-    pkg->Domain[GTUNSLICE].VRaddr = (UINT8)((b->box.data & 0x78000)>>15);
-    pkg->Domain[GTUNSLICE].VRtype = (UINT8)((b->box.data & bit19u32) ? 1 : 0);
+      pkg->planes[ECORE].VRaddr = pkg->planes[IACORE].VRaddr;
+      pkg->planes[ECORE].VRtype = pkg->planes[IACORE].VRtype;
 
-    //
-    // GT SLICE
+      //
+      // RING
 
-    pkg->Domain[GTSLICE].VRaddr = (UINT8)((b->box.data & 0xF00000)>>20);
-    pkg->Domain[GTSLICE].VRtype = (UINT8)((b->box.data & bit24u32) ? 1 : 0);
+      pkg->planes[RING].VRaddr = pkg->planes[IACORE].VRaddr;
+      pkg->planes[RING].VRtype = pkg->planes[IACORE].VRtype;
+            
+      //
+      // GT SLICE
+
+      pkg->planes[GTSLICE].VRaddr = (UINT8)((b->box.data & 0xf000) >> 12);
+      pkg->planes[GTSLICE].VRtype = (UINT8)((b->box.data & bit17u32) ? 1 : 0);
+
+      //
+      // GT UNSLICE
+
+      pkg->planes[GTUNSLICE].VRaddr = pkg->planes[GTSLICE].VRaddr;
+      pkg->planes[GTUNSLICE].VRtype = pkg->planes[GTSLICE].VRtype;
+
+
+    }
+    else {
+
+
+      //
+      // SA
+
+      pkg->planes[UNCORE].VRaddr = (UINT8)((b->box.data & 0x0f));
+      pkg->planes[UNCORE].VRtype = (UINT8)((b->box.data & bit4u32) ? 1 : 0);
+
+      //
+      // IACORE
+
+      pkg->planes[IACORE].VRaddr = (UINT8)((b->box.data & 0x1e0) >> 5);
+      pkg->planes[IACORE].VRtype = (UINT8)((b->box.data & bit9u32) ? 1 : 0);
+
+      //
+      // RING
+
+      pkg->planes[RING].VRaddr = (UINT8)((b->box.data & 0x3c00) >> 10);
+      pkg->planes[RING].VRtype = (UINT8)((b->box.data & bit14u32) ? 1 : 0);
+
+      //
+      // GT UNSLICE
+
+      pkg->planes[GTUNSLICE].VRaddr = (UINT8)((b->box.data & 0x78000) >> 15);
+      pkg->planes[GTUNSLICE].VRtype = (UINT8)((b->box.data & bit19u32) ? 1 : 0);
+
+      //
+      // GT SLICE
+
+      pkg->planes[GTSLICE].VRaddr = (UINT8)((b->box.data & 0xf00000) >> 20);
+      pkg->planes[GTSLICE].VRtype = (UINT8)((b->box.data & bit24u32) ? 1 : 0);
+
+    }
   }
 
   return status;
+}
+
+/*******************************************************************************
+ * DomainSupported
+ ******************************************************************************/
+
+BOOLEAN DomainSupported(const UINT8 didx)
+{
+  if (didx == ECORE) {
+
+    //
+    // Check if we run on hybrid CPU
+
+    if (gPlatform->packages[0].CpuInfo.HybridArch) {
+      return 1;
+    }
+
+    return 0;
+  }
+
+  return 1;
 }
 
 
@@ -145,12 +214,22 @@ EFI_STATUS ProbePackage(IN OUT PACKAGE* pkg)
 {
   EFI_STATUS status = EFI_SUCCESS;
 
-  //
-  // CPUID
+  ///////////
+  // CPUID //
+  ///////////
+
+  GetCpuInfo(&pkg->CpuInfo);      /// <- H*A*C*K.
 
   AsmCpuid(0x01,
     &pkg->CpuID,
     NULL, NULL, NULL);
+
+  //////////////////////
+  // Individual cores //
+  //////////////////////
+
+  DiscoverVRTopology(pkg);
+
 
   //////////////////////////
   // Discover VR Topology //
@@ -163,11 +242,9 @@ EFI_STATUS ProbePackage(IN OUT PACKAGE* pkg)
   ////////////////////////
 
   for (UINT8 didx = 0; didx < MAX_DOMAINS; didx++) {
-    DOMAIN* dom = pkg->Domain + didx;
-
-    dom->parent = (void*)pkg;
-
-    if (pkg->Program_VF_Overrides[didx]) {
+    if (DomainSupported(didx)) {
+      DOMAIN* dom = pkg->planes + didx;
+      dom->parent = (void*)pkg;
       IAPERF_ProbeDomainVF(didx, dom);
     }
   }
@@ -222,11 +299,13 @@ EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
   // Program V/F overrides
 
   for (UINT8 didx = 0; didx < MAX_DOMAINS; didx++) {
-    DOMAIN* dom = pkg->Domain + didx;
+    if (DomainSupported(didx)) {
+      DOMAIN* dom = pkg->planes + didx;
 
-    if (pkg->Program_VF_Overrides[didx]) {
-      IAPERF_ProgramDomainVF(didx, dom, pkg->Program_VF_Points,
-        pkg->Program_IccMax[didx]);
+      if (pkg->Program_VF_Overrides[didx]) {
+        IAPERF_ProgramDomainVF(didx, dom, pkg->Program_VF_Points[didx],
+          pkg->Program_IccMax[didx]);
+      }
     }
   }
 
@@ -382,7 +461,7 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* psys)
   EFI_STATUS status = EFI_SUCCESS;
 
   PACKAGE* pac = &psys->packages[0];
-  UINTN prevPackage = 0xFFFFFFF;
+  UINT32 prevPackage = 0xFFFFFFFF;
 
   UINTN nPackages = 0;
   UINTN nThreadsTotal = 0;
@@ -392,20 +471,53 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* psys)
 
   pac->parent = psys;
 
+  for (UINTN pidx = 0; pidx < psys->PkgCnt; pidx++) {
+    PACKAGE* p = psys->packages + pidx;
+    p->FirstCoreApicID = 0xFFFFFFFF;
+    p->FirstCoreNumber = 0xFFFFFFFF;
+  }
+
   for (UINTN tidx = 0; tidx < psys->LogicalProcessors; tidx++) {
 
     EFI_PROCESSOR_INFORMATION pi;
 
     gMpServices->GetProcessorInfo(gMpServices, tidx, &pi);
 
+    if (prevPackage == 0xFFFFFFFF)
+      prevPackage = pi.Location.Package;
+
+    CPUCORE* core = &pac->Core[localCoreOrThreadCount];
+
+    core->LocalIdx = (UINT8) localCoreOrThreadCount;
+    core->ApicID = pi.ProcessorId;
+    core->AbsIdx = tidx;
+    core->parent = (VOID*)pac;
+    core->PkgIdx = (UINT8) nPackages;
+    pac->idx = (UINT64)nPackages;
+
+    CoreIdxMap[tidx] = (VOID*)&pac->Core[localCoreOrThreadCount];
+    CoreApicIDs[tidx] = pac->Core[localCoreOrThreadCount].ApicID;
+
+    const BOOLEAN physCore = (pi.Location.Thread == 0) ? 1 : 0;
+        
     pac->LogicalCores += 1;
-    pac->PhysicalCores += (pi.Location.Thread == 0) ? 1 : 0;
-    pac->FirstCoreApicID = pi.ProcessorId;
+    pac->PhysicalCores += (physCore) ? 1 : 0;
 
-    pac->Core[localCoreOrThreadCount].ApicID = pi.ProcessorId;
+    pac->Core[localCoreOrThreadCount].IsPhysical = physCore;
 
+    if (pac->FirstCoreApicID == 0xFFFFFFFF) {
+      pac->FirstCoreApicID = pi.ProcessorId;
+    }
+
+    if (pac->FirstCoreNumber == 0xFFFFFFFF) {
+      pac->FirstCoreNumber = tidx;
+    }      
+    
     nThreadsTotal++;
+    localCoreOrThreadCount++;
     nCoresTotal += (pi.Location.Thread == 0) ? 1 : 0;
+
+    //AsciiPrint("[Tidx %u] apic id: %lu, abs idx: %lu, pkg idx: %u\n", tidx, core->ApicID, core->AbsIdx, core->PkgIdx);
 
     if (pi.Location.Package != prevPackage)
     {
@@ -414,6 +526,7 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* psys)
 
       pac->parent = (VOID*)psys;
 
+
       nPackages++;
       prevPackage = pi.Location.Package;
       localCoreOrThreadCount = 0;
@@ -421,18 +534,8 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* psys)
     }
   }
 
-  psys->LogicalProcessors = nThreadsTotal;
-  psys->PkgCnt = nPackages;
-
-  //
-  // Hack - tbd, remove!
-  // 
-
-  if (psys->PkgCnt == 1) {
-    status = gMpServices->WhoAmI(
-      gMpServices,
-      &psys->packages[0].FirstCoreApicID);
-  }
+  psys->LogicalProcessors = gNumCores = nThreadsTotal;
+  psys->PkgCnt = nPackages + 1;
 
   return status;
 }
@@ -488,7 +591,7 @@ EFI_STATUS EFIAPI DiscoverPlatform(IN OUT PLATFORM** ppsys)
   ppd->PkgCnt = 1;                    // Boot Processor
 
   DetectPackages(ppd);
-
+  
   //
   // Probe each package in its own context
 
@@ -496,11 +599,11 @@ EFI_STATUS EFIAPI DiscoverPlatform(IN OUT PLATFORM** ppsys)
   {
     PACKAGE* pac = ppd->packages + pidx;
 
-    status = RunOnPackageOrCore(ppd, pac->FirstCoreApicID, ProbePackage, pac);
+    status = RunOnPackageOrCore(ppd, pac->FirstCoreNumber, ProbePackage, pac);
 
     if (EFI_ERROR(status)) {
       Print(L"[ERROR] CPU package %u, status code: 0x%x\n",
-        pac->FirstCoreApicID,
+        pac->FirstCoreNumber,
         status);
 
       return status;
@@ -516,7 +619,7 @@ EFI_STATUS EFIAPI DiscoverPlatform(IN OUT PLATFORM** ppsys)
 
 VOID PrintPlatformInfo(IN PLATFORM* psys)
 {
-
+  PMUNUSED(psys);
 }
 
 
@@ -579,7 +682,9 @@ EFI_STATUS EFIAPI ProgramCoreKnobs(PLATFORM* psys)
   //
   // Overclocking Lock
 
-  IaCore_OcLock();
+  if (gPostProgrammingOcLock) {
+	  IaCore_OcLock();
+  }
 
   return EFI_SUCCESS;
 }
@@ -595,6 +700,8 @@ StartupPlatformInit(
   IN EFI_SYSTEM_TABLE* SystemTable,
   IN OUT PLATFORM** Platform
 ) {
+  PMUNUSED(SystemTable);
+
   EFI_STATUS status = EFI_SUCCESS;
 
   status = DiscoverPlatform(Platform);
@@ -617,7 +724,14 @@ StartupPlatformInit(
 EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   IN OUT PLATFORM* sys)
 {
+  PMUNUSED(SystemTable);
   EFI_STATUS status = EFI_SUCCESS;
+
+  /////////////////////
+  // PRINT (CURRENT) //
+  /////////////////////
+  
+  PrintPlatformSettings(sys);  
 
   /////////////////
   // PROGRAMMING //
@@ -638,10 +752,11 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   {
     PACKAGE* pk = sys->packages + pidx;
 
-    for (UINTN cidx = 0; cidx < sys->LogicalProcessors; cidx++)
+    //for (INTN cidx = pk->LogicalCores; cidx >= 0; --cidx)
+    for (UINTN cidx = 0; cidx < pk->LogicalCores; cidx++)
     {
       CPUCORE* core = pk->Core + cidx;
-      RunOnPackageOrCore(sys, core->ApicID, ProgramPackageOrCore, pk);
+      RunOnPackageOrCore(sys, core->AbsIdx, ProgramPackageOrCore, pk);
     }
   }
 
@@ -655,7 +770,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   for (UINTN pidx = 0; pidx < sys->PkgCnt; pidx++)
   {
     PACKAGE* pk = sys->packages + pidx;
-    RunOnPackageOrCore(sys, pk->FirstCoreApicID, ProgramPackage_Stage1, pk);
+    RunOnPackageOrCore(sys, pk->FirstCoreNumber, ProgramPackage_Stage1, pk);
   }
 
   /////////////////
@@ -665,7 +780,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   //
   // MSR Locks
 
-  RunOnAllProcessors(ProgramCoreKnobs, (void *)sys);
+  RunOnAllProcessors(ProgramCoreKnobs, FALSE, (void *)sys);
 
   //
   // MMIO locks
@@ -673,7 +788,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   for (UINTN pidx = 0; pidx < sys->PkgCnt; pidx++)
   {
     PACKAGE* pk = sys->packages + pidx;
-    RunOnPackageOrCore(sys, pk->FirstCoreApicID, ProgramPackage_Stage2, pk);
+    RunOnPackageOrCore(sys, pk->FirstCoreNumber, ProgramPackage_Stage2, pk);
   }
 
   //
@@ -682,4 +797,16 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   PrintVFPoints(sys);
 
   return status;
+}
+
+/*******************************************************************************
+* GetCpuDataBlock
+******************************************************************************/
+
+VOID* GetCpuDataBlock()
+{
+  UINTN processorNumber;
+  gMpServices->WhoAmI(gMpServices, &processorNumber);
+  VOID* coreStructAddr = CoreIdxMap[processorNumber];
+  return coreStructAddr;
 }

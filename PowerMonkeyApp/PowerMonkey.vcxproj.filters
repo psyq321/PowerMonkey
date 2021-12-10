@@ -19,6 +19,9 @@
     <ClCompile Include="TimeWindows.c" />
     <ClCompile Include="MiniLog.c" />
     <ClCompile Include="SelfTest.c" />
+    <ClCompile Include="PrintStats.c" />
+    <ClCompile Include="CpuInfo.c" />
+    <ClCompile Include="CpuData.c" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ASMx64">
@@ -81,6 +84,19 @@
       <Filter>Include</Filter>
     </ClInclude>
     <ClInclude Include="SelfTest.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="PrintStats.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="CpuInfo.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="CONFIGURATION.h" />
+    <ClInclude Include="BmpFont.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="CpuData.h">
       <Filter>Include</Filter>
     </ClInclude>
   </ItemGroup>

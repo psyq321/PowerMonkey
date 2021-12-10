@@ -39,6 +39,8 @@
 #include "InterruptHook.h"
 #include "SelfTest.h"
 #include "MiniLog.h"
+#include "CpuInfo.h"
+#include "CpuData.h"
 
 /*******************************************************************************
  * Globals
@@ -55,7 +57,7 @@ extern EFI_SYSTEM_TABLE*  gST;
 // Initialized at startup
 
 EFI_MP_SERVICES_PROTOCOL* gMpServices = NULL;
-
+BOOLEAN gCpuDetected = 0;
 PLATFORM* gPlatform = NULL;
 UINTN gBootCpu = 0;
 
@@ -83,6 +85,11 @@ EFI_STATUS UefiInit(IN EFI_SYSTEM_TABLE* SystemTable)
   }
 
   InitTrace();
+
+  //
+  // Gather basic CPU info
+  
+  gCpuDetected = DetectCpu();
 
   //
   // Hook the BSP with our "SafeAsm" interrupt handler
@@ -195,7 +202,7 @@ VOID PrintBanner(VOID)
     " |  ____// _ \\ | | | | / _  ) / __)| || || | / _ \\ |  _ \\ | | / )/ _  )| | | |\n"
     " | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |\n"
     " |_|     \\___/  \\____| \\____)|_|   |_||_||_| \\___/ |_| |_||_| \\_)\\____) \\__  |\n"
-    "                                                         Version 0.1.4 (____/\n"
+    "                                                         Version 0.1.5 (____/\n"
   );
 
   AsciiPrint(
@@ -264,6 +271,7 @@ EFI_STATUS EFIAPI UefiMain(
 
   ApplyPolicy(SystemTable, gPlatform);
 
+
   ///
   /// Self test
   ///
@@ -282,5 +290,5 @@ EFI_STATUS EFIAPI UefiMain(
 
   AsciiPrint("Finished.\n");
 
-  return EFI_SUCCESS;
+ return EFI_SUCCESS;
 }

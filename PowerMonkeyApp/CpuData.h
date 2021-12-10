@@ -26,17 +26,37 @@
 
 #pragma once
 
-#include "Platform.h"
+/*******************************************************************************
+ * 
+ ******************************************************************************/
 
-EFI_STATUS EFIAPI RunOnPackageOrCore( 
-  const IN PLATFORM *Platform,
-  const IN UINTN CpuNumber,
-  const IN EFI_AP_PROCEDURE proc,
-  const IN VOID *param OPTIONAL 
-);
+typedef struct _CPUTYPE {
+  UINT32 family;
+  UINT32 model;
+  UINT32 stepping;
+} CPUTYPE;
 
-EFI_STATUS EFIAPI RunOnAllProcessors( 
-  const IN EFI_AP_PROCEDURE proc,
-  const BOOLEAN runConcurrent,                  // false = serial execution
-  IN VOID *param OPTIONAL
-);
+typedef struct _CPUCONFIGTABLE {
+
+  CPUTYPE cpuType;
+  CHAR8 uArch[32];
+
+  BOOLEAN hasUnlimitedIccMaxFlag;           // Extra bit controlling unlimited IccMax
+  UINT8 IccMaxBits;                         // ADL=11bits, RKL and lower=10bits
+  UINT8 VfPointsExposed;                    // OC Mailbox exposes V/F points (param2)
+  UINT8 HasEcores;                          // Has E Cores
+  
+
+} CPUCONFIGTABLE;
+
+/*******************************************************************************
+ * DetectCpu
+ ******************************************************************************/
+
+BOOLEAN DetectCpu();
+
+/*******************************************************************************
+ * Detected CPU Data
+ ******************************************************************************/
+
+extern CPUCONFIGTABLE* gActiveCpuData;

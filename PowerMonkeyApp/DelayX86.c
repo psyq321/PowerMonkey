@@ -26,9 +26,9 @@
 
 #include <Uefi.h>
 
-#pragma intrinsic(__rdtsc)
-#pragma intrinsic(_mm_pause)
-#pragma intrinsic(__cpuid)
+#pragma intrinsic(__rdtsc)                // At this point, code will look so
+#pragma intrinsic(_mm_pause)              // fugly that writing it in pure SMM
+#pragma intrinsic(__cpuid)                // assembly would count as beautify
 
 /*******************************************************************************
  * Globals that must be initialized

@@ -26,17 +26,14 @@
 
 #pragma once
 
-#include "Platform.h"
+/*******************************************************************************
+ * PrintVFPoints
+ ******************************************************************************/
 
-EFI_STATUS EFIAPI RunOnPackageOrCore( 
-  const IN PLATFORM *Platform,
-  const IN UINTN CpuNumber,
-  const IN EFI_AP_PROCEDURE proc,
-  const IN VOID *param OPTIONAL 
-);
+VOID PrintVFPoints(IN PLATFORM* psys);
 
-EFI_STATUS EFIAPI RunOnAllProcessors( 
-  const IN EFI_AP_PROCEDURE proc,
-  const BOOLEAN runConcurrent,                  // false = serial execution
-  IN VOID *param OPTIONAL
-);
+/*******************************************************************************
+ * PrintPlatformSettings
+ ******************************************************************************/
+
+VOID PrintPlatformSettings(IN PLATFORM* psys);

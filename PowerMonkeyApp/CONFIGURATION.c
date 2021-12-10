@@ -25,6 +25,12 @@
 *******************************************************************************/
 
 #include "Platform.h"
+#include "CONFIGURATION.h"    // <- enable tracing if PowerMonkey hangs!
+
+///
+/// Please review CONFIGURATION.h for debug/global settings
+/// like tracing (in case PowerMonkey hangs the system)
+/// 
 
 /*******************************************************************************
  *                   !!! WARNING - ACHTUNG - VNIMANIE !!!
@@ -58,6 +64,16 @@
  ******************************************************************************/
 
 ///
+/// Post-Execution Overclocking LOCK
+/// 
+/// For security reasons, it is highly recommended to perform CFG and OC lock
+/// so that malicious applications cannot change CPU parameters to make system
+/// less stable or secure
+///
+
+UINT8 gPostProgrammingOcLock = 1;
+
+///
 /// Enable / Disable "Emergency Exit"
 /// Enabling this option adds 3 second delay with possibility to abort
 /// by pressing ESC key. Disable it only if you are absolutely sure that your
@@ -88,6 +104,20 @@ UINT8 gDisableFirwmareWDT = 0;
 /// Typical values: 0 (no stress testing); 10 (very short); 100+ (longer)
 
 UINT64 gSelfTestMaxRuns = 0; /// DO NOT ENABLE YET (WIP)
+
+
+/*******************************************************************************
+ * Debug / Test / Diagnostics Options
+ ******************************************************************************/
+
+UINT8 gPrintPackageConfig = 1;
+
+///
+/// Print original V/F points (pre and post programming)
+/// 
+
+UINT8 gPrintVFPoints_PostProgram = 1;
+
 
 /*******************************************************************************
  * ApplyComputerOwnersPolicy()
@@ -125,10 +155,18 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->Program_VF_Overrides[IACORE] =    1;    // Enable programming of VF
                                                 // Overrides for IA Cores
 
-    pk->Program_VF_Overrides[RING] =      1;    // Enable programming of VF
+    //
+    // Hybrid architectures (Alder Lake+) - E-Cores
+
+    pk->Program_VF_Overrides[ECORE] = 1;        // Enable programming of VF
+                                                // Overrides for E-Cores
+
+
+    pk->Program_VF_Overrides[RING] = 1;         // Enable programming of VF
                                                 // Overrides for Ring / Cache
 
-    pk->Program_VF_Overrides[UNCORE] =    0;    // Enable programming of VF
+
+    pk->Program_VF_Overrides[UNCORE] =    1;    // Enable programming of VF
                                                 // Overrides for Uncore (SA)
 
     pk->Program_VF_Overrides[GTSLICE] =   0;    // Enable programming of VF
@@ -137,42 +175,51 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->Program_VF_Overrides[GTUNSLICE] = 0;    // Enable programming of VF
                                                 // Overrides for GT Unslice
 
-    ///
-    /// V/F OVERRIDES FOR DOMAIN: CORE
-    ///
-    
-    pk->Domain[IACORE].VoltMode = V_IPOLATIVE;  // V_IPOLATIVE = Interpolate
-                                                // V_OVERRIDE =  Override
-
-    pk->Domain[IACORE].TargetVolts =  0;        // in mV (absolute)
-    pk->Domain[IACORE].OffsetVolts = -125;      // in mV (negative = undervolt)
-
-    ///
-    /// V/F OVERRIDES FOR DOMAIN: RING
-    ///
-
-    // Note: some domains are sharing the same voltage plane! Check yours!
+    // NOTE: some domains are sharing the same voltage plane! Check yours!
     // 
     // E.g.: for CML-H, IACORE (CPU cores) and RING (cache) share a common VR
     // if you don't program both linked domains to exactly the same voltage, 
-    // CPU's pcode will take one (higher, which means less undervolt!) and
+    // CPU's pcode will use one (higher, which means less undervolt!) and
     // apply it to both domains - but without adjusting values submitted by the 
-    // user so it appears everything went as planned. Some might believe they 
-    // won the 'chip lottery' seeing their CPU seemingly undervolt to -250 mV 
-    // or smth. while in reality pcode is doing exactly nothing because cache
-    // is programmed to 0 mV offset. Don't be that guy (or girl)!
+    // user so it appears everything went as user requested! Some might believe 
+    // they won the 'chip lottery' seeing their CPU seemingly undervolt to 
+    // -250 mV or so, while in reality pcode is doing exactly nothing!
+    // Don't be that guy (or girl)!
 
-    pk->Domain[RING].VoltMode = V_IPOLATIVE;   // V_IPOLATIVE = Interpolate
-                                               // V_OVERRIDE  = Override
+    ///
+    /// LEGACY V/F OVERRIDES FOR DOMAINS: CORE & RING (Cache)
+    /// Note: Shared VR on test CML-H CPU = Same Voltages Applied
+    /// 
+    /// For CPU SKUs allowing V/F point adjustment you can adjust individual 
+    /// points on the V/F curve instead (see below)
+    /// 
+    /// NOTE: Legacy V/F overrides >will not apply< if you chose to program
+    /// individual V/F points. 
+    
+    //
+    // Legacy (will be ignored in vfpoints are used)
 
-    pk->Domain[RING].TargetVolts = 0;          // in mV (absolute)
-    pk->Domain[RING].OffsetVolts = -125;       // in mV (negative = undervolt)
+    pk->planes[IACORE].VoltMode = 
+      pk->planes[RING].VoltMode = V_IPOLATIVE;  // V_IPOLATIVE = Interpolate
+                                                // V_OVERRIDE =  Override
+    pk->planes[IACORE].TargetVolts =
+      pk->planes[RING].TargetVolts =  0;        // in mV (absolute)
+    
+    pk->planes[IACORE].OffsetVolts =
+      pk->planes[RING].OffsetVolts = 0;// -75;      // in mV (negative = undervolt)
 
 
     ///
-    /// V/F OVERRIDES FOR DOMAIN: SA
+    /// V/F OVERRIDES FOR DOMAIN: UNCORE (SA)
     ///
     
+    pk->planes[UNCORE].VoltMode = V_IPOLATIVE;  // V_IPOLATIVE = Interpolate
+                                                // V_OVERRIDE =  Override
+
+    pk->planes[UNCORE].TargetVolts = 0;         // in mV (absolute)
+    pk->planes[UNCORE].OffsetVolts = -35;       // in mV (negative = undervolt)
+
+
     // Add your adjustments here if needed    
 
     ///
@@ -206,62 +253,144 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     /// VF Curve Adjustment is only supported by CORE and RING domains
     /// and for CML and RKL (at least) you must ensure that the same values
     /// are programmed for both domains! (they are sharing the same VR)
+    ///
+    /// NOTE: Enabling VF point programming disables legacy VF Overrides
+    /// (single offset applied to entire VF curve)
+    /// 
+    /// Same rule applies as for previous-gen CPUs: if two domains share single
+    /// SVID, then you must program the same voltage adjustment for both
 
-    pk->Program_VF_Points = 0;                      // 0 - Do not program
+    pk->Program_VF_Points[IACORE] =                 // 0 - Do not program
+      pk->Program_VF_Points[RING] = 0;              // 1 - Program
+                                                    // 2 - Print current values                                                    
+                                                    //     (2 does not program)
+    
+                                                    //
+    // Hybrid Architectures (Alder Lake +): E-Cores
+
+    pk->Program_VF_Points[ECORE] = 0;               // 0 - Do not program
                                                     // 1 - Program
-                                                    // 2 - Print current values
+                                                    // 2 - Print current values                                                    
                                                     //     (2 does not program)
 
     ///
-    /// Change to your CPU config!
     /// NOTE: VF Points here are ZERO INDEXED and can go from VP[0] to VP[14] !
+    ///  *** CHECK YOUR CPU - ESPECIALLY # OF VF POINTS!!! ***
     /// 
     /// Uncomment below block (lines 220/224)
-/*
-    pk->Domain[IACORE].vfPoint[0].OffsetVolts =
-      pk->Domain[RING].vfPoint[0].OffsetVolts = 0;      // 800 MHz (Example)
+    
+#if 0
 
-    pk->Domain[IACORE].vfPoint[1].OffsetVolts =
-      pk->Domain[RING].vfPoint[1].OffsetVolts = -50;    // 2500 MHz (Example)
+    ///////////////////////////////////////////////////////////////
+    /// Example for Rocket Lake Unlocked SKU (B0 Stepping, PRQ): //
+    ///////////////////////////////////////////////////////////////
+    
+    pk->planes[IACORE].vfPoint[0].OffsetVolts = 
+      pk->planes[RING].vfPoint[0].OffsetVolts = 0;     // V_Offset @ 800 MHz
 
-    pk->Domain[IACORE].vfPoint[2].OffsetVolts =
-      pk->Domain[RING].vfPoint[2].OffsetVolts = -100;   // 3500 MHz (Example)
+    pk->planes[IACORE].vfPoint[1].OffsetVolts = 
+      pk->planes[RING].vfPoint[1].OffsetVolts = -125;  // V_Offset @ 2500 MHz
 
-    pk->Domain[IACORE].vfPoint[3].OffsetVolts =
-      pk->Domain[RING].vfPoint[3].OffsetVolts = -130;   // 4300 MHz (Example)
+    pk->planes[IACORE].vfPoint[2].OffsetVolts =
+      pk->planes[RING].vfPoint[2].OffsetVolts = -110;  // V_Offset @ 3500 MHz
 
-    pk->Domain[IACORE].vfPoint[4].OffsetVolts =
-      pk->Domain[RING].vfPoint[4].OffsetVolts = -110;   // 4800 MHz (Example)
+    pk->planes[IACORE].vfPoint[3].OffsetVolts =
+      pk->planes[RING].vfPoint[3].OffsetVolts = -100;  // V_Offset @ 4300 MHz
 
-    pk->Domain[IACORE].vfPoint[5].OffsetVolts =
-      pk->Domain[RING].vfPoint[5].OffsetVolts = -100;   // 5100 MHz (Example)
+    pk->planes[IACORE].vfPoint[4].OffsetVolts =
+      pk->planes[RING].vfPoint[4].OffsetVolts = -95;   // V_Offset @ 4600 MHz
 
-    pk->Domain[IACORE].vfPoint[6].OffsetVolts =
-      pk->Domain[RING].vfPoint[6].OffsetVolts = -100;   // 5200 MHz (Example)
+    pk->planes[IACORE].vfPoint[5].OffsetVolts =
+      pk->planes[RING].vfPoint[5].OffsetVolts = -85;   // V_Offset @ 4800 MHz
 
-    pk->Domain[IACORE].vfPoint[7].OffsetVolts =
-      pk->Domain[RING].vfPoint[7].OffsetVolts = -100;   // 5200 MHz (Example)
- */
+    pk->planes[IACORE].vfPoint[6].OffsetVolts = 
+      pk->planes[RING].vfPoint[6].OffsetVolts = -75;   // V_Offset @ 5200 MHz
+                                                                           
+    pk->planes[IACORE].vfPoint[7].OffsetVolts = 
+      pk->planes[RING].vfPoint[7].OffsetVolts = 0;     // Offset @ Overclock
+ 
+#else
+
+    /////////////////////////////////////////////////////////////
+    /// Example for Alder Lake Unlocked SKU (C0 Stepping, PRQ) //
+    /////////////////////////////////////////////////////////////
+
+    //////////////////////////////////////
+    // P-Cores - please use your values //
+    //////////////////////////////////////
+
+    pk->planes[IACORE].vfPoint[0].OffsetVolts =
+      pk->planes[RING].vfPoint[0].OffsetVolts = 0;     // V_Offset @ 800 MHz
+
+    pk->planes[IACORE].vfPoint[1].OffsetVolts =
+      pk->planes[RING].vfPoint[1].OffsetVolts = -50;   // V_Offset @ 1800 MHz
+
+    pk->planes[IACORE].vfPoint[2].OffsetVolts =
+      pk->planes[RING].vfPoint[2].OffsetVolts = -85;   // V_Offset @ 3600 MHz
+
+    pk->planes[IACORE].vfPoint[3].OffsetVolts =
+      pk->planes[RING].vfPoint[3].OffsetVolts = -140;  // V_Offset @ 4000 MHz
+
+    pk->planes[IACORE].vfPoint[4].OffsetVolts =
+      pk->planes[RING].vfPoint[4].OffsetVolts = -140;  // V_Offset @ 4200 MHz
+
+    pk->planes[IACORE].vfPoint[5].OffsetVolts =
+      pk->planes[RING].vfPoint[5].OffsetVolts = -135;  // V_Offset @ 4800 MHz
+
+    pk->planes[IACORE].vfPoint[6].OffsetVolts =
+      pk->planes[RING].vfPoint[6].OffsetVolts = 0;     // V_Offset @ 5300 MHz
+
+    pk->planes[IACORE].vfPoint[7].OffsetVolts =
+      pk->planes[RING].vfPoint[7].OffsetVolts = 0;     // V_Offset @ 5300 MHz
+
+    pk->planes[IACORE].vfPoint[8].OffsetVolts =
+      pk->planes[RING].vfPoint[8].OffsetVolts = 0;     // V_Offset @ 5300 MHz
+
+    pk->planes[IACORE].vfPoint[9].OffsetVolts =
+      pk->planes[RING].vfPoint[9].OffsetVolts = 0;     // V_Offset @ 5300 MHz
+
+    
+    /////////////////////////////
+    // E-Cores - bogus values, //
+    /////////////////////////////
+
+    pk->planes[ECORE].vfPoint[0].OffsetVolts = 0;
+    pk->planes[ECORE].vfPoint[1].OffsetVolts = 0;
+    pk->planes[ECORE].vfPoint[2].OffsetVolts = 0;
+    pk->planes[ECORE].vfPoint[3].OffsetVolts = 0;
+    pk->planes[ECORE].vfPoint[4].OffsetVolts = 0;
+
+#endif
  
     /////////////
     // ICC Max //
     /////////////
 
     //
-    // Note: check the capabilities of your CPU
+    // Please check the capabilities of your CPU
     // Do not program too high value as damage might occur!
+    // (unless, of course, desktop, unlocked SKU and mobo with beefy VRs)
+
+    //
+    // NOTE: Setting ICC Max to MAX_AMPS will set "Unlimited IccMax" bit when
+    // programming TGL/RKL and newer CPUs. This is automatic.
 
     pk->Program_IccMax[RING] =      1;  // Enable IccMax override for Ring/$
     pk->Program_IccMax[IACORE] =    1;  // Enable IccMax override for IA Cores
-    pk->Program_IccMax[UNCORE] =    0;  // Enable IccMax override for SA/Uncore
+    pk->Program_IccMax[UNCORE] =    1;  // Enable IccMax override for SA/Uncore
     pk->Program_IccMax[GTSLICE] =   0;  // Enable IccMax override for GT Slice
     pk->Program_IccMax[GTUNSLICE] = 0;  // Enable IccMax override for GT Unslice
 
     //
-    // IccMax Values
+    // IccMax for IACORE and RING (Cache)
     
-    pk->Domain[IACORE].IccMax = 
-      pk->Domain[RING].IccMax = MAX_AMPS;      // 1/4 Amps Unit or MAX_AMPS
+    pk->planes[IACORE].IccMax = 
+      pk->planes[RING].IccMax = MAX_AMPS;      // 1/4 Amps Unit or MAX_AMPS
+
+    //
+    // IccMax for UNCORE (SA)
+
+    pk->planes[UNCORE].IccMax = MAX_AMPS;      // 1/4 Amps Unit or MAX_AMPS
 
     ////////////////////
     /// Turbo Ratios ///
@@ -272,7 +401,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     // (e.g. 1C, 2C, 4C, 8C, = use this ratio). Remove or set to 0
     // if you do not wish to set it
 
-    pk->ForcedRatioForAllCoreCounts = 51;
+    pk->ForcedRatioForAllCoreCounts = 50;
 
     /////////////////////
     /// Power Control ///

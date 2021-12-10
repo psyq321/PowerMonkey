@@ -33,6 +33,8 @@
 #include "OcMailbox.h"
 #include "Constants.h"
 #include "FixedPoint.h"
+#include "MiniLog.h"
+#include "CpuData.h"
 
 /*******************************************************************************
  * Layout of the CPU Overclocking mailbox can be found in academic papers:
@@ -61,16 +63,29 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
   EFI_STATUS status = EFI_SUCCESS;
   UINT32 cmd = 0;
 
+  //
+  // Alderlake: if we are running on E-Core, skip other domains
+
+  CPUCORE *core = (CPUCORE *)GetCpuDataBlock();
+
+  if (core->CpuInfo.HybridArch && core->IsECore) {
+    if (domIdx != ECORE) {
+      return status;
+    }
+  }
+
   OcMailbox_InitializeAsMSR(&box);
 
   /////////////////////////////////
   // Read IccMax for this domain //
   /////////////////////////////////
 
+  const UINT16 iccMaxMask = (1 << gActiveCpuData->IccMaxBits) - 1;
+
   cmd = OcMailbox_BuildInterface(0x16, dom->VRaddr, 0);
 
   if (!EFI_ERROR(OcMailbox_ReadWrite(cmd, 0, &box))) {
-    dom->IccMax = b->box.data & 0x3ff;
+    dom->IccMax = b->box.data & iccMaxMask;
   }
 
   ///////////////////
@@ -98,15 +113,24 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
   dom->OffsetVolts = cvrt_offsetvolts_fxto_i16(OffsetVoltsFx);
   dom->TargetVolts = cvrt_ovrdvolts_fxto_i16(TargetVoltsFx);
   
+  MiniTraceEx("Dom: 0x%x, legacy: maxRatio: %u, vmode: %u, voffset: %d, vtarget: %u", 
+    domIdx,
+    dom->MaxRatio,
+    dom->VoltMode,
+    dom->OffsetVolts,
+    dom->TargetVolts);
+
   //
   // Discover V/F Points 
   // (CML and above only!!!)
 
   dom->nVfPoints = 0;
 
-  if ((domIdx==IACORE)||(domIdx==RING)) {
+  if ((domIdx==IACORE)||(domIdx==RING)||(domIdx==ECORE)) {
 
     UINT8 pidx = 0;
+
+    MiniTraceEx("Discovering VF Pts. for domain: 0x%x", domIdx);
 
     do {
 
@@ -131,16 +155,29 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
 
         INT16 voltOffsetFx = (INT16)((b->box.data >> 21) & 0x7ff);
 
-        vp->FusedRatio = (UINT8)(b->box.data & 0xff);
+        vp->FusedRatio = (UINT8)(b->box.data & 0xff);;
         vp->OffsetVolts = cvrt_offsetvolts_fxto_i16(voltOffsetFx);
+        vp->IsValid = 1;
 
         dom->nVfPoints++;
+      }
+
+      if (box.status == 0) {
+        VF_POINT* vp = &dom->vfPoint[dom->nVfPoints - 1];
+        
+        MiniTraceEx("VF Pt. found, #%u, mult: %ux, voffset: %d mV, dom: 0x%x",
+          dom->nVfPoints,
+          vp->FusedRatio,
+          vp->OffsetVolts,
+          domIdx);
       }
 
       pidx++;
 
     } while ((box.status == 0) && (pidx < MAX_VF_POINTS));
   }
+
+  MiniTraceEx("Dom: 0x%x, V/F discovery done", domIdx);
 
   return status;
 }
@@ -157,6 +194,17 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
   OcMailbox_InitializeAsMSR(&box);
 
   //
+  // Alderlake: if we are running on E-Core, skip other domains
+
+  CPUCORE* core = (CPUCORE*)GetCpuDataBlock();
+
+  if (core->CpuInfo.HybridArch && core->IsECore) {
+    if (domIdx != ECORE) {
+      return EFI_SUCCESS;
+    }
+  }
+
+  //
   // Use OC Mailbox MSR
   // to program V/F overrides
   
@@ -171,53 +219,88 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
     
     //
     // Sanity
-        
-    dom->IccMax = (dom->IccMax > 0x3FF) ? 0x3FF : dom->IccMax;
-    dom->IccMax = (dom->IccMax < 0x4) ? 0x4 : dom->IccMax;
 
-    //
-    // TBD: RKL/ICL/TGL - handle "Unlimited IccMax"! 
+    const UINT16 iccMaxMask = (1 << gActiveCpuData->IccMaxBits) - 1;
+        
+    dom->IccMax = (dom->IccMax > iccMaxMask) ? iccMaxMask : dom->IccMax;
+    dom->IccMax = (dom->IccMax < 0x4) ? 0x4 : dom->IccMax;
     
-    data = dom->IccMax;    
-    
+    data = dom->IccMax;
+
+    MiniTraceEx("Dom: 0x%x, programming IccMax of %u A: %u",
+      domIdx,
+      data>>2);
+
     cmd = OcMailbox_BuildInterface(0x17, dom->VRaddr, 0);
     OcMailbox_ReadWrite(cmd, data, &box);
+
+    //
+    // RKL/ICL/TGL/ADL require extra step for truly unlocked IccMax
+    // NOTE: do not use on CML or older CPUs!
+
+    if (gActiveCpuData->hasUnlimitedIccMaxFlag) {
+      if (dom->IccMax == iccMaxMask) {
+
+        data = dom->IccMax;
+        data |= bit31u32;
+
+        cmd = OcMailbox_BuildInterface(0x17, dom->VRaddr, 0);
+        OcMailbox_ReadWrite(cmd, data, &box);
+      }
+    }
+
+    MiniTraceEx("Dom: 0x%x, programming IccMax done", domIdx);
   }
 
   //////////////////
   // V/F (Legacy) //
   //////////////////
-    
-  //
-  // Convert the desired voltages in OC Mailbox format
-
-  UINT32 targetVoltsFx = 
-    (UINT32) cvrt_ovrdvolts_i16_tofix(dom->TargetVolts) & 0xfff;  
-  
-  UINT32 offsetVoltsFx = 
-    (UINT32) cvrt_offsetvolts_i16_tofix(dom->OffsetVolts) & 0x7ff;
 
   //
-  // Compose the command for the OC mailbox
+  // Do not perform legacy programming
+  // if user has chosen to program individual VF points
 
-  data =  dom->MaxRatio;
-  data |= ((UINT32)(targetVoltsFx)) << 8;
-  data |= ((UINT32)(dom->VoltMode & bit1u8)) << 20;  
-  data |= (offsetVoltsFx) << 21;
+  if (!programVfPoints) {
 
-  cmd = OcMailbox_BuildInterface(0x11, domIdx, 0x0); 
-
-  //
-  // Send our VF override request to the OC Mailbox
-
-  if(EFI_ERROR(OcMailbox_ReadWrite( cmd, data, &box))) {
-    
     //
-    // If we failed here, it is beyond hope
-    // (retries already done, etc.) so fail hard
-    
-    return EFI_ABORTED;
+    // Convert the desired voltages in OC Mailbox format
+
+    UINT32 targetVoltsFx =
+      (UINT32)cvrt_ovrdvolts_i16_tofix(dom->TargetVolts) & 0xfff;
+
+    UINT32 offsetVoltsFx =
+      (UINT32)cvrt_offsetvolts_i16_tofix(dom->OffsetVolts) & 0x7ff;
+
+    //
+    // Compose the command for the OC mailbox
+
+    data = dom->MaxRatio;
+    data |= ((UINT32)(targetVoltsFx)) << 8;
+    data |= ((UINT32)(dom->VoltMode & bit1u8)) << 20;
+    data |= (offsetVoltsFx) << 21;
+
+    MiniTraceEx("Dom: 0x%x programming: max %ux, vmode: %u, voff: %d, vtgt: %u",
+      domIdx,
+      dom->MaxRatio,
+      dom->VoltMode,
+      dom->OffsetVolts,
+      dom->TargetVolts);
+
+    cmd = OcMailbox_BuildInterface(0x11, domIdx, 0x0);
+
+    //
+    // Send our VF override request to the OC Mailbox
+
+    if (EFI_ERROR(OcMailbox_ReadWrite(cmd, data, &box))) {
+
+      //
+      // If we failed here, it is beyond hope
+      // (retries already done, etc.) so fail hard
+
+      return EFI_ABORTED;
+    }
   }
+    
 
   ///////////////
   // VF Points //
@@ -227,31 +310,41 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
     for (UINT8 vidx = 0; vidx < dom->nVfPoints; vidx++) {
       VF_POINT *vp = dom->vfPoint + vidx;
 
-      if (vp->FusedRatio > 0) {
-
-        data = cmd = 0;
+      if (vp->IsValid) {
         
         //
         // Convert voltage offset to mbox format:
 
-        offsetVoltsFx = (UINT32)cvrt_offsetvolts_i16_tofix(
+        UINT32 offsetVoltsFx = (UINT32)cvrt_offsetvolts_i16_tofix(
           vp->OffsetVolts) & 0x7ff;
 
         //
         // Compose the command for the OC mailbox
 
-        data = vp->FusedRatio;
-        data |= (offsetVoltsFx) << 21;
+        data = (offsetVoltsFx) << 21;
+
+        MiniTraceEx("Dom: 0x%x, VF Pt. #%u programming: voffset: %d mV",
+          domIdx,
+          vidx+1,
+          vp->OffsetVolts );
 
         cmd = OcMailbox_BuildInterface(0x11, domIdx, vidx + 1);
 
         if (EFI_ERROR(OcMailbox_ReadWrite(cmd, data, &box))) {
+
+          MiniTraceEx("Dom: 0x%x, aborting programming at vfp #%u, err: 0x%x",
+            domIdx,
+            vidx + 1,
+            box.status);
+
           return EFI_ABORTED;
         }
       }
     }
   }
-  
+
+  MiniTraceEx("Dom: 0x%x, V/F programming done", domIdx);
+
   return EFI_SUCCESS;
 }
 
@@ -261,10 +354,15 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
 
 VOID IaCore_OcLock(VOID)
 {
-  QWORD flexRatioMsr;
-  
-  flexRatioMsr.u64 = pm_rdmsr64(MSR_FLEX_RATIO);
-  flexRatioMsr.u32.lo |= bit20u32;
+   QWORD flexRatioMsr;
+   
+   flexRatioMsr.u64 = pm_rdmsr64(MSR_FLEX_RATIO);
 
-  pm_wrmsr64 (MSR_FLEX_RATIO, flexRatioMsr.u64);
+   if (!(flexRatioMsr.u32.lo & bit20u32)) {
+
+     MiniTraceEx("Locking OC");
+
+	   flexRatioMsr.u32.lo |= bit20u32;
+	   pm_wrmsr64(MSR_FLEX_RATIO, flexRatioMsr.u64);
+   }
 }

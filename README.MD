@@ -1,4 +1,4 @@
-# Reduce CPU Power Waste and Gain Performance. Greener and Meaner!
+# Reduce CPU Power Waste and Gain Performance - Greener and Meaner
 
 ```txt
    ______                            ______                 _
@@ -17,22 +17,27 @@
   recommended use by users not skilled in the art. Use it at your own risk.
 ```
 
-- [What is PowerMonkey?](#what-is-powermonkey)
-  - [Background](#background)
-  - [Challenges](#challenges)
-  - [How does PowerMonkey work?](#how-does-powermonkey-work)
-- [Who is the target user of PowerMonkey?](#who-is-the-target-user-of-powermonkey)
-- [Enabled Features](#enabled-features)
-- [Getting Started](#getting-started)
-- [Build the binaries](#build-the-binaries)
-  - [Building - "Visual Studio" route](#building---visual-studio-route)
-  - [Building - EDK2 route](#building---edk2-route)
-- [Deployment](#deployment)
-- [Testing](#testing)
-  - [Emergency Exit](#emergency-exit)
-- [Cinebench R23](#cinebench-r23)
-- [Extra 650 MHz and energy saved? Where is the catch?](#extra-650-mhz-and-energy-saved-where-is-the-catch)
-- [Moving onto Hyper-V](#moving-onto-hyper-v)
+- [Reduce CPU Power Waste and Gain Performance - Greener and Meaner](#reduce-cpu-power-waste-and-gain-performance---greener-and-meaner)
+  - [What is PowerMonkey?](#what-is-powermonkey)
+    - [**Background**](#background)
+    - [**Challenges**](#challenges)
+    - [**How does PowerMonkey work?**](#how-does-powermonkey-work)
+  - [Who is the target user of PowerMonkey?](#who-is-the-target-user-of-powermonkey)
+  - [Enabled Features](#enabled-features)
+  - [Getting Started](#getting-started)
+    - [Configuration](#configuration)
+    - [Build the binaries](#build-the-binaries)
+      - [**Building - "Visual Studio" route:**](#building---visual-studio-route)
+      - [**Building - EDK2 route:**](#building---edk2-route)
+    - [Deployment](#deployment)
+  - [Testing](#testing)
+    - [Emergency Exit](#emergency-exit)
+    - [**Cannot resolve hanging - Tracing to the Rescue**](#cannot-resolve-hanging---tracing-to-the-rescue)
+  - [Real World Results](#real-world-results)
+    - [Cinebench R23](#cinebench-r23)
+    - [Extra 650 MHz and energy saved? Where is the catch?](#extra-650-mhz-and-energy-saved-where-is-the-catch)
+    - [Moving onto Hyper-V](#moving-onto-hyper-v)
+    - [**Even Better Undervolting: V/F Point Adjustment**](#even-better-undervolting-vf-point-adjustment)
   
 ## What is PowerMonkey?
 
@@ -70,7 +75,10 @@ PowerMonkey.efi is currently proof-of-concept for expert users who have systems 
 
 ## Enabled Features
 
-NOTE: PowerMonkey is a POC and is **not tested** on anything other than few CML (10th Gen) systems. At this stage, usage is recommended only to developers and experts under precautions. There are no checks for CPU compatibility so crashes could occur. It can brick computers or cause them to fail in all kinds of ways!
+*NOTE: Alder Lake Support is BETA (P-Cores Only, spurious crashes discovered when E-Cores are emabled)*
+
+PowerMonkey is a POC and is **not tested** on anything other than few CML, RKL and ADL* systems.
+At this stage, usage is recommended only to developers and experts under precautions. There are no checks for CPU compatibility so crashes could occur. It can brick computers or cause them to fail in all kinds of ways!
 
 |                          Feature                        |    Configurable    |
 | ------------------------------------------------------- | ------------------ |
@@ -79,10 +87,10 @@ NOTE: PowerMonkey is a POC and is **not tested** on anything other than few CML 
 |   Targetted voltage mode                                |         YES        |
 |   Interpolative voltage mode                            |         YES        |
 |   Voltage offset                                        |         YES        |
-|   Voltage adjustment on individual VF Curve Points      |    YES (Preview)   |
+|   Voltage adjustment on individual VF Curve Points      |         YES        |
 | **IccMax**                                              |                    |
 |   Programmable IccMax for all domains (OC Mailbox)      |         YES        |
-|   RKL/TGL/ICL+ Unlimited IccMax                         |         TBD        |
+|   RKL/ICL/TGL/ADL Unlimited IccMax                      |         YES        |
 | **Turbo Bins**                                          |                    |
 |   Max. Turbo Ratio for all turbo configurations         |         YES        |
 |   Invididual (per # cores) turbo ratio configuration    |         TBD        |
@@ -99,12 +107,15 @@ NOTE: PowerMonkey is a POC and is **not tested** on anything other than few CML 
 |   Fine-grained Lockdown of different Power registers    |         YES        |
 | **Stability Testing**                                   |                    |
 |   After-programming Stress Tester                       |         TBD        |
+| **Debugging**                                           |                    |
+|   Tracing (Compile-Time Option, see CONFIGURATION.h)    |         YES        |
 
 ## Getting Started
 
 ### Configuration
 
-All relevant configuration options are stored in the file `CONFIGURATION.c` where the entire configuration interface and options reside. Configuration process is exactly the same for all build methods and does not depend on the choice of build toolchain. Simply edit `CONFIGURATION.c` with your overrides and build the PowerMonkey.efi executable afterwards!
+All relevant configuration options are stored in these files: `CONFIGURATION.c` and `CONFIGURATION.h`
+where the entire configuration interface and options reside. Configuration process is exactly the same for all build methods and does not depend on the choice of build toolchain. Simply edit `CONFIGURATION.c` and `CONFIGURATION.h` with your overrides and build the PowerMonkey.efi executable afterwards!
 
 Note: this guide is not 'Undervolting HowTo' - it is assumed you already know the optimal settings for your system. If not, please check some of the excellent guides like [ThrottleStop guide](https://www.ultrabookreview.com/31385-the-throttlestop-guide/) or [Guide on NotebookReview Forums](http://forum.notebookreview.com/threads/the-undervolting-guide.235824/)
 
@@ -201,7 +212,38 @@ PowerMonkey has an "Emergency Exit" feature enabled by default: it waits 3 secon
 
 If the computer is still alive and not frozen, you might proceed to your OS of choice to confirm that the settings have been applied. Do not forget to disable Hypervisor first, as one enabled, you will not be able to actually see the voltages from a VM. Settingfs form the ```CONFIGURATION.c``` applied to my CPU result in the following (pictures of ThrottleStop and XTU just reading the values from the CPU):
 
+### **Cannot resolve hanging - Tracing to the Rescue**
+
+Voltage and clock controls are very low-level functions with no sophisticated error control implemented
+in the firmware / p-code. Many mistakes will lead to frozen system or reboots without notice. Optimal
+and recommended way to debug this is using remote System Debugger over DCI connection. But it is highly
+unlikely for many users to have hardware debuggers at hand, so will have to do with software.
+
+If PowerMonkey hangs and you cannot isolate the problem using configuration options, then you should
+enable real-time tracing, by uncommenting this line in ```CONFIGURATION.h```
+
+```cpp
+///
+/// MINIMAL TRACING
+///
+/// If PowerMonkey.efi is freezing your system during programming and you cannot
+/// pinpoint the source, uncomment the ENABLE_MINILOG_TRACING #define, rebuild
+/// PowerMonkey.efi and run - at the moment of freezing display shall contain
+/// last executed modification OPs that can be used to aid debugging
+///
+
+#define ENABLE_MINILOG_TRACING
+```
+
+After rebuilding, run PowerMonkey.efi as you normally would. You will see that screen is now updated in real-time with information what PowerMonkey.efi is doing on every core. Every core gets two text lines: yellow line contains "human" readable information, white line contains logs of important machine instructions that are prone to cause instabilities / crashes. Last thing seen before crash/hang is usually the last batch of instructions sent to the CPU. You can take a photo of this (sorry, not a joke - it is exactly like Windows BSOD) and share it with community/author to aid debugging (or fix the problem yourself if you are familiar with firmware/system programming).
+
+![Aborted](img/pmtracing.png)
+
+## Real World Results
+
 **Intel XTU:**
+
+Comet Lake S (Notebook):
 
 ![EfiGood](img/powah_xtu1.jpg)
 
@@ -236,8 +278,8 @@ So, we gained 0.64 GHz in sustained 100% load, all while becoming 35% more energ
 > (*) OK, it has to be told that -125 mV is considered a very aggressive undervolt
 > for an average Comet Lake H CPU specimen. Mine seems happy, but there is much
 > more to this story that I will cover some other time. For now, let me state that
-> observation has led me to believe that it is something else that makes these 
-> settings reported not stable, and that problem already has a fix (albeit just for 
+> observation has led me to believe that it is something else that makes these
+> settings reported not stable, and that problem already has a fix (albeit just for
 > fully unlocked 'OC' models atm.).
 
 THis particular CML-H model could *theoretically* sustain 4.2 GHz all-core load, as this is what it has been fused with as maximum. Looking at ThrottleStop logs it shows that now we are thermally limited. This particular laptop does look like it could benefit from re-pasting so *maybe* sustaining 4.2 GHz is doable.
@@ -246,7 +288,7 @@ But... HOW?
 
 ### Extra 650 MHz and energy saved? Where is the catch?
 
-There is no catch, just laws of physics. Notebook CPU is encased inside the scorching environment that cannot evacuate heat as effectively as, say, a server could. 
+There is no catch, just laws of physics. Notebook CPU is encased inside the scorching environment that cannot evacuate heat as effectively as, say, a server could.
 
 Just looking at the dimensions of notebook parts (esp. the thermal solution,) it becomes apparent that we will not be pushing out hundreds of watts out of that space. The test system used here can deal with ~100-110W (internal measurements), if you are OK with your computer sounding like a jet engine. So this is our limit, but reasonable people would dial that down to 70-80W if they value their hearing.
 
@@ -270,3 +312,9 @@ Things become even more interesting if one logs the data and checks what has CPU
 |   Total Build Time                 |      18m18.203s    |      17m21.769s    |
 
 Differences are less drastic compared to Cinebench, which is to be expected as Linux kernel build is not so CPU-heavy. Still, it is almost a minute faster and, as originally intended: serves to prove that custom CPU settings are active under Hyper-V.
+
+### **Even Better Undervolting: V/F Point Adjustment**
+
+Unlocked CML, RKL, TGL and ADL chips offer even more advanced tweaking of voltages: per individual points on Voltage/frequency curve. While there will be a separate guide on this, here is a quick preview of V/F Point Adjustment in action, with Alder Lake CPU:
+
+![AlderRun](img/alder_run.png)

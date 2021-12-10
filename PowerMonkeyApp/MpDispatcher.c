@@ -37,6 +37,7 @@
 // PowerMonkey
 
 #include "MpDispatcher.h"
+#include "LowLevel.h"
 
 //
 // Initialized at startup
@@ -54,9 +55,60 @@ extern EFI_BOOT_SERVICES* gBS;
 
 typedef struct _PACKAGE_DISPATCH_DATA
 {
-  UINTN ApicID;
+  UINTN CpuNumber;
   VOID* opaqueParam;
 } PACKAGE_DISPATCH_DATA;
+
+
+/*******************************************************************************
+ * ProcessorIgnite
+ ******************************************************************************/
+
+typedef struct _IgniteContext
+{
+  UINTN CpuNumber;
+  VOID* userParam;  
+  EFI_AP_PROCEDURE userProc;
+} IgniteContext;
+
+VOID EFIAPI ProcessorIgnite(VOID* params)
+{
+  ///
+  /// We are now running on the designated CPU.
+  /// Before executing user's function we will set GS to point to per-CPU store
+  /// 
+    
+  IgniteContext* pic = (IgniteContext*)params;
+
+  VOID* coreStructAddr = GetCpuDataBlock();
+
+  //
+  // Set the GS register to point to coreStructAddr
+
+  SetCpuGSBase(coreStructAddr);
+
+  ///
+  /// Populate CPU-specific info
+  /// 
+  
+  CPUCORE* core = (CPUCORE*)coreStructAddr;
+  GetCpuInfo(&core->CpuInfo);
+
+  if (core->CpuInfo.HybridArch) {
+    core->IsECore = core->CpuInfo.ECore;
+    core->IsPerfCore = core->CpuInfo.PCore;
+  }
+  else {
+    core->IsECore = 0;
+    core->IsPerfCore = 1;
+  }
+  
+  ///
+  /// Execute user's call
+  /// 
+
+  pic->userProc(pic->userParam);
+}
 
 
 /*******************************************************************************
@@ -65,28 +117,34 @@ typedef struct _PACKAGE_DISPATCH_DATA
 
 EFI_STATUS EFIAPI RunOnPackageOrCore(
   const IN PLATFORM* Platform,
-  const IN UINTN ApicID,
+  const IN UINTN CpuNumber,
   const IN EFI_AP_PROCEDURE proc,
   IN VOID* param OPTIONAL)
 {
   EFI_STATUS status = EFI_SUCCESS;
 
   if (gMpServices) {
-    if (ApicID != Platform->BootProcessor) {
+    if (CpuNumber != Platform->BootProcessor) {
+
+      IgniteContext ctx = { 0 };
+      
+      ctx.userParam = param;
+      ctx.userProc = proc;
+      ctx.CpuNumber = CpuNumber;
 
       status = gMpServices->StartupThisAP(
         gMpServices,
-        proc,
-        ApicID,
+        ProcessorIgnite,
+        CpuNumber,
         NULL,
         1000000,
-        param,
+        &ctx,
         NULL
       );
 
       if (EFI_ERROR(status)) {
         Print(L"[ERROR] Unable to execute on CPU %u,"
-          "status code: 0x%x\n", ApicID, status);
+          "status code: 0x%x\n", CpuNumber, status);
       }
 
       return status;
@@ -97,7 +155,16 @@ EFI_STATUS EFIAPI RunOnPackageOrCore(
   // Platform has no MP services OR we are running on the desired package
   // ... so instead of dispatching, we will just do the work now
 
-  proc(param);
+  {
+    IgniteContext ctx = { 0 };
+
+    ctx.userParam = param;
+    ctx.userProc = proc;
+    ctx.CpuNumber = CpuNumber;
+
+    ProcessorIgnite(&ctx);
+  }
+  
 
   //
   // ... and that's that
@@ -111,6 +178,7 @@ EFI_STATUS EFIAPI RunOnPackageOrCore(
 
 EFI_STATUS EFIAPI RunOnAllProcessors(
   const IN EFI_AP_PROCEDURE proc,
+  const BOOLEAN runConcurrent,                  // false = serial execution
   IN VOID* param OPTIONAL)
 {
   EFI_STATUS status = EFI_SUCCESS;
@@ -123,12 +191,14 @@ EFI_STATUS EFIAPI RunOnAllProcessors(
 
   if (gMpServices) {
 
-    status = gBS->CreateEvent(
-      EVT_NOTIFY_SIGNAL,
-      TPL_NOTIFY,
-      EfiEventEmptyFunction,
-      NULL,
-      &mpEvent);
+    if (runConcurrent) {
+      status = gBS->CreateEvent(
+        EVT_NOTIFY_SIGNAL,
+        TPL_NOTIFY,
+        EfiEventEmptyFunction,
+        NULL,
+        &mpEvent);
+    }
 
     if (EFI_ERROR(status)) {
       Print(L"[ERROR] Unable to create EFI_EVENT, code: 0x%x\n", status);
@@ -136,18 +206,24 @@ EFI_STATUS EFIAPI RunOnAllProcessors(
     }
     else {
 
+      IgniteContext ctx = { 0 };
+
+      ctx.CpuNumber = 0xFFFFFFFF;
+      ctx.userParam = param;
+      ctx.userProc = proc;
+
       status = gMpServices->StartupAllAPs(
         gMpServices,
-        proc,
+        ProcessorIgnite,
         FALSE,
-        &mpEvent,
+        (runConcurrent) ? &mpEvent : NULL,
         0,
-        param,
+        &ctx,
         NULL
       );
 
       if (EFI_ERROR(status)) {
-        Print(L"[ERROR] Unable to execute all CPUs, code: 0x%x\n", status);
+        Print(L"[ERROR] Unable to execute on AP CPUs, code: 0x%x\n", status);
         gBS->CloseEvent(mpEvent);
         mpEvent = NULL;
       }
@@ -169,9 +245,12 @@ EFI_STATUS EFIAPI RunOnAllProcessors(
     //
     // Wait for APs to finish
 
-    gBS->WaitForEvent(1, &mpEvent, &eventIdx);
-    gBS->CloseEvent(mpEvent);
+    if (runConcurrent) {
+      gBS->WaitForEvent(1, &mpEvent, &eventIdx);
+      gBS->CloseEvent(mpEvent);
+    }    
   }
 
   return status;
 }
+

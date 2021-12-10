@@ -24,73 +24,96 @@
 *
 *******************************************************************************/
 
-/*******************************************************************************
- * Configuration
- ******************************************************************************/
-
-#include "CONFIGURATION.h"
-
-/*******************************************************************************
- * MiniLogEntry - 128 bits, can be cmpxchg16b-ed
- ******************************************************************************/
-
-typedef struct _MiniLogEntry {
-  UINT8   operId;
-  UINT8   pkgIdx;
-  UINT8   coreIdx;
-  UINT8   dangerous;
-  UINT32  param1;
-  UINT64  param2;
-} MiniLogEntry;
+#include <Uefi.h>
+#include <Library/UefiLib.h>
+#include "SaferAsmHdr.h"
+#include "CpuInfo.h"
+#include "Constants.h"
 
 /*******************************************************************************
- * Operation IDs
+ * 
  ******************************************************************************/
 
-#define MINILOG_OPID_FREE_MSG                                   0x00
-#define MINILOG_OPID_RDMSR64                                    0x01
-#define MINILOG_OPID_WRMSR64                                    0x02
-#define MINILOG_OPID_MMIO_READ32                                0x03
-#define MINILOG_OPID_MMIO_WRITE32                               0x04
-#define MINILOG_OPID_MMIO_OR32                                  0x05
+#pragma intrinsic(__cpuid)
+#pragma intrinsic(__cpuidex)
+extern void* memset(void* str, int c, UINTN n);
 
 /*******************************************************************************
- * Log Codes
+ * GetCpuInfo
  ******************************************************************************/
 
-#define MINILOG_LOGCODE_TRACE                                   0x00
+void GetCpuInfo(CPUINFO* ci)
+{
+  memset(ci, 0, sizeof(CPUINFO));
 
-/*******************************************************************************
- *
- ******************************************************************************/
 
-#ifdef ENABLE_MINILOG_TRACING
+  //////////////////
+  // Brand String //
+  //////////////////
+  
+  UINT32* venstr = (UINT32 *)ci->venString;
+  UINT32* brandstr = (UINT32*)ci->brandString;
 
-void InitTrace();
+  __cpuid(venstr,    0x80000002);
+  __cpuid(venstr+4,  0x80000003);
+  __cpuid(venstr+12, 0x80000004);
 
-void MiniTrace(
-  const UINT8  operId,  
-  const UINT8  dangerous,
-  const UINT32 param1,
-  const UINT64 param2
-);
+  ///////////////////
+  // Vendor String //
+  ///////////////////
+  
+  UINT32 args[4] = {0};
 
-void MiniTraceEx(
-  IN  CONST CHAR8* format,
-  ...
-);
+  __cpuid(args, 0x00000000);
+  UINT32 hscall = args[0];
+  brandstr[0] = args[1];
+  brandstr[1] = args[3];
+  brandstr[2] = args[2];
 
-#else
+  
+  memset(args, 0, sizeof(args));  
+  __cpuid(args, 0x01);
 
-#define InitTrace()
-#define MiniTrace(a, b, c, d)
+  ci->f1 = args[0];
+  ci->stepping =  args[0] & 0x0000000F;
+  ci->family =   (UINT32)(args[0] & 0x00000F00) >> 8;
+  ci->model =    (UINT32)(args[0] & 0x000000F0) >> 4;
 
-static void MiniTraceEx(
-  IN  CONST CHAR8* format,
-  ...
-) {
+  if ((ci->family == 0xF) || (ci->family == 0x6)) {
+    ci->model  |= (UINT32)((args[0] & 0x0000F0000) >> 12);
+    ci->family |= (UINT32)((args[0] & 0x00FF00000) >> 16);
+  }
 
+  
+  ///////////////////////////////////
+  // Hybrid Architecture Detection //
+  ///////////////////////////////////
+
+  memset(args, 0, sizeof(args));
+  __cpuid(args, 0x7);
+
+  ci->HybridArch = (args[3] & bit15u32) ? 1 : 0;  
+
+  if (ci->HybridArch) {
+
+    if (hscall >= 0x1A) {
+      memset(args, 0, sizeof(args));
+      __cpuid(args, 0x1A);
+
+      UINT32 ct = ((args[0] & 0xFF000000) >> 24);
+
+      if (ct == 0x20) {
+        ci->ECore = 1;
+        ci->PCore = 0;
+      }
+      else {
+        ci->ECore = 0;
+        ci->PCore = 1;
+      }
+    }
+  }
+  else {
+    ci->ECore = 0;
+    ci->PCore = 1;
+  }
 }
-
-
-#endif

@@ -46,7 +46,14 @@ VALID_ARCHITECTURES             = X64
 
 [Sources]
   CONFIGURATION.c
+  CONFIGURATION.h
   Constants.h
+  CpuMailboxes.c
+  CpuMailboxes.h
+  CpuData.c
+  CpuData.h
+  CpuInfo.c
+  CpuInfo.h
   CpuMailboxes.c
   CpuMailboxes.h
   DelayX86.c
@@ -63,6 +70,8 @@ VALID_ARCHITECTURES             = X64
   OcMailbox.h
   Platform.c
   Platform.h
+  PrintStats.c
+  PrintStats.h
   PowerLimits.c
   PowerLimits.h
   PowerMonkey.c

@@ -26,7 +26,10 @@
 
 #pragma once
 
+#define PMUNUSED(x) (void)(x)
+
 #include "CpuMailboxes.h"
+#include "CpuInfo.h"
 
 /*******************************************************************************
  * Constants
@@ -34,11 +37,21 @@
 
 #define MAX_PACKAGES    8                        // Maximum Packages
 #define MAX_CORES       128                      // Max cores per package
-#define MAX_DOMAINS     5
+#define MAX_DOMAINS     6
 #define MAX_VF_POINTS   15
 
 #define MAX_POWAH       0xFFFFFFFF
 #define MAX_AMPS        0xFFFF
+
+/*******************************************************************************
+ * CoreIdxMap
+ ******************************************************************************/
+
+extern UINTN gNumCores;
+extern VOID* CoreIdxMap[MAX_CORES * MAX_PACKAGES];
+extern UINTN CoreApicIDs[MAX_CORES * MAX_PACKAGES];
+
+UINTN ApicIdToCoreNumber(const UINTN ApicID);
 
 /*******************************************************************************
  * OC Mailbox - Voltage Domains (NOTE: some might be linked!)
@@ -50,7 +63,8 @@ enum VoltDomains
   GTSLICE =   0x01,           // GT Slice
   RING =      0x02,           // Ring / Cache
   GTUNSLICE = 0x03,           // GT Unslice
-  UNCORE =    0x04            // Uncore (SA)
+  UNCORE =    0x04,           // Uncore (SA)
+  ECORE =     0x05            // E-Core (Alder Lake+ hybrids only)
 };
 
 /*******************************************************************************
@@ -96,6 +110,7 @@ typedef struct _VF_POINT
 {
   UINT8   FusedRatio;               // Read Only
   INT16   OffsetVolts;              // R/W if supported and if V/F point valid  
+  UINT8   IsValid;
 } VF_POINT;
 
 /*******************************************************************************
@@ -137,13 +152,20 @@ typedef struct _DOMAIN
 
 typedef struct _CPUCORE
 {
+  CPUINFO   CpuInfo;
+
   UINTN     ApicID;
+  UINTN     AbsIdx;
+  UINT8     LocalIdx;
+
   UINT32    CpuID;
-  UINT8     CpuidString[128];
 
-  BOOLEAN   IsPhysicalCore;                           // 
+  BOOLEAN   IsPhysical;
+  BOOLEAN   IsPerfCore;
+  BOOLEAN   IsECore;
 
-  void *parentPackage;
+  VOID      *parent;
+  UINT8     PkgIdx;
 
 } CPUCORE;
 
@@ -162,9 +184,9 @@ typedef struct _PACKAGE
   UINT8 Program_VF_Overrides[MAX_DOMAINS];     // Domains to program
   UINT8 Program_IccMax[MAX_DOMAINS];           // Program IccMax for a domain
 
-  DOMAIN Domain[MAX_DOMAINS];                  // IA Cores, Ring, SA, ...
+  DOMAIN planes[MAX_DOMAINS];                  // IA Cores, Ring, SA, ...
 
-  UINT8 Program_VF_Points;                     // Program individual VF Points
+  UINT8 Program_VF_Points[MAX_DOMAINS];        // Program individual VF Points
                                                // (VF Curve Points)
 
   //
@@ -278,17 +300,20 @@ typedef struct _PACKAGE
 
   UINTN   PackageID;
   UINTN   FirstCoreApicID;
+  UINTN   FirstCoreNumber;
 
   UINTN   PhysicalCores;
   UINTN   LogicalCores;
 
   UINT32  CpuID;
   UINT8   CpuidString[128];
+  CPUINFO CpuInfo;
 
   //////////////////
   // Private Data //
   //////////////////
  
+  UINT64 idx;
   VOID* parent;                             // Parent platform object
 
 } PACKAGE;
@@ -340,3 +365,15 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* Platform);
 
 EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   IN OUT PLATFORM* sys);
+
+/*******************************************************************************
+ * DomainSupported
+ ******************************************************************************/
+
+BOOLEAN DomainSupported(const UINT8 didx);
+
+/*******************************************************************************
+* GetCpuDataBlock
+******************************************************************************/
+
+VOID* GetCpuDataBlock();

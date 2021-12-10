@@ -862,6 +862,7 @@ smo_done:
 
         ret
 
+
 section .data
 global safer_c_isr_fptr
 safer_c_isr_fptr: dq 0

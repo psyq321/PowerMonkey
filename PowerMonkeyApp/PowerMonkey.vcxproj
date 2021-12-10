@@ -9,6 +9,7 @@
   <PropertyGroup Label="Globals">
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{A94AC9AF-BA6D-4F79-AD8A-806D78CD4A0E}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -40,14 +41,21 @@
       <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Speed</FavorSizeOrSpeed>
       <EnablePREfast Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnablePREfast>
       <WarningLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Level4</WarningLevel>
+      <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</BrowseInformation>
     </ClCompile>
+    <Bscmake>
+      <PreserveSbr Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</PreserveSbr>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CONFIGURATION.c" />
+    <ClCompile Include="CpuData.c" />
+    <ClCompile Include="CpuInfo.c" />
     <ClCompile Include="CpuMailboxes.c" />
     <ClCompile Include="DelayX86.c" />
     <ClCompile Include="FixedPoint.c" />
     <ClCompile Include="MiniLog.c" />
+    <ClCompile Include="PrintStats.c" />
     <ClCompile Include="SelfTest.c" />
     <ClCompile Include="TimeWindows.c" />
     <ClCompile Include="VFTuning.c" />
@@ -63,11 +71,16 @@
     <ClCompile Include="VoltTables.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BmpFont.h" />
+    <ClInclude Include="CONFIGURATION.h" />
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="CpuData.h" />
+    <ClInclude Include="CpuInfo.h" />
     <ClInclude Include="CpuMailboxes.h" />
     <ClInclude Include="ASMx64\ComboHell_AVX2.h" />
     <ClInclude Include="DelayX86.h" />
     <ClInclude Include="FixedPoint.h" />
+    <ClInclude Include="PrintStats.h" />
     <ClInclude Include="SelfTest.h" />
     <ClInclude Include="MiniLog.h" />
     <ClInclude Include="SaferAsmHdr.h" />

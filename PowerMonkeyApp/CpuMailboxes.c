@@ -46,6 +46,43 @@
  ******************************************************************************/
 
 /*******************************************************************************
+ * CpuMailbox_MMIOBusyWait
+ ******************************************************************************/
+
+EFI_STATUS EFIAPI CpuMailbox_MMIOBusyWait(CpuMailbox* b)
+{
+  const UINT32 mmioAddr = b->cfg.addr;
+  const UINT32 busyFlag = b->cfg.busyFlag;
+  const UINT32 maxSpins = b->cfg.maxSpins;
+
+  MailboxBody* mb = &b->b;
+
+  UINT8 busy = 1;
+  UINTN nspins = 0;
+
+  do {
+    mb->box.ifce = pm_mmio_read32(mmioAddr);
+
+    busy = (mb->box.ifce & busyFlag) ? 1 : 0;
+
+    if (busy) {
+      nspins++;
+      MicroStall(1);
+    }
+  } while ((busy) && (nspins < maxSpins));
+
+  //
+  // Check if the operation timed out
+
+  if ((busy) && (nspins == maxSpins)) {
+    return EFI_ABORTED;
+  }
+
+  return EFI_SUCCESS;
+}
+
+
+/*******************************************************************************
  * CpuMailbox_BusyWait_MSR
  ******************************************************************************/
 

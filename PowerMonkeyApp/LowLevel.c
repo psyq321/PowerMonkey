@@ -110,6 +110,26 @@ VOID EFIAPI HandleProbingFault(MINISTAT *pst)
   }
 }
 
+/*******************************************************************************
+ * GetCpuGSBase
+ ******************************************************************************/
+
+VOID* EFIAPI GetCpuGSBase()
+{
+  UINT32 err;
+  return (VOID *)safer_rdmsr64(0xc0000101, &err);
+}
+
+
+/*******************************************************************************
+ * SetCpuGSBase
+ ******************************************************************************/
+
+VOID EFIAPI SetCpuGSBase(const void* addr)
+{
+  safer_wrmsr64(0xc0000101, (UINT64)addr);
+}
+
 
 /*******************************************************************************
  * GetPCIeBaseAddress
@@ -136,7 +156,6 @@ VOID EFIAPI InitializeMMIO(VOID)
   // Locate MCHBAR
 
   gMCHBAR = pm_mmio_read32((gPCIeBaseAddr & 0xFC000000) + 0x48) & 0xfffffffe;
-
 }
 
 /*******************************************************************************
@@ -148,7 +167,7 @@ UINT64 pm_rdmsr64(const UINT32 msr_idx)
   UINT32 err = 0;
   UINT64 val = safer_rdmsr64(msr_idx, &err);
 
-  MiniTrace(MINILOG_OPID_RDMSR64, (UINT16)msr_idx, (err)?0xBAAD : val, 0);
+  MiniTrace(MINILOG_OPID_RDMSR64, 1, (UINT32)msr_idx, (err)?0xBAAD : val);
 
   if (err) {
 
@@ -172,7 +191,7 @@ UINT64 pm_rdmsr64(const UINT32 msr_idx)
 
 UINT32 pm_wrmsr64(const UINT32 msr_idx, const UINT64 value)
 {
-  MiniTrace(MINILOG_OPID_WRMSR64, (UINT16)msr_idx, value, 1);
+  MiniTrace(MINILOG_OPID_WRMSR64, 1, (UINT32)msr_idx, value);
 
   UINT32 err = safer_wrmsr64(msr_idx, value);
 

@@ -139,7 +139,7 @@ EFI_STATUS PM_SelfTest(VOID)
   AsciiPrint("[SelfTest] Running %u Iterations of ComboHell_AVX2 Stressor\n",
     gSelfTestMaxRuns);
 
-  RunOnAllProcessors(PM_ComboHell_Thread, NULL);
+  RunOnAllProcessors(PM_ComboHell_Thread, TRUE, NULL);
 
   AsciiPrint( "Self test completed with %u errors.\n", 
     gSelfTestErrorCnt);

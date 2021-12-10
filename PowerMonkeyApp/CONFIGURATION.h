@@ -26,17 +26,13 @@
 
 #pragma once
 
-#include "Platform.h"
+///
+/// MINIMAL TRACING
+///
+/// If PowerMonkey.efi is freezing your system during programming and you cannot
+/// pinpoint the source, uncomment the ENABLE_MINILOG_TRACING #define, rebuild
+/// PowerMonkey.efi and run - at the moment of freezing display shall contain
+/// last executed modification OPs that can be used to aid debugging
+///
 
-EFI_STATUS EFIAPI RunOnPackageOrCore( 
-  const IN PLATFORM *Platform,
-  const IN UINTN CpuNumber,
-  const IN EFI_AP_PROCEDURE proc,
-  const IN VOID *param OPTIONAL 
-);
-
-EFI_STATUS EFIAPI RunOnAllProcessors( 
-  const IN EFI_AP_PROCEDURE proc,
-  const BOOLEAN runConcurrent,                  // false = serial execution
-  IN VOID *param OPTIONAL
-);
+//#define ENABLE_MINILOG_TRACING

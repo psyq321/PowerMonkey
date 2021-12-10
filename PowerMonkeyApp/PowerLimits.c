@@ -75,7 +75,7 @@ UINT64 GetPkgPowerLimits(
   
   msr.u64 = pm_rdmsr64(MSR_PKG_POWER_INFO);
   
-  *pMsrPkgMaxPL1 = msr.u32.hi & 0x00003fff;
+  *pMsrPkgMaxPL1 = msr.u32.hi  & 0x00003fff;
   *pMsrPkgMinPL1 = (msr.u32.lo & 0x3fff0000) >> 16;  
   *pMsrPkgMaxTau = (msr.u32.hi & 0x3f0000) >> 16;
 
@@ -146,79 +146,81 @@ void SetPkgPowerLimit12_MSR(
   xform_tau = (PkgMaxTau > 0) ? MIN(xform_tau, PkgMaxTau) : xform_tau;
 
   msr.u64 = pm_rdmsr64(MSR_PACKAGE_POWER_LIMIT);
-  
+
+  if (!(msr.u32.hi & bit31u32)) {        // do not attempt to write locked MSR
   /////////
   // PL1 //
   /////////
 
-  msr.u32.lo = (enablePL1) ?
-    msr.u32.lo | bit15u32 :
-    msr.u32.lo & ~bit15u32;
+    msr.u32.lo = (enablePL1) ?
+      msr.u32.lo | bit15u32 :
+      msr.u32.lo & ~bit15u32;
 
-  msr.u32.lo &= ~vmask1;
+    msr.u32.lo &= ~vmask1;
 
-  if (enablePL1)
-  {
-    // POWER
-    msr.u32.lo |= (xform_pl1w > vmask1) ? vmask1 : xform_pl1w & vmask1;
+    if (enablePL1)
+    {
+      // POWER
+      msr.u32.lo |= (xform_pl1w > vmask1) ? vmask1 : xform_pl1w & vmask1;
 
-    if (TNOERR) {
-      // TIME
+      if (TNOERR) {
+        // TIME
+        msr.u32.lo &= 0xff01ffff;
+        msr.u32.lo |= (UINT32)(FX) << 22;
+        msr.u32.lo |= (UINT32)(FY) << 17;
+      }
+    }
+    else {
       msr.u32.lo &= 0xff01ffff;
-      msr.u32.lo |= (UINT32)(FX) << 22;
-      msr.u32.lo |= (UINT32)(FY) << 17;
     }
-  }
-  else {
-    msr.u32.lo &= 0xff01ffff;
-  }
 
-  /////////
-  // PL2 //
-  /////////
+    /////////
+    // PL2 //
+    /////////
 
-  msr.u32.hi = (enablePL2) ?
-    msr.u32.hi | bit15u32 :
-    msr.u32.hi & ~bit15u32;
+    msr.u32.hi = (enablePL2) ?
+      msr.u32.hi | bit15u32 :
+      msr.u32.hi & ~bit15u32;
 
-  msr.u32.hi &= ~vmask1;
+    msr.u32.hi &= ~vmask1;
 
-  if (enablePL2)
-  {
-    // POWER    
-    msr.u32.hi |= (xform_pl2w > vmask1) ? vmask1 : xform_pl2w & vmask1;
+    if (enablePL2)
+    {
+      // POWER    
+      msr.u32.hi |= (xform_pl2w > vmask1) ? vmask1 : xform_pl2w & vmask1;
 
-    if (TNOERR) {
-      // TIME
+      if (TNOERR) {
+        // TIME
+        msr.u32.hi &= 0xff01ffff;
+        msr.u32.hi |= (UINT32)(FX) << 22;
+        msr.u32.hi |= (UINT32)(FY) << 17;
+      }
+    }
+    else {
       msr.u32.hi &= 0xff01ffff;
-      msr.u32.hi |= (UINT32)(FX) << 22;
-      msr.u32.hi |= (UINT32)(FY) << 17;
     }
+
+    pm_wrmsr64(MSR_PACKAGE_POWER_LIMIT, msr.u64);
+
+    MicroStall(3);
+
+    //
+    // Clamp
+
+    msr.u64 = pm_rdmsr64(MSR_PACKAGE_POWER_LIMIT);
+
+    msr.u32.lo = (clamp) ?
+      msr.u32.lo | bit16u32 :
+      msr.u32.lo & ~bit16u32;
+
+    msr.u32.hi = (clamp) ?
+      msr.u32.hi | bit16u32 :
+      msr.u32.hi & ~bit16u32;
+
+    pm_wrmsr64(MSR_PACKAGE_POWER_LIMIT, msr.u64);
+
+    MicroStall(3);
   }
-  else {
-    msr.u32.hi &= 0xff01ffff;
-  }
-
-  pm_wrmsr64(MSR_PACKAGE_POWER_LIMIT, msr.u64);  
-  
-  MicroStall(3);
-
-  //
-  // Clamp
-
-  msr.u64 = pm_rdmsr64(MSR_PACKAGE_POWER_LIMIT);
-
-  msr.u32.lo = (clamp) ?
-    msr.u32.lo | bit16u32 :
-    msr.u32.lo & ~bit16u32;
-
-  msr.u32.hi = (clamp) ?
-    msr.u32.hi | bit16u32 :
-    msr.u32.hi & ~bit16u32;
-
-  pm_wrmsr64(MSR_PACKAGE_POWER_LIMIT, msr.u64);
-
-  MicroStall(3);
 }
 
 /*******************************************************************************
@@ -232,14 +234,18 @@ VOID EFIAPI SetPL12MSRLock( const UINT8 lock )
     QWORD msr = { 0 };
 
     msr.u64 = pm_rdmsr64(MSR_PACKAGE_POWER_LIMIT);
-            
-    msr.u32.hi = (lock) ?
-      msr.u32.hi | bit31u32 :
-      msr.u32.hi & ~bit31u32;
 
-    pm_wrmsr64(MSR_PACKAGE_POWER_LIMIT, msr.u64);
+    if (!(msr.u32.hi & bit31u32)) {        // do not attempt to write locked MSR
 
-    MicroStall(3);
+      msr.u32.hi = (lock) ?
+        msr.u32.hi | bit31u32 :
+        msr.u32.hi & ~bit31u32;
+
+      pm_wrmsr64(MSR_PACKAGE_POWER_LIMIT, msr.u64);
+
+      MicroStall(3);
+
+    }
   }
 }
 
@@ -832,12 +838,17 @@ VOID EFIAPI GetCTDPLevel(UINT8 *level, UINT8 *locked)
 
 VOID EFIAPI SetCTDPLevel(const UINT8 level)
 {
-  UINT64 val = pm_rdmsr64(MSR_CONFIG_TDP_CONTROL);
+  QWORD msr = { 0 };
 
-  val &= 0xfffffffffffffffc;
-  val |= (UINT64)(level) & 0x03;
+  msr.u64 = pm_rdmsr64(MSR_CONFIG_TDP_CONTROL);
 
-  pm_wrmsr64(MSR_CONFIG_TDP_CONTROL, val);
+  if (!(msr.u32.lo & bit31u32)) {        // do not attempt to write locked MSR
+    
+    msr.u64 &= 0xfffffffffffffffc;
+    msr.u64 |= (UINT64)(level) & 0x03;
+
+    pm_wrmsr64(MSR_CONFIG_TDP_CONTROL, msr.u64);
+  }
 }
 
 /*******************************************************************************
@@ -850,14 +861,17 @@ VOID EFIAPI SetCTDPLock(const UINT8 lock)
 
   msr.u64 = pm_rdmsr64(MSR_CONFIG_TDP_CONTROL);
 
-  if (lock < 2) {
+  if (!(msr.u32.lo & bit31u32)) {        // do not attempt to write locked MSR
+    
+    if (lock < 2) {
 
-    msr.u32.lo = (lock) ?
-      msr.u32.lo | bit31u32 :
-      msr.u32.lo & ~bit31u32;
+      msr.u32.lo = (lock) ?
+        msr.u32.lo | bit31u32 :
+        msr.u32.lo & ~bit31u32;
+    }
+
+    pm_wrmsr64(MSR_CONFIG_TDP_CONTROL, msr.u64);
   }
-
-  pm_wrmsr64(MSR_CONFIG_TDP_CONTROL, msr.u64);
 }
 
 /*******************************************************************************

@@ -30,6 +30,7 @@
 #include "VFTuning.h"
 #include "LowLevel.h"
 #include "DelayX86.h"
+#include "MiniLog.h"
 
 /*******************************************************************************
  *                   !!! WARNING - ACHTUNG - VNIMANIE !!!
@@ -116,6 +117,7 @@ EFI_STATUS IAPERF_ProgramMaxTurboRatios(const UINT8 maxRatio)
   //
   // Program the new values
 
+  MiniTraceEx("Setting all-core max turbo ratio to: %ux", maxRatio);
+
   return SetTurboRatioLimits(msr);
 }
-

@@ -26,17 +26,30 @@
 
 #pragma once
 
-#include "Platform.h"
+/*******************************************************************************
+ * CpuInfo Structure
+ ******************************************************************************/
 
-EFI_STATUS EFIAPI RunOnPackageOrCore( 
-  const IN PLATFORM *Platform,
-  const IN UINTN CpuNumber,
-  const IN EFI_AP_PROCEDURE proc,
-  const IN VOID *param OPTIONAL 
-);
+typedef struct _CPUINFO
+{
+  UINT8 venString[64];
+  UINT8 brandString[8];
 
-EFI_STATUS EFIAPI RunOnAllProcessors( 
-  const IN EFI_AP_PROCEDURE proc,
-  const BOOLEAN runConcurrent,                  // false = serial execution
-  IN VOID *param OPTIONAL
-);
+  UINT32 f1;
+  UINT32 family;
+  UINT32 model;
+  UINT32 stepping;
+
+  BOOLEAN HybridArch;
+  
+  BOOLEAN ECore;
+  BOOLEAN PCore;
+
+} CPUINFO;
+
+
+/*******************************************************************************
+ * GetCpuInfo
+ ******************************************************************************/
+
+void GetCpuInfo(CPUINFO* ci);
