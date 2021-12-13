@@ -168,6 +168,80 @@ BOOLEAN EmergencyExit(VOID)
 }
 
 /*******************************************************************************
+ * UnknownCpuWarning
+ ******************************************************************************/
+
+BOOLEAN UnknownCpuWarning(VOID)
+{
+  EFI_STATUS         Status;
+  EFI_EVENT          TimerEvent;
+  EFI_EVENT          WaitList[2];
+  EFI_INPUT_KEY      Key;
+  UINTN              Index;
+
+  gST->ConOut->SetAttribute(gST->ConOut, EFI_RED);
+
+  Print(
+    L"\n WARNING: Detected CPU (model: %u, family: %u, stepping: %u) is not known!\n"
+    L" It is likely that proceeding further with hardware programming will result\n"
+    L" result in unpredictable behavior or with the system hang/reboot.\n\n",
+    gCpuInfo.model,
+    gCpuInfo.family,
+    gCpuInfo.stepping );
+
+  Print(
+    L" If you are a BIOS engineer or otherwise familiar with the detected CPU params\n"
+    L" please edit CpuData.c and extend it with the detected CPU model/family/stepping\n"
+  );
+
+  Print(
+    L" and its capabilities. Further changes to the PowerMonkey code might be necessary.\n\n"
+    L" Press F10 key within the next 30 seconds to IGNORE this warning.\n"
+    L" Otherwise, PowerMonkey will exit with no changes to the system.\n\n"
+  );
+
+  gST->ConOut->SetAttribute(gST->ConOut, EFI_LIGHTGRAY);
+
+  Status = gBS->CreateEvent(
+    EVT_TIMER, TPL_NOTIFY, NULL, NULL, &TimerEvent);
+
+  //
+  // 3 second timeout
+
+  Status = gBS->SetTimer(
+    TimerEvent, TimerRelative, 300000000);
+
+  //
+  // Wait for a keystroke OR timeout
+
+  WaitList[0] = gST->ConIn->WaitForKey;
+  WaitList[1] = TimerEvent;
+
+  Status = gBS->WaitForEvent(2, WaitList, &Index);
+
+  if (!EFI_ERROR(Status) && Index == 1) {
+    Status = EFI_TIMEOUT;
+  }
+
+  gBS->CloseEvent(TimerEvent);
+  gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
+
+  if (Key.ScanCode == SCAN_F10) {
+    AsciiPrint(
+      " Overriding unknown CPU detection...\n");
+
+    return TRUE;
+  }
+  else {
+    AsciiPrint(
+      " Programming aborted.\n");
+  }
+
+  return FALSE;
+}
+
+
+/*******************************************************************************
  * PrintBanner
  ******************************************************************************/
 
@@ -188,7 +262,7 @@ VOID PrintBanner(VOID)
     " |  ____// _ \\ | | | | / _  ) / __)| || || | / _ \\ |  _ \\ | | / )/ _  )| | | |\n"
     " | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |\n"
     " |_|     \\___/  \\____| \\____)|_|   |_||_||_| \\___/ |_| |_||_| \\_)\\____) \\__  |\n"
-    "                                                         Version 0.1.6 (____/\n"
+    "                                                         Version 0.1.7 (____/\n"
   );
 
   AsciiPrint(
@@ -229,6 +303,18 @@ EFI_STATUS EFIAPI UefiMain(
   // Gather basic CPU info
 
   gCpuDetected = DetectCpu();
+
+  if (!gCpuDetected) {
+
+    //
+    // Throw warning for UNKNOWN CPUs
+
+    BOOLEAN ovrd = UnknownCpuWarning();
+
+    if (ovrd == FALSE) {
+      return EFI_ABORTED;
+    }
+  }
 
   ///
   /// Set-up TSC timing

@@ -130,7 +130,7 @@ VOID PrintPlatformSettings(IN PLATFORM* psys)
       PACKAGE* pac = psys->packages + pidx;
 
       Print(
-        L"+---------------------------------------------------------------------------+\n"
+        L"+---------------------------------------------------------------------+\n"
       );
 
       Print(L"| Package %u |  ", pidx);
@@ -140,9 +140,9 @@ VOID PrintPlatformSettings(IN PLATFORM* psys)
 
 
       Print(
-        L"+-----------+------+------+--------+----------+-----------+----------+------+\n"
-        L"| Vt Domain |  VR  | SVID | IccMax | VoltMode |  Vtarget  | Voffset  | Mult |\n"
-        L"|-----------|------|------|--------|----------|-----------|----------|------|\n"
+        L"+-----------+------+------+--------+----------+-----------+----------+\n"
+        L"| Vt Domain |  VR  | SVID | IccMax | VoltMode |  Vtarget  | Voffset  |\n"
+        L"|-----------|------|------|--------|----------|-----------|----------|\n"
       );
 
       for (UINTN didx = 0; didx < MAX_DOMAINS; didx++) {
@@ -151,8 +151,8 @@ VOID PrintPlatformSettings(IN PLATFORM* psys)
 
           Print(
             (dom->OffsetVolts < 0) ?
-            L"|%s| 0x%02x |%s| %03u A  |%s|  %04u mV  | %04d mV  | %03ux |\n" :
-            L"|%s| 0x%02x |%s| %03u A  |%s|  %04u mV  |  %03d mV  | %03ux |\n",
+            L"|%s| 0x%02x |%s| %03u A  |%s|  %04u mV  | %04d mV  |\n" :
+            L"|%s| 0x%02x |%s| %03u A  |%s|  %04u mV  |  %03d mV  |\n",
 
             vrDomainColStr[didx & 0x7],
 
@@ -164,15 +164,14 @@ VOID PrintPlatformSettings(IN PLATFORM* psys)
             &voltModeColStr[dom->VoltMode & 0x1][0],
 
             (UINT32)dom->TargetVolts,
-            (INT32)dom->OffsetVolts,
-            (UINT32)dom->MaxRatio
+            (INT32)dom->OffsetVolts
           );
         }
       }
 
       Print(
-        L"+-----------+------+------+--------+----------+-----------+----------+------+\n"
-        L"\n\n");
+        L"+-----------+------+------+--------+----------+-----------+----------+\n"
+        L"\n");
     }
   }
 }

@@ -218,25 +218,21 @@ EFI_STATUS ProbePackage(IN OUT PACKAGE* pkg)
   // CPUID //
   ///////////
 
-  GetCpuInfo(&pkg->CpuInfo);      /// <- H*A*C*K.
+  if (pkg->probed != 1) {
+    
+    GetCpuInfo(&pkg->CpuInfo);
 
-  AsmCpuid(0x01,
-    &pkg->CpuID,
-    NULL, NULL, NULL);
+    AsmCpuid(0x01,
+      &pkg->CpuID,
+      NULL, NULL, NULL);
 
-  //////////////////////
-  // Individual cores //
-  //////////////////////
+    //////////////////////////
+    // Discover VR Topology //
+    //////////////////////////
 
-  DiscoverVRTopology(pkg);
-
-
-  //////////////////////////
-  // Discover VR Topology //
-  //////////////////////////
+    DiscoverVRTopology(pkg);
+  }
   
-  DiscoverVRTopology(pkg);
-
   ////////////////////////
   // Initialize domains //
   ////////////////////////
@@ -244,7 +240,11 @@ EFI_STATUS ProbePackage(IN OUT PACKAGE* pkg)
   for (UINT8 didx = 0; didx < MAX_DOMAINS; didx++) {
     if (DomainSupported(didx)) {
       DOMAIN* dom = pkg->planes + didx;
-      dom->parent = (void*)pkg;
+
+      if (pkg->probed != 1) {
+        dom->parent = (void*)pkg;
+      }
+      
       IAPERF_ProbeDomainVF(didx, dom);
     }
   }
@@ -275,6 +275,8 @@ EFI_STATUS ProbePackage(IN OUT PACKAGE* pkg)
   pkg->PkgPowerUnits = GetPkgPowerUnits(
     &pkg->PkgTimeUnits,
     &pkg->PkgEnergyUnits);
+
+  pkg->probed = 1;
 
   return status;
 }
@@ -541,9 +543,36 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* psys)
 }
 
 /*******************************************************************************
+* ProbePackages
+******************************************************************************/
+
+EFI_STATUS EFIAPI ProbePackages(IN OUT PLATFORM* ppd)
+{
+  EFI_STATUS status = EFI_SUCCESS;
+
+  //
+  // Probe each package in its own context
+
+  for (UINTN pidx = 0; pidx < ppd->PkgCnt; pidx++)
+  {
+    PACKAGE* pac = ppd->packages + pidx;
+
+    status = RunOnPackageOrCore(ppd, pac->FirstCoreNumber, ProbePackage, pac);
+
+    if (EFI_ERROR(status)) {
+      Print(L"[ERROR] CPU package %u, status code: 0x%x\n",
+        pac->FirstCoreNumber,
+        status);
+
+      return status;
+    }
+  }
+
+  return status;
+}
+
+/*******************************************************************************
 * DiscoverPlatform
-*
-* TODO/TBD/HACK: multi-socket code needs rework.
 ******************************************************************************/
 
 EFI_STATUS EFIAPI DiscoverPlatform(IN OUT PLATFORM** ppsys)
@@ -592,24 +621,8 @@ EFI_STATUS EFIAPI DiscoverPlatform(IN OUT PLATFORM** ppsys)
 
   DetectPackages(ppd);
   
-  //
-  // Probe each package in its own context
-
-  for (UINTN pidx = 0; pidx < ppd->PkgCnt; pidx++)
-  {
-    PACKAGE* pac = ppd->packages + pidx;
-
-    status = RunOnPackageOrCore(ppd, pac->FirstCoreNumber, ProbePackage, pac);
-
-    if (EFI_ERROR(status)) {
-      Print(L"[ERROR] CPU package %u, status code: 0x%x\n",
-        pac->FirstCoreNumber,
-        status);
-
-      return status;
-    }
-  }
-
+  ProbePackages(ppd);
+  
   return EFI_SUCCESS;
 }
 
@@ -683,7 +696,7 @@ EFI_STATUS EFIAPI ProgramCoreKnobs(PLATFORM* psys)
   // Overclocking Lock
 
   if (gPostProgrammingOcLock) {
-	  IaCore_OcLock();
+    IaCore_OcLock();
   }
 
   return EFI_SUCCESS;
@@ -727,12 +740,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   PMUNUSED(SystemTable);
   EFI_STATUS status = EFI_SUCCESS;
 
-  /////////////////////
-  // PRINT (CURRENT) //
-  /////////////////////
   
-  PrintPlatformSettings(sys);  
-
   /////////////////
   // PROGRAMMING //
   /////////////////
@@ -791,10 +799,17 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
     RunOnPackageOrCore(sys, pk->FirstCoreNumber, ProgramPackage_Stage2, pk);
   }
 
-  //
-  // 
-  
-  PrintVFPoints(sys);
+  ////////////////////
+  // PRINT SETTINGS //
+  ////////////////////
+
+  {
+    ProbePackages(sys);
+
+    PrintPlatformSettings(sys);
+
+    PrintVFPoints(sys);
+  }
 
   return status;
 }

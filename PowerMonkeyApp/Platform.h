@@ -315,6 +315,7 @@ typedef struct _PACKAGE
  
   UINT64 idx;
   VOID* parent;                             // Parent platform object
+  UINT64 probed;
 
 } PACKAGE;
 

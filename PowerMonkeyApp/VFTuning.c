@@ -80,6 +80,8 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
   // Read IccMax for this domain //
   /////////////////////////////////
 
+  MiniTraceEx("Dom: 0x%x, Reading IccMax", domIdx);
+
   const UINT16 iccMaxMask = (1 << gActiveCpuData->IccMaxBits) - 1;
 
   cmd = OcMailbox_BuildInterface(0x16, dom->VRaddr, 0);
@@ -355,15 +357,15 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
 
 VOID IaCore_OcLock(VOID)
 {
-   QWORD flexRatioMsr;
-   
-   flexRatioMsr.u64 = pm_rdmsr64(MSR_FLEX_RATIO);
+  QWORD flexRatioMsr;
 
-   if (!(flexRatioMsr.u32.lo & bit20u32)) {
+  flexRatioMsr.u64 = pm_rdmsr64(MSR_FLEX_RATIO);
 
-     MiniTraceEx("Locking OC");
+  if (!(flexRatioMsr.u32.lo & bit20u32)) {
 
-	   flexRatioMsr.u32.lo |= bit20u32;
-	   pm_wrmsr64(MSR_FLEX_RATIO, flexRatioMsr.u64);
+    MiniTraceEx("Locking OC");
+
+    flexRatioMsr.u32.lo |= bit20u32;
+    pm_wrmsr64(MSR_FLEX_RATIO, flexRatioMsr.u64);
    }
 }

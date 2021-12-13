@@ -47,6 +47,10 @@ CPUCONFIGTABLE gCpuConfigTable[] = {
   // Special entry for undetected CPUs
   
   { {0, 0, 0} , "Unknown", 0, 10, 0, 0 },
+
+  //
+  // "Known" CPUs (not necessarily supported or tested)
+
   { {6, 26, 1} , "Nehalem", 0, 10, 0, 0 },
   { {6, 26, 2} , "Nehalem-EP", 0, 10, 0, 0 },
   { {6, 26, 4} , "Bloomfield", 0, 10, 0, 0 },
@@ -104,9 +108,11 @@ CPUCONFIGTABLE gCpuConfigTable[] = {
   { {6, 95, 1} , "Denverton", 0, 10, 0, 0 },
   { {6, 102, 3} , "Cannon Lake-U", 0, 10, 0, 0 },
   { {6, 117, 10} , "Spreadtrum", 0, 10, 0, 0 },
+  { {6, 106, 0} , "IceLake-SP", 0, 10, 0, 0 },              // QEMU (debug)
+  { {6, 106, 6} , "IceLake-SP", 0, 10, 0, 0 },
   { {6, 122, 1} , "Gemini Lake-D", 0, 10, 0, 0 },
   { {6, 122, 8} , "GoldmontPlus", 0, 10, 0, 0 },
-  { {6, 126, 5} , "IceLakeY", 0, 10, 0, 0 },
+  { {6, 126, 5} , "IceLakeY", 0, 10, 0, 0 },  
   { {6, 138, 1} , "Lakefield", 0, 10, 0, 0 },
   { {6, 140, 1} , "TigerLake", 0, 10, 1, 0 },
   { {6, 141, 1} , "TigerLake", 0, 10, 1, 0 },
@@ -127,7 +133,10 @@ CPUCONFIGTABLE gCpuConfigTable[] = {
   { {6, 167, 0} , "RocketLake", 0, 10, 1, 0 },       // RKL-S ES
   { {6, 167, 1} , "RocketLake", 0, 10, 1, 0 },       // RKL-S QS/PRQ
   { {6, 151, 2} , "AlderLake-S", 0, 11, 1, 1 },      // ADL-S QS/PRQ
-  { {6, 154, 1} , "AlderLake-P", 0, 11, 1, 1 },      // ADL-P ES
+  { {6, 151, 4} , "AlderLake-S", 0, 11, 1, 1 },      // ADL-S
+  { {6, 151, 5} , "AlderLake-S", 0, 11, 1, 1 },      // ADL-S
+  { {6, 154, 2} , "AlderLake-P", 0, 11, 1, 1 },      // ADL-P
+  { {6, 154, 3} , "AlderLake-P", 0, 11, 1, 1 },      // ADL-P
 };
 
 
@@ -143,8 +152,6 @@ CPUCONFIGTABLE* gActiveCpuData = &gCpuConfigTable[0];
 
 BOOLEAN DetectCpu()
 {
-  BOOLEAN found = FALSE;
-
   //
   // CPUID
 
@@ -172,5 +179,5 @@ BOOLEAN DetectCpu()
     }
   }
 
-  return found;
+  return FALSE;
 }
