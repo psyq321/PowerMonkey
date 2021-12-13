@@ -126,7 +126,8 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
 
   dom->nVfPoints = 0;
 
-  if ((domIdx==IACORE)||(domIdx==RING)||(domIdx==ECORE)) {
+  if (  (gActiveCpuData->VfPointsExposed) && 
+        ((domIdx==IACORE)||(domIdx==RING)||(domIdx==ECORE))) {
 
     UINT8 pidx = 0;
 
@@ -260,7 +261,7 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
   // Do not perform legacy programming
   // if user has chosen to program individual VF points
 
-  if (!programVfPoints) {
+  if (!programVfPoints || !gActiveCpuData->VfPointsExposed) {
 
     //
     // Convert the desired voltages in OC Mailbox format
@@ -306,7 +307,7 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
   // VF Points //
   ///////////////
 
-  if (programVfPoints == 1) {
+  if ((programVfPoints == 1) && (gActiveCpuData->VfPointsExposed)) {
     for (UINT8 vidx = 0; vidx < dom->nVfPoints; vidx++) {
       VF_POINT *vp = dom->vfPoint + vidx;
 

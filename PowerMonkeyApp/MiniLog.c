@@ -24,6 +24,13 @@
 *
 *******************************************************************************/
 
+#pragma intrinsic(__rdtsc)
+#pragma intrinsic(__cpuid)
+
+/*******************************************************************************
+ * Includes
+ ******************************************************************************/
+
 #include <PiPei.h>
 #include <Uefi.h>
 #include <Library/UefiLib.h>
@@ -37,9 +44,10 @@
 #include "MiniLog.h"
 #include "Platform.h"
 #include "LowLevel.h"
+#include "DelayX86.h"
 
 extern PLATFORM* gPlatform;
-
+ 
 /*******************************************************************************
  * Globals
  ******************************************************************************/
@@ -228,6 +236,11 @@ void MiniTrace(
   ///
   
   if (haveConsole) {
+    
+    //
+    // Timestamp
+
+    UINT64 tsns = TicksToNanoSeconds(ReadTsc());
 
     //
     // Get absolute core idx and use it to find the Y position for the trace
@@ -242,9 +255,10 @@ void MiniTrace(
     {
       CHAR8 outBuf[80] = { 0 };
 
-      AsciiSPrint(outBuf, 80, "[CPU %u][CORE %u] - %a : 0x%x : 0x%lx",
+      AsciiSPrint(outBuf, 80, "[PKG%u][CORE%u][%u] - %a : 0x%x : 0x%lx",
         pkgIdx,
         coreIdx,
+        tsns,
         GetOperIdString(operId),
         param1,
         param2);
@@ -282,6 +296,11 @@ void MiniTraceEx(
 
   if (haveConsole) {
 
+    //
+    // Timestamp
+
+    UINT64 tsns = TicksToNanoSeconds(ReadTsc());
+
     CHAR8 buf[160] = { 0 };
     CHAR8 tbuf[160] = { 0 };
     UINTN BufferSize = 160;
@@ -301,7 +320,7 @@ void MiniTraceEx(
     UINT8 pkgIdx = core->PkgIdx;
     UINT8 coreIdx = core->LocalIdx;
 
-    AsciiSPrint(buf, 160, "[CPU %u][CORE %u] %a", pkgIdx, coreIdx, tbuf);
+    AsciiSPrint(buf, 160, "[PKG%u][CORE%u][%u] %a", pkgIdx, coreIdx, tsns, tbuf);
 
     UINTN offsetY = 1;
     UINTN lineOffset = (offsetY + 2*core->AbsIdx) * font->fbHeight;

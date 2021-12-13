@@ -60,3 +60,4 @@ BOOLEAN DetectCpu();
  ******************************************************************************/
 
 extern CPUCONFIGTABLE* gActiveCpuData;
+extern CPUINFO gCpuInfo;

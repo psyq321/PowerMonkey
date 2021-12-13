@@ -65,7 +65,7 @@ void GetCpuInfo(CPUINFO* ci)
   UINT32 args[4] = {0};
 
   __cpuid(args, 0x00000000);
-  UINT32 hscall = args[0];
+  UINT32 hscall = ci->maxf = args[0];
   brandstr[0] = args[1];
   brandstr[1] = args[3];
   brandstr[2] = args[2];

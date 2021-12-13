@@ -25,6 +25,11 @@
 *******************************************************************************/
 
 #include <Uefi.h>
+#include <Library/IoLib.h>
+#include <Library/UefiLib.h>
+#include <Library/TimerLib.h>
+#include "CpuInfo.h"
+#include "CpuData.h"
 
 #pragma intrinsic(__rdtsc)                // At this point, code will look so
 #pragma intrinsic(_mm_pause)              // fugly that writing it in pure SMM
@@ -46,16 +51,44 @@ EFI_STATUS EFIAPI InitializeTscVars(VOID)
   UINT64 tmp;
   UINT32 regs[4] = { 0 };
 
-  __cpuid(regs, 0x15);
+  if(gCpuInfo.maxf >= 0x15)
+    __cpuid(regs, 0x15);
+
+  gXtalFreq = regs[2];
 
   if ((regs[0] == 0) || (regs[1] == 0)) {
-    return EFI_INVALID_PARAMETER;
+
+    //
+    // Totally bogus values
+    // TODO: calibrate using some known clock source
+
+    regs[0] = regs[1] = 1;
+    gTscFreq = 124783;
+    
+    return EFI_SUCCESS;
   }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
-  tmp =  (UINT64)gXtalFreq * (UINT64)regs[1]; 
-  tmp += (UINT64)regs[0] >> 1;
-  tmp /= (UINT64)regs[0];                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+
+  if(gXtalFreq == 0)
+  {
+    UINT32 regs2[4] = { 0 };
+
+    if (gCpuInfo.maxf >= 0x15)
+      __cpuid(regs2, 0x16);
+
+    gXtalFreq = (UINT64)regs2[0] * 1000000 * (UINT64)regs[0] / (UINT64)regs[1];
+
+    if (gXtalFreq == 0) {
+      gXtalFreq = 23958333;         // TBD: we could at least distinguish SKU
+    }
+  }
+
+  tmp = (UINT64)gXtalFreq * (UINT64)regs[1];
   
+  if (regs[0] > 1) {
+    tmp += (UINT64)regs[0] >> 1;
+    tmp /= (UINT64)regs[0];
+  }
+
   gTscFreq = (UINT32)tmp;
 
   return EFI_SUCCESS;
@@ -66,7 +99,7 @@ EFI_STATUS EFIAPI InitializeTscVars(VOID)
  * Stalls the CPU for specific number of TICKS
  ******************************************************************************/
 
-VOID EFIAPI StallCpu( const UINT64 ticks)
+VOID EFIAPI StallCpu(const UINT64 ticks)
 {
   ///
   /// Wrap-around is expected 10-years after power-on 
@@ -102,4 +135,22 @@ VOID EFIAPI MicroStall(const UINT64 us)
   UINT64 ticks = us * gTscFreq / 1000000u;
 
   StallCpu(ticks);
+}
+
+/*******************************************************************************
+ * TicksToNanoSeconds
+ ******************************************************************************/
+
+UINT64 EFIAPI TicksToNanoSeconds(UINT64 Ticks)  
+{
+  return (UINT64)(1000000000u * Ticks) / gTscFreq;
+}
+
+/*******************************************************************************
+ * ReadTsc
+ ******************************************************************************/
+
+UINT64 ReadTsc(VOID)
+{
+  return __rdtsc();
 }

@@ -206,7 +206,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
       pk->planes[RING].TargetVolts =  0;        // in mV (absolute)
     
     pk->planes[IACORE].OffsetVolts =
-      pk->planes[RING].OffsetVolts = 0;// -75;      // in mV (negative = undervolt)
+      pk->planes[RING].OffsetVolts = -130;     // in mV (negative = undervolt)
 
 
     ///
@@ -329,13 +329,13 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
       pk->planes[RING].vfPoint[2].OffsetVolts = -85;   // V_Offset @ 3600 MHz
 
     pk->planes[IACORE].vfPoint[3].OffsetVolts =
-      pk->planes[RING].vfPoint[3].OffsetVolts = -140;  // V_Offset @ 4000 MHz
+      pk->planes[RING].vfPoint[3].OffsetVolts = -145;  // V_Offset @ 4000 MHz
 
     pk->planes[IACORE].vfPoint[4].OffsetVolts =
-      pk->planes[RING].vfPoint[4].OffsetVolts = -140;  // V_Offset @ 4200 MHz
+      pk->planes[RING].vfPoint[4].OffsetVolts = -145;  // V_Offset @ 4200 MHz
 
     pk->planes[IACORE].vfPoint[5].OffsetVolts =
-      pk->planes[RING].vfPoint[5].OffsetVolts = -135;  // V_Offset @ 4800 MHz
+      pk->planes[RING].vfPoint[5].OffsetVolts = -137;  // V_Offset @ 4800 MHz
 
     pk->planes[IACORE].vfPoint[6].OffsetVolts =
       pk->planes[RING].vfPoint[6].OffsetVolts = 0;     // V_Offset @ 5300 MHz
@@ -401,7 +401,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     // (e.g. 1C, 2C, 4C, 8C, = use this ratio). Remove or set to 0
     // if you do not wish to set it
 
-    pk->ForcedRatioForAllCoreCounts = 50;
+    pk->ForcedRatioForAllCoreCounts = 51;
 
     /////////////////////
     /// Power Control ///

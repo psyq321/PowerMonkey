@@ -33,6 +33,7 @@
 #include "DelayX86.h"
 #include "TimeWindows.h"
 #include "Constants.h"
+#include "MiniLog.h"
 
 /*******************************************************************************
  * GetPkgPowerUnits
@@ -257,6 +258,8 @@ VOID EFIAPI SetPL12MMIOLock(const UINT8 lock)
 {
   if (lock < 2) {
 
+    MiniTraceEx("Setting MMIO PL1/2 Lock");
+
     QWORD msr = { 0 };
 
     msr.u64 = pm_rdmsr64(MSR_PACKAGE_POWER_LIMIT);
@@ -282,6 +285,8 @@ VOID EFIAPI SetPL3Lock(const UINT8 lock)
 {
   if (lock < 2) {
 
+    MiniTraceEx("Setting PL3 Lock");
+
     QWORD msr = { 0 };
 
     msr.u64 = pm_rdmsr64(MSR_PL3_CONTROL);
@@ -303,6 +308,8 @@ VOID EFIAPI SetPL3Lock(const UINT8 lock)
 VOID EFIAPI SetPL4Lock(const UINT8 lock)
 {
   if (lock < 2) {
+
+    MiniTraceEx("Setting PL4 Lock");
 
     QWORD msr = { 0 };
 
@@ -326,6 +333,8 @@ VOID EFIAPI SetPSysLock(const UINT8 lock)
 {
   if (lock < 2) {
 
+    MiniTraceEx("Setting PSys Lock");
+
     QWORD msr = { 0 };
 
     msr.u64 = pm_rdmsr64(MSR_PLATFORM_POWER_LIMIT);
@@ -348,6 +357,8 @@ VOID EFIAPI SetPSysLock(const UINT8 lock)
 VOID EFIAPI SetPP0Lock(const UINT8 lock)
 {
   if (lock < 2) {
+
+    MiniTraceEx("Setting PP0 Lock");
 
     QWORD msr = { 0 };
 
@@ -391,6 +402,8 @@ VOID EFIAPI SetPkgPowerLimit12_MMIO(
   QWORD msr = { 0 };
 
   const UINT32 vmask1 = 0x7fff;
+
+  MiniTraceEx("Setting MMIO PL1/2 Limits");
 
   //
   // Back to Watts
@@ -513,6 +526,8 @@ VOID EFIAPI SetPlatformPowerLimit12(
 
   const UINT32 vmask1 = 0x7fff;
 
+  MiniTraceEx("Setting Platform PL1/2 Limits");
+
   //
   // Back to Watts
 
@@ -624,6 +639,9 @@ VOID EFIAPI SetPlatformPowerLimit3(
 
   const UINT32 vmask1 = 0x7fff;
 
+  MiniTraceEx("Setting Platform PL3 Limit");
+
+
   //
   // Back to Watts
 
@@ -687,6 +705,8 @@ VOID EFIAPI SetPlatformPowerLimit4(
   {
     QWORD msr = { 0 };
 
+    MiniTraceEx("Setting Platform PL4 Limit");
+
     const UINT32 vmask1 = 0x1fff;
 
     UINT32 xform_pl4 = MAX_POWAH;
@@ -740,6 +760,8 @@ void SetPP0PowerLimit(
   QWORD msr = { 0 };
 
   const UINT32 vmask1 = 0x7fff;
+
+  MiniTraceEx("Setting PP0 Limit");
 
   //
   // Back to Watts

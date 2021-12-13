@@ -36,10 +36,11 @@ typedef struct _CPUINFO
   UINT8 brandString[8];
 
   UINT32 f1;
+  UINT32 maxf;
   UINT32 family;
   UINT32 model;
   UINT32 stepping;
-
+ 
   BOOLEAN HybridArch;
   
   BOOLEAN ECore;

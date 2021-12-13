@@ -108,8 +108,8 @@ CPUCONFIGTABLE gCpuConfigTable[] = {
   { {6, 122, 8} , "GoldmontPlus", 0, 10, 0, 0 },
   { {6, 126, 5} , "IceLakeY", 0, 10, 0, 0 },
   { {6, 138, 1} , "Lakefield", 0, 10, 0, 0 },
-  { {6, 140, 1} , "TigerLake", 0, 10, 0, 1 },
-  { {6, 141, 1} , "TigerLake", 0, 10, 0, 1 },
+  { {6, 140, 1} , "TigerLake", 0, 10, 1, 0 },
+  { {6, 141, 1} , "TigerLake", 0, 10, 1, 0 },
   { {6, 142, 9} , "Kabylake", 0, 10, 0, 0 },
   { {6, 142, 10} , "Kabylake", 0, 10, 0, 0 },
   { {6, 142, 11} , "WhiskeyLake", 0, 10, 0, 0 },
@@ -120,12 +120,12 @@ CPUCONFIGTABLE gCpuConfigTable[] = {
   { {6, 158, 11} , "Coffeelake", 0, 10, 0, 0 },
   { {6, 158, 12} , "CoffeeLake", 0, 10, 0, 0 },
   { {6, 158, 13} , "CoffeeLake", 0, 10, 0, 0 },
-  { {6, 165, 2} , "CometLake", 0, 10, 0, 1 },
-  { {6, 165, 4} , "CometLake", 0, 10, 0, 1 },
-  { {6, 165, 5} , "Comet Lake-S", 0, 10, 0, 1 },
-  { {6, 166, 0} , "CometLake", 0, 10, 0, 1 },
-  { {6, 167, 0} , "RocketLake", 0, 10, 0, 1 },       // RKL-S ES
-  { {6, 167, 1} , "RocketLake", 0, 10, 0, 1 },       // RKL-S QS/PRQ
+  { {6, 165, 2} , "CometLake", 0, 10, 1, 0 },
+  { {6, 165, 4} , "CometLake", 0, 10, 1, 0 },
+  { {6, 165, 5} , "CometLake-S", 0, 10, 1, 0 },
+  { {6, 166, 0} , "CometLake", 0, 10, 1, 0 },
+  { {6, 167, 0} , "RocketLake", 0, 10, 1, 0 },       // RKL-S ES
+  { {6, 167, 1} , "RocketLake", 0, 10, 1, 0 },       // RKL-S QS/PRQ
   { {6, 151, 2} , "AlderLake-S", 0, 11, 1, 1 },      // ADL-S QS/PRQ
   { {6, 154, 1} , "AlderLake-P", 0, 11, 1, 1 },      // ADL-P ES
 };

@@ -87,11 +87,6 @@ EFI_STATUS UefiInit(IN EFI_SYSTEM_TABLE* SystemTable)
   InitTrace();
 
   //
-  // Gather basic CPU info
-  
-  gCpuDetected = DetectCpu();
-
-  //
   // Hook the BSP with our "SafeAsm" interrupt handler
 
   if (gEnableSaferAsm) {
@@ -103,15 +98,6 @@ EFI_STATUS UefiInit(IN EFI_SYSTEM_TABLE* SystemTable)
   // so that we do not need to do it every time we need them
 
   InitializeMMIO();
-
-  //
-  // Set-up TSC timing
-  // NOTE: not MP-proofed - multiple packages will use the same calibration
-
-  if (EFI_ERROR(InitializeTscVars())) {
-    Print(L"[ERROR] Unable to initialize timing using"
-      "CPUID leaf 0x15, error code: 0x%x\n", status);
-  }
 
   //
   // Disable UEFI watchdog timer (if requested)
@@ -202,7 +188,7 @@ VOID PrintBanner(VOID)
     " |  ____// _ \\ | | | | / _  ) / __)| || || | / _ \\ |  _ \\ | | / )/ _  )| | | |\n"
     " | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |\n"
     " |_|     \\___/  \\____| \\____)|_|   |_||_||_| \\___/ |_| |_||_| \\_)\\____) \\__  |\n"
-    "                                                         Version 0.1.5 (____/\n"
+    "                                                         Version 0.1.6 (____/\n"
   );
 
   AsciiPrint(
@@ -239,6 +225,20 @@ EFI_STATUS EFIAPI UefiMain(
   IN EFI_SYSTEM_TABLE* SystemTable
 )
 {
+  //
+  // Gather basic CPU info
+
+  gCpuDetected = DetectCpu();
+
+  ///
+  /// Set-up TSC timing
+  /// NOTE: not MP-proofed - multiple packages will use the same calibration
+
+  if (EFI_ERROR(InitializeTscVars())) {
+    Print(L"[ERROR] Unable to initialize timing using"
+      "CPUID leaf 0x15\n");
+  }
+
   ///
   /// Print Banner
   ///
