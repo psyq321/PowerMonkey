@@ -36,8 +36,8 @@
 
 | Trademarks and Copyrights  |
 | ------------- |
-| All product names, logos, and brands are property of their respective owners. All company, product and service names used in this website are for identification purposes only. Use of these names, logos, and brands does not imply endorsement. 
-3D XPoint, Altera, Arc, Arria, Avalon, Axxia, Barefoot Networks, the Barefoot logo, the Footsie logo, BunnyPeople, Celeron, Cilk, Cyclone, Do something wonderful., Docea, eASIC, easicopy, Enpirion, Hyperflex, Intel, the Intel logo, Intel Adaptix, Intel Agilex, Intel Atom, Intel CoFluent, Intel Core, Intel Evo, Intel Inside, the Intel Inside logo, Intel Optane, Intel RealSense, Intel Shooting Star, Intel SpeedStep, Intel Unite, Intel vPro, Iris, Itanium, Killer, MAX, Movidius, Myriad, Nios, OpenVINO, the OpenVINO logo, Pentium, Quark, Quartus, Simics, SmartByte, SoftSilicon, Sound Mark, StarPro, Stratix, the Stratix logo, Stay With It, the Engineering Stay With It logo, StreamSight, The Journey Inside, Thunderbolt, the Thunderbolt logo, Tofino, Transcede, Ultrabook, VTune, and Xeon are trademarks of Intel Corporation or its subsidiaries.|
+| All product names, logos, and brands are property of their respective owners. All company, product and service names used in this website are for identification purposes only. Use of these names, logos, and brands does not imply endorsement. |
+|3D XPoint, Altera, Arc, Arria, Avalon, Axxia, Barefoot Networks, the Barefoot logo, the Footsie logo, BunnyPeople, Celeron, Cilk, Cyclone, Do something wonderful., Docea, eASIC, easicopy, Enpirion, Hyperflex, Intel, the Intel logo, Intel Adaptix, Intel Agilex, Intel Atom, Intel CoFluent, Intel Core, Intel Evo, Intel Inside, the Intel Inside logo, Intel Optane, Intel RealSense, Intel Shooting Star, Intel SpeedStep, Intel Unite, Intel vPro, Iris, Itanium, Killer, MAX, Movidius, Myriad, Nios, OpenVINO, the OpenVINO logo, Pentium, Quark, Quartus, Simics, SmartByte, SoftSilicon, Sound Mark, StarPro, Stratix, the Stratix logo, Stay With It, the Engineering Stay With It logo, StreamSight, The Journey Inside, Thunderbolt, the Thunderbolt logo, Tofino, Transcede, Ultrabook, VTune, and Xeon are trademarks of Intel Corporation or its subsidiaries.|
 
 | Draft Article  |
 | ------------- |
@@ -187,7 +187,9 @@ So, let’s look at the recipe - to start with, we need to extract the V/F point
 
 Remember, always cross-check with your own hardware!
 
-After V/F points are known, it is time to test the CPU to determine stable voltages for each V/F point. You can do this in many ways;  I was lazy and just patched the Plundervolt script (some good out of it at the end) with slightly better control and let it run in a mini Linux distro that auto-boots after crash…
+After V/F points are known, it is time to test the CPU to determine stable voltages for each V/F point. You can do this in many ways;  I was lazy and just patched the [Plundervolt script](https://github.com/KitMurdock/plundervolt/blob/master/utils/find_crash_point.sh) (some good out of it at the end) with slightly better control of the CPU states and Prime95 run for every test. Then I let it run in a mini Linux distro that auto-boots after each crash…
+
+To ensure coverage, I actually ran three tests (SSE only, AVX and AVX-512) as those have very different power demands, and PMC could handle them differently in terms of voltages and frequencies.
 
 If you do this, please ensure you disable all CPU-assisted frequency scaling and power management and keep monitoring tests for throttling (try avoiding it) - otherwise, your newly found voltages will not represent reality.
 
@@ -199,7 +201,7 @@ My script includes a run of Prime95 (or mprime in Linux) with silly AVX-512 load
 - Crash voltages for AVX workloads
 - Crash voltages for SSE workloads
 
-At this point, one can take the worst cases of these, add a buffer they consider necessary - and program the values. I use PowerMonkey.efi since we are also validating the support for V/F points at the same time - so, let’s change `CONFIGURATION.C`:
+At this point, one can take the worst cases of these, add a "buffer" considered necessary / safe - and program the new values. I use PowerMonkey.efi since we are also validating the support for V/F points at the same time - so, let’s change `CONFIGURATION.C`:
 
 ```cpp
     ///
