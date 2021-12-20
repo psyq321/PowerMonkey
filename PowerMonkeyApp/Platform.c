@@ -42,6 +42,7 @@
 #include "DelayX86.h"
 #include "PrintStats.h"
 #include "CpuData.h"
+#include "LowLevel.h"
 
 /*******************************************************************************
  * Globals
@@ -83,101 +84,74 @@ UINTN ApicIdToCoreNumber(const UINTN ApicID)
  * DiscoverVRTopology
  ******************************************************************************/
 
-EFI_STATUS DiscoverVRTopology(IN OUT PACKAGE *pkg)
+EFI_STATUS DiscoverVRTopology(IN OUT PACKAGE* pkg)
 {
   EFI_STATUS status = EFI_SUCCESS;
 
   //
-  // Using OC Mailbox here
-
-  CpuMailbox box;
-  MailboxBody* b = &box.b;
+  // We can use OC Mailbox Function 0x04 only if we:
+  //   a) know how to parse the result
+  // and
+  //   b) CPU actually supports this
+  //
 
   MiniTraceEx("Detecting VR Topology");
 
-  OcMailbox_InitializeAsMSR(&box);
-  UINT32 cmd = OcMailbox_BuildInterface(0x04, 0x0, 0x0);
-  status = OcMailbox_ReadWrite(cmd, 0, &box);
+  for (UINTN didx = 0; didx < MAX_DOMAINS; didx++) {
 
-  if (!EFI_ERROR(status)) {
+    DOMAIN* dom = &pkg->planes[didx];
 
-    if (gActiveCpuData->HasEcores) {
+    dom->VRaddr = INVALID_VR_ADDR;
+    dom->VRtype = NO_SVID_VR;
 
-      //////////////////////////
-      // Alder Lake & Friends //
-      //////////////////////////
-
-      //
-      // SA
-
-      pkg->planes[UNCORE].VRaddr = 0;
-      pkg->planes[UNCORE].VRtype = 1;
+    if (gActiveCpuData->vtdt) {
+      
+      VOLTPLANEDESC* vguide = &gActiveCpuData->vtdt->doms[didx];
 
       //
-      // IACORE
+      // Domain should exist, check if OC Mailbox can be used to probe it
 
-      pkg->planes[IACORE].VRaddr = (UINT8)((b->box.data & 0xF00) >> 8);
-      pkg->planes[IACORE].VRtype = (UINT8)((b->box.data & bit12u32) ? 1 : 0);
+      if (vguide->DomainExists) {
 
-      //
-      // ECORE
+        if (vguide->DomainSupportedForDiscovery) {
 
-      pkg->planes[ECORE].VRaddr = pkg->planes[IACORE].VRaddr;
-      pkg->planes[ECORE].VRtype = pkg->planes[IACORE].VRtype;
+          CpuMailbox box;
+          MailboxBody* b = &box.b;
 
-      //
-      // RING
+          //
+          // Use command 0x04 to obtain VR info
 
-      pkg->planes[RING].VRaddr = pkg->planes[IACORE].VRaddr;
-      pkg->planes[RING].VRtype = pkg->planes[IACORE].VRtype;
-            
-      //
-      // GT SLICE
+          OcMailbox_InitializeAsMSR(&box);
+          UINT32 cmd = OcMailbox_BuildInterface(0x04, 0x0, 0x0);
+          status = OcMailbox_ReadWrite(cmd, 0, &box);
 
-      pkg->planes[GTSLICE].VRaddr = (UINT8)((b->box.data & 0xf000) >> 12);
-      pkg->planes[GTSLICE].VRtype = (UINT8)((b->box.data & bit17u32) ? 1 : 0);
+          if (box.status == 0) {
 
-      //
-      // GT UNSLICE
+            const UINT32 amask  = vguide->OCMB_VRAddr_DomainBitMask;
+            const UINT32 tmask  = vguide->OCMB_VRsvid_DomainBitMask;
+            const UINT32 ashift = vguide->OCMB_VRAddr_DomainBitShift;
 
-      pkg->planes[GTUNSLICE].VRaddr = pkg->planes[GTSLICE].VRaddr;
-      pkg->planes[GTUNSLICE].VRtype = pkg->planes[GTSLICE].VRtype;
+            dom->VRaddr = (UINT8)((b->box.data & amask) >> ashift);
+            dom->VRtype = (UINT8)((b->box.data & tmask) ? NO_SVID_VR : SVID_VR);
 
+          }
+        }
+        else {
 
+          //
+          // Domain cannot be probed by OC Mailbox
+          // This means either incomplete info, 
+          // or BIOS PCODE Mailbox must be used
+
+          MiniTraceEx("Domain 0x%x cannot be probed using OC Mailbox", didx);
+        }
+      }
+      else {
+        MiniTraceEx("Skipping nonexistent voltage domain 0x%x", didx);
+      }
     }
     else {
-
-
-      //
-      // SA
-
-      pkg->planes[UNCORE].VRaddr = (UINT8)((b->box.data & 0x0f));
-      pkg->planes[UNCORE].VRtype = (UINT8)((b->box.data & bit4u32) ? 1 : 0);
-
-      //
-      // IACORE
-
-      pkg->planes[IACORE].VRaddr = (UINT8)((b->box.data & 0x1e0) >> 5);
-      pkg->planes[IACORE].VRtype = (UINT8)((b->box.data & bit9u32) ? 1 : 0);
-
-      //
-      // RING
-
-      pkg->planes[RING].VRaddr = (UINT8)((b->box.data & 0x3c00) >> 10);
-      pkg->planes[RING].VRtype = (UINT8)((b->box.data & bit14u32) ? 1 : 0);
-
-      //
-      // GT UNSLICE
-
-      pkg->planes[GTUNSLICE].VRaddr = (UINT8)((b->box.data & 0x78000) >> 15);
-      pkg->planes[GTUNSLICE].VRtype = (UINT8)((b->box.data & bit19u32) ? 1 : 0);
-
-      //
-      // GT SLICE
-
-      pkg->planes[GTSLICE].VRaddr = (UINT8)((b->box.data & 0xf00000) >> 20);
-      pkg->planes[GTSLICE].VRtype = (UINT8)((b->box.data & bit24u32) ? 1 : 0);
-
+      MiniTraceEx("CPU information does not contain VR Topology discovery information");
     }
   }
 
@@ -188,8 +162,18 @@ EFI_STATUS DiscoverVRTopology(IN OUT PACKAGE *pkg)
  * DomainSupported
  ******************************************************************************/
 
-BOOLEAN DomainSupported(const UINT8 didx)
+BOOLEAN VoltageDomainExists(const UINT8 didx)
 {
+  //
+  // Check if we have this info in the table
+
+  if (gActiveCpuData->vtdt) {
+    return gActiveCpuData->vtdt->doms[didx].DomainExists;
+  }
+  
+  //
+  // Guess...
+
   if (didx == ECORE) {
 
     //
@@ -238,7 +222,7 @@ EFI_STATUS ProbePackage(IN OUT PACKAGE* pkg)
   ////////////////////////
 
   for (UINT8 didx = 0; didx < MAX_DOMAINS; didx++) {
-    if (DomainSupported(didx)) {
+    if (VoltageDomainExists(didx)) {
       DOMAIN* dom = pkg->planes + didx;
 
       if (pkg->probed != 1) {
@@ -301,7 +285,7 @@ EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
   // Program V/F overrides
 
   for (UINT8 didx = 0; didx < MAX_DOMAINS; didx++) {
-    if (DomainSupported(didx)) {
+    if (VoltageDomainExists(didx)) {
       DOMAIN* dom = pkg->planes + didx;
 
       if (pkg->Program_VF_Overrides[didx]) {
@@ -326,7 +310,8 @@ EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
 
   if (pkg->ProgramPL12_MSR) {
 
-    SetPkgPowerLimit12_MSR(
+    SetPkgPowerLimit12(
+      IO_MSR,
       pkg->MsrPkgMaxTau,
       pkg->MsrPkgMinPL1,
       pkg->MsrPkgMaxPL1,
@@ -420,7 +405,8 @@ EFI_STATUS ProgramPackage_Stage1(IN OUT PACKAGE* pkg)
 
   if (pkg->ProgramPL12_MMIO)
   {
-    SetPkgPowerLimit12_MMIO(
+    SetPkgPowerLimit12(
+      IO_MMIO,
       pkg->MsrPkgMaxTau,
       pkg->MsrPkgMinPL1,
       pkg->MsrPkgMaxPL1,
@@ -444,6 +430,7 @@ EFI_STATUS ProgramPackage_Stage1(IN OUT PACKAGE* pkg)
       pkg->EnablePlatformPL1,
       pkg->EnablePlatformPL2,
       pkg->PkgTimeUnits,
+      pkg->PkgEnergyUnits,
       pkg->ClampPlatformPL,
       pkg->PlatformPL_Time,
       pkg->PlatformPL1_Power,

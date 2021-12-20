@@ -159,7 +159,7 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
         INT16 voltOffsetFx = (INT16)((b->box.data >> 21) & 0x7ff);
 
         vp->FusedRatio = (UINT8)(b->box.data & 0xff);;
-        vp->OffsetVolts = cvrt_offsetvolts_fxto_i16(voltOffsetFx);
+        vp->VOffset = cvrt_offsetvolts_fxto_i16(voltOffsetFx);
         vp->IsValid = 1;
 
         dom->nVfPoints++;
@@ -171,7 +171,7 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
         MiniTraceEx("VF Pt. found, #%u, mult: %ux, voffset: %d mV, dom: 0x%x",
           dom->nVfPoints,
           vp->FusedRatio,
-          vp->OffsetVolts,
+          vp->VOffset,
           domIdx);
       }
 
@@ -263,7 +263,7 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
   // Do not perform legacy programming
   // if user has chosen to program individual VF points
 
-  if (!programVfPoints || !gActiveCpuData->VfPointsExposed) {
+  if ((programVfPoints == 0) || (!gActiveCpuData->VfPointsExposed)) {
 
     //
     // Convert the desired voltages in OC Mailbox format
@@ -309,7 +309,7 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
   // VF Points //
   ///////////////
 
-  if ((programVfPoints == 1) && (gActiveCpuData->VfPointsExposed)) {
+  if ((programVfPoints == 1) && (gActiveCpuData->VfPointsExposed == 1)) {
     for (UINT8 vidx = 0; vidx < dom->nVfPoints; vidx++) {
       VF_POINT *vp = dom->vfPoint + vidx;
 
@@ -319,7 +319,7 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
         // Convert voltage offset to mbox format:
 
         UINT32 offsetVoltsFx = (UINT32)cvrt_offsetvolts_i16_tofix(
-          vp->OffsetVolts) & 0x7ff;
+          vp->VOffset) & 0x7ff;
 
         //
         // Compose the command for the OC mailbox
@@ -329,7 +329,7 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
         MiniTraceEx("Dom: 0x%x, VF Pt. #%u programming: voffset: %d mV",
           domIdx,
           vidx+1,
-          vp->OffsetVolts );
+          vp->VOffset );
 
         cmd = OcMailbox_BuildInterface(0x11, domIdx, vidx + 1);
 

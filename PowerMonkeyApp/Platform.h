@@ -109,7 +109,7 @@ typedef union _QWORD
 typedef struct _VF_POINT
 {
   UINT8   FusedRatio;               // Read Only
-  INT16   OffsetVolts;              // R/W if supported and if V/F point valid  
+  INT16   VOffset;              // R/W if supported and if V/F point valid  
   UINT8   IsValid;
 } VF_POINT;
 
@@ -371,7 +371,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
  * DomainSupported
  ******************************************************************************/
 
-BOOLEAN DomainSupported(const UINT8 didx);
+BOOLEAN VoltageDomainExists(const UINT8 didx);
 
 /*******************************************************************************
 * GetCpuDataBlock

@@ -162,7 +162,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
                                                 // Overrides for E-Cores
 
 
-    pk->Program_VF_Overrides[RING] = 1;         // Enable programming of VF
+    pk->Program_VF_Overrides[RING] =  1;        // Enable programming of VFC:\Development\PowerMonkey\workspace\README.MD
                                                 // Overrides for Ring / Cache
 
 
@@ -177,11 +177,11 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
 
     // NOTE: some domains are sharing the same voltage plane! Check yours!
     // 
-    // E.g.: for CML-H, IACORE (CPU cores) and RING (cache) share a common VR
-    // if you don't program both linked domains to exactly the same voltage, 
-    // CPU's pcode will use one (higher, which means less undervolt!) and
-    // apply it to both domains - but without adjusting values submitted by the 
-    // user so it appears everything went as user requested! Some might believe 
+    // E.g.: for SKL, CFL, CML and RKL: IACORE (CPU cores) and RING (cache) 
+    // share a common VR. If you don't program both linked domains to exactly 
+    // the same voltage CPU's pcode will use higher voltage and apply it to both
+    // domains - but without adjusting values submitted by the user so it 
+    // appears everything went as user requested! Some might believe 
     // they won the 'chip lottery' seeing their CPU seemingly undervolt to 
     // -250 mV or so, while in reality pcode is doing exactly nothing!
     // Don't be that guy (or girl)!
@@ -199,26 +199,37 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     //
     // Legacy (will be ignored in vfpoints are used)
 
-    pk->planes[IACORE].VoltMode = 
-      pk->planes[RING].VoltMode = V_IPOLATIVE;  // V_IPOLATIVE = Interpolate
-                                                // V_OVERRIDE =  Override
+    pk->planes[IACORE].VoltMode =
+      pk->planes[RING].VoltMode = V_IPOLATIVE;      // V_IPOLATIVE = Interpolate
+                                                    // V_OVERRIDE =  Override
     pk->planes[IACORE].TargetVolts =
-      pk->planes[RING].TargetVolts =  0;        // in mV (absolute)
-    
+      pk->planes[RING].TargetVolts = 0;             // in mV (absolute)
+
     pk->planes[IACORE].OffsetVolts =
-      pk->planes[RING].OffsetVolts = -130;     // in mV (negative = undervolt)
+      pk->planes[RING].OffsetVolts = -50;           // in mV 
+                                                    // (negative = undervolt)
+
+    
+    ///
+    /// V/F OVERRIDES FOR DOMAIN: E-Core (ADL & Co. only)
+    ///
+
+    pk->planes[ECORE].VoltMode = V_IPOLATIVE;   // V_IPOLATIVE = Interpolate
+                                                // V_OVERRIDE =  Override
+
+    pk->planes[ECORE].TargetVolts = 0;          // in mV (absolute)
+    pk->planes[ECORE].OffsetVolts = 0;          // in mV (negative = undervolt)
 
 
     ///
     /// V/F OVERRIDES FOR DOMAIN: UNCORE (SA)
     ///
-    
+
     pk->planes[UNCORE].VoltMode = V_IPOLATIVE;  // V_IPOLATIVE = Interpolate
                                                 // V_OVERRIDE =  Override
 
     pk->planes[UNCORE].TargetVolts = 0;         // in mV (absolute)
     pk->planes[UNCORE].OffsetVolts = -35;       // in mV (negative = undervolt)
-
 
     // Add your adjustments here if needed    
 
@@ -234,9 +245,9 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
 
     // Add your adjustments here if needed
 
-    ///////////////////////////
-    /// V/F Curve Adjustment //
-    ///////////////////////////
+    ///////////////////////////////////////
+    /// Point-based V/F Curve Adjustment //
+    ///////////////////////////////////////
     
     ///
     /// VF Curve Point (VF Point) Adjustment has been introduced in CML
@@ -268,8 +279,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
                                                     //
     // Hybrid Architectures (Alder Lake +): E-Cores
 
-    pk->Program_VF_Points[ECORE] = 0;               // 0 - Do not program
                                                     // 1 - Program
+    pk->Program_VF_Points[ECORE] = 0;               // 0 - Do not program
                                                     // 2 - Print current values                                                    
                                                     //     (2 does not program)
 
@@ -277,7 +288,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     /// NOTE: VF Points here are ZERO INDEXED and can go from VP[0] to VP[14] !
     ///  *** CHECK YOUR CPU - ESPECIALLY # OF VF POINTS!!! ***
     /// 
-    /// Uncomment below block (lines 220/224)
+    /// Examples below
     
 #if 0
 
@@ -285,29 +296,29 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     /// Example for Rocket Lake Unlocked SKU (B0 Stepping, PRQ): //
     ///////////////////////////////////////////////////////////////
     
-    pk->planes[IACORE].vfPoint[0].OffsetVolts = 
-      pk->planes[RING].vfPoint[0].OffsetVolts = 0;     // V_Offset @ 800 MHz
+    pk->planes[IACORE].vfPoint[0].VOffset =
+      pk->planes[RING].vfPoint[0].VOffset = 0;     // V_Offset @ 800 MHz
 
-    pk->planes[IACORE].vfPoint[1].OffsetVolts = 
-      pk->planes[RING].vfPoint[1].OffsetVolts = -125;  // V_Offset @ 2500 MHz
+    pk->planes[IACORE].vfPoint[1].VOffset =
+      pk->planes[RING].vfPoint[1].VOffset = -125;  // V_Offset @ 2500 MHz
 
-    pk->planes[IACORE].vfPoint[2].OffsetVolts =
-      pk->planes[RING].vfPoint[2].OffsetVolts = -110;  // V_Offset @ 3500 MHz
+    pk->planes[IACORE].vfPoint[2].VOffset =
+      pk->planes[RING].vfPoint[2].VOffset = -110;  // V_Offset @ 3500 MHz
 
-    pk->planes[IACORE].vfPoint[3].OffsetVolts =
-      pk->planes[RING].vfPoint[3].OffsetVolts = -100;  // V_Offset @ 4300 MHz
+    pk->planes[IACORE].vfPoint[3].VOffset =
+      pk->planes[RING].vfPoint[3].VOffset = -100;  // V_Offset @ 4300 MHz
 
-    pk->planes[IACORE].vfPoint[4].OffsetVolts =
-      pk->planes[RING].vfPoint[4].OffsetVolts = -95;   // V_Offset @ 4600 MHz
+    pk->planes[IACORE].vfPoint[4].VOffset =
+      pk->planes[RING].vfPoint[4].VOffset = -95;   // V_Offset @ 4600 MHz
 
-    pk->planes[IACORE].vfPoint[5].OffsetVolts =
-      pk->planes[RING].vfPoint[5].OffsetVolts = -85;   // V_Offset @ 4800 MHz
+    pk->planes[IACORE].vfPoint[5].VOffset =
+      pk->planes[RING].vfPoint[5].VOffset = -85;   // V_Offset @ 4800 MHz
 
-    pk->planes[IACORE].vfPoint[6].OffsetVolts = 
-      pk->planes[RING].vfPoint[6].OffsetVolts = -75;   // V_Offset @ 5200 MHz
+    pk->planes[IACORE].vfPoint[6].VOffset =
+      pk->planes[RING].vfPoint[6].VOffset = -75;   // V_Offset @ 5200 MHz
                                                                            
-    pk->planes[IACORE].vfPoint[7].OffsetVolts = 
-      pk->planes[RING].vfPoint[7].OffsetVolts = 0;     // Offset @ Overclock
+    pk->planes[IACORE].vfPoint[7].VOffset =
+      pk->planes[RING].vfPoint[7].VOffset = 0;     // Offset @ Overclock
  
 #else
 
@@ -319,46 +330,57 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     // P-Cores - please use your values //
     //////////////////////////////////////
 
-    pk->planes[IACORE].vfPoint[0].OffsetVolts =
-      pk->planes[RING].vfPoint[0].OffsetVolts = 0;     // V_Offset @ 800 MHz
-
-    pk->planes[IACORE].vfPoint[1].OffsetVolts =
-      pk->planes[RING].vfPoint[1].OffsetVolts = -50;   // V_Offset @ 1800 MHz
-
-    pk->planes[IACORE].vfPoint[2].OffsetVolts =
-      pk->planes[RING].vfPoint[2].OffsetVolts = -85;   // V_Offset @ 3600 MHz
-
-    pk->planes[IACORE].vfPoint[3].OffsetVolts =
-      pk->planes[RING].vfPoint[3].OffsetVolts = -145;  // V_Offset @ 4000 MHz
-
-    pk->planes[IACORE].vfPoint[4].OffsetVolts =
-      pk->planes[RING].vfPoint[4].OffsetVolts = -145;  // V_Offset @ 4200 MHz
-
-    pk->planes[IACORE].vfPoint[5].OffsetVolts =
-      pk->planes[RING].vfPoint[5].OffsetVolts = -137;  // V_Offset @ 4800 MHz
-
-    pk->planes[IACORE].vfPoint[6].OffsetVolts =
-      pk->planes[RING].vfPoint[6].OffsetVolts = 0;     // V_Offset @ 5300 MHz
-
-    pk->planes[IACORE].vfPoint[7].OffsetVolts =
-      pk->planes[RING].vfPoint[7].OffsetVolts = 0;     // V_Offset @ 5300 MHz
-
-    pk->planes[IACORE].vfPoint[8].OffsetVolts =
-      pk->planes[RING].vfPoint[8].OffsetVolts = 0;     // V_Offset @ 5300 MHz
-
-    pk->planes[IACORE].vfPoint[9].OffsetVolts =
-      pk->planes[RING].vfPoint[9].OffsetVolts = 0;     // V_Offset @ 5300 MHz
-
+    ///
+    /// CPU: Alder Lake-S 12900K PRQ
+    /// Autotune script: prime95_ultrashort
+    /// 
+    /// Crash offsets (in mV) per VF point:
+    ///
+    ///          0.8GHz  1.8GHz  3.6GHz  4.0GHz  4.2GHz  4.8GHz  5.0GHz  5.3GHz
+    /// AVX512:     N/A    -244    -238    -225    -235    -190    -158     N/A
+    /// AVX2        N/A    -240    -230    -214    -230    -170    -144     N/A
+    /// SSE         N/A    -250    -246    -232    -238    -186    -172     N/A
     
+    pk->planes[IACORE].vfPoint[0].VOffset =
+      pk->planes[RING].vfPoint[0].VOffset = 0;     // V_Offset @ 800 MHz (mV)
+
+    pk->planes[IACORE].vfPoint[1].VOffset =
+      pk->planes[RING].vfPoint[1].VOffset = -190;  // V_Offset @ 1800 MHz (mV)
+
+    pk->planes[IACORE].vfPoint[2].VOffset =
+      pk->planes[RING].vfPoint[2].VOffset = -180;  // V_Offset @ 3600 MHz (mV)
+
+    pk->planes[IACORE].vfPoint[3].VOffset =
+      pk->planes[RING].vfPoint[3].VOffset = -180;  // V_Offset @ 4000 MHz (mV)
+
+    pk->planes[IACORE].vfPoint[4].VOffset =
+      pk->planes[RING].vfPoint[4].VOffset = -175;  // V_Offset @ 4200 MHz (mV)
+
+    pk->planes[IACORE].vfPoint[5].VOffset =
+      pk->planes[RING].vfPoint[5].VOffset = -137;  // V_Offset @ 4800 MHz (mV)
+
+    pk->planes[IACORE].vfPoint[6].VOffset =
+      pk->planes[RING].vfPoint[6].VOffset = 0;     // V_Offset @ 5300 MHz (mV)
+
+    pk->planes[IACORE].vfPoint[7].VOffset =
+      pk->planes[RING].vfPoint[7].VOffset = 0;     // V_Offset @ 5300 MHz (mV)
+
+    pk->planes[IACORE].vfPoint[8].VOffset =
+      pk->planes[RING].vfPoint[8].VOffset = 0;     // V_Offset @ 5300 MHz (mV)
+
+    pk->planes[IACORE].vfPoint[9].VOffset =
+      pk->planes[RING].vfPoint[9].VOffset = 0;     // V_Offset @ 5300 MHz (mV)
+
+
     /////////////////////////////
     // E-Cores - bogus values, //
     /////////////////////////////
 
-    pk->planes[ECORE].vfPoint[0].OffsetVolts = 0;
-    pk->planes[ECORE].vfPoint[1].OffsetVolts = 0;
-    pk->planes[ECORE].vfPoint[2].OffsetVolts = 0;
-    pk->planes[ECORE].vfPoint[3].OffsetVolts = 0;
-    pk->planes[ECORE].vfPoint[4].OffsetVolts = 0;
+    pk->planes[ECORE].vfPoint[0].VOffset = 0;
+    pk->planes[ECORE].vfPoint[1].VOffset = 0;
+    pk->planes[ECORE].vfPoint[2].VOffset = 0;
+    pk->planes[ECORE].vfPoint[3].VOffset = 0;
+    pk->planes[ECORE].vfPoint[4].VOffset = 0;
 
 #endif
  
@@ -384,13 +406,19 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     //
     // IccMax for IACORE and RING (Cache)
     
-    pk->planes[IACORE].IccMax = 
+    pk->planes[IACORE].IccMax =
       pk->planes[RING].IccMax = MAX_AMPS;      // 1/4 Amps Unit or MAX_AMPS
 
     //
     // IccMax for UNCORE (SA)
 
     pk->planes[UNCORE].IccMax = MAX_AMPS;      // 1/4 Amps Unit or MAX_AMPS
+
+                                               //
+                                               // Example:
+                                               // to set IccMax of 155A
+                                               // enter value of 620
+                                               // (620 = 4 x 155)
 
     ////////////////////
     /// Turbo Ratios ///
@@ -502,8 +530,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
 
     pk->EnableMmioPkgPL1 = 1;               // Enable MMIO PL1
     pk->EnableMmioPkgPL2 = 1;               // Enable MMIO PL2
-    pk->MmioPkgPL1_Power = MAX_POWAH;       // MMIO PL1 in mW or MAX_POWAH
-    pk->MmioPkgPL2_Power = MAX_POWAH;       // MMIO PL2 in mW or MAX_POWAH
+    pk->MmioPkgPL1_Power = MAX_POWAH;        // MMIO PL1 in mW or MAX_POWAH
+    pk->MmioPkgPL2_Power = MAX_POWAH;      // MMIO PL2 in mW or MAX_POWAH
     pk->MmioPkgPL_Time   = MAX_POWAH;       // Tau in ms or MAX_POWAH
     pk->ClampMmioPkgPL =   1;               // Allow clamping
     pk->LockMmioPkgPL12 =  1;               // Lock after programming

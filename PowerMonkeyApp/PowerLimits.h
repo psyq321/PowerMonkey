@@ -69,6 +69,57 @@ VOID EFIAPI SetPkgPowerLimit12_MSR(
   const UINT32 pl2w);
 
 /*******************************************************************************
+ * SetPkgPowerLimit12_MMIO
+ ******************************************************************************/
+
+VOID EFIAPI SetPkgPowerLimit12_MMIO(
+
+  // platform limits
+  // (if they exist)
+  const UINT32 PkgMaxTau,
+  const UINT32 PkgMinPL1,
+  const UINT32 PkgMaxPL1,
+
+  const UINT8 enablePL1,
+  const UINT8 enablePL2,
+
+  const UINT32 timeUnits,
+  const UINT32 energyUnits,
+  const UINT32 powerUnits,
+
+  const UINT8 clamp,
+  const UINT32 pl1t,
+  const UINT32 pl1w,
+  const UINT32 pl2w);
+
+/*******************************************************************************
+ * SetPkgPowerLimit1
+ ******************************************************************************/
+
+void SetPkgPowerLimit12(
+
+  const UINT8 dst,            // 0=MSR, 1=MMIO
+
+  // firmware limits
+  // (if they exist)
+  const UINT32 PkgMaxTau,
+  const UINT32 PkgMinPL1,
+  const UINT32 PkgMaxPL1,
+
+  const UINT8 enablePL1,
+  const UINT8 enablePL2,
+
+  const UINT32 timeUnits,
+  const UINT32 energyUnits,
+  const UINT32 powerUnits,
+
+  const UINT8 clamp,
+  const UINT32 pl1t,
+  const UINT32 pl1w,
+  const UINT32 pl2w);
+
+
+/*******************************************************************************
  * SetPL12MSRLock
  ******************************************************************************/
 
@@ -118,30 +169,6 @@ VOID EFIAPI SetPlatformPowerLimit4(
   const UINT32 pl4i);
 
 /*******************************************************************************
- * SetPkgPowerLimit12_MMIO
- ******************************************************************************/
-
-VOID EFIAPI SetPkgPowerLimit12_MMIO(
-  
-  // platform limits
-  // (if they exist)
-  const UINT32 PkgMaxTau,
-  const UINT32 PkgMinPL1,
-  const UINT32 PkgMaxPL1,
-
-  const UINT8 enablePL1,
-  const UINT8 enablePL2,
-
-  const UINT32 timeUnits,
-  const UINT32 energyUnits,
-  const UINT32 powerUnits,
-
-  const UINT8 clamp,
-  const UINT32 pl1t,
-  const UINT32 pl1w,
-  const UINT32 pl2w);
-
-/*******************************************************************************
  * SetPL12MMIOLock
  ******************************************************************************/
 
@@ -154,7 +181,8 @@ VOID EFIAPI SetPL12MMIOLock(const UINT8 lock);
 VOID EFIAPI SetPlatformPowerLimit12(
   const UINT8 enablePL1,
   const UINT8 enablePL2,
-  const UINT32 units,
+  const UINT32 unitsT,
+  const UINT32 unitsW,
   const UINT8 clamp,
   const UINT32 pl1t,
   const UINT32 pl1w,    

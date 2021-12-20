@@ -84,20 +84,7 @@ VOID EFIAPI HandleProbingFault(MINISTAT *pst)
     // TODO: Fix for MP needed - this will not work on non-BSP //
     /////////////////////////////////////////////////////////////
     
-    AsciiPrint("\n\n");
-    AsciiPrint("PowerMonkey has encountered a fatal error during operation\n");
-    AsciiPrint("This can be caused by unsupported hardware or cfg. value\n");
-    AsciiPrint("Details about the crash:\n");
-    AsciiPrint("Error: ");
-    AsciiPrint(pst->errtxt);
-    AsciiPrint("\n");
-
-    AsciiPrint("Param1: 0x%llx\n", pst->param1);
-    AsciiPrint("Param2: 0x%llx\n", pst->param2);
-    AsciiPrint("Param3: 0x%llx\n", pst->param3);
-    AsciiPrint("\n\n");
-
-    AsciiPrint("System will halt now...\n");
+    MiniTraceEx("PowerMonkey has encountered a fatal error during operation.\n");    
   }
 
   //
@@ -288,4 +275,52 @@ UINT32 pm_mmio_write32(const UINT32 addr, const UINT32 value)
   }
 
   return value;
+}
+
+/*******************************************************************************
+ * pm_xio_read64
+ ******************************************************************************/
+
+UINT64 pm_xio_read64(const UINT8 tgtype, const UINT32 addr)
+{
+  if (tgtype == IO_MSR) {
+    return pm_rdmsr64(addr);
+  }
+  else {
+    if (gMCHBAR) {
+
+      QWORD msr = { 0 };
+
+      msr.u32.lo = pm_mmio_read32(gMCHBAR + addr);
+      msr.u32.hi = pm_mmio_read32(gMCHBAR + addr + 4);
+
+      return msr.u64;
+    }
+  }
+
+  return 0xbadc0debadc0de;
+}
+
+/*******************************************************************************
+ * pm_xio_write64
+ ******************************************************************************/
+
+UINT32 pm_xio_write64(const UINT8 tgtype, const UINT32 addr, const UINT64 val)
+{
+  if (tgtype == IO_MSR) {
+    return pm_wrmsr64(addr, val);
+  }
+  else {
+    if (gMCHBAR) {
+
+      QWORD msr;
+
+      msr.u64 = val;
+
+      pm_mmio_write32(gMCHBAR + addr, msr.u32.lo);
+      return pm_mmio_write32(gMCHBAR + addr + 4, msr.u32.hi);
+    }
+  }
+
+  return 0xbadc0de;
 }

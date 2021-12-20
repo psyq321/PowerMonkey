@@ -1,0 +1,1058 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   class="frappe-chart chart chart-container"
+   width="1024"
+   height="600"
+   version="1.1"
+   id="svg162"
+   sodipodi:docname="sv_explainer.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview164"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="1"
+     inkscape:pagecheckerboard="true"
+     showgrid="false"
+     inkscape:zoom="2.1646365"
+     inkscape:cx="433.56008"
+     inkscape:cy="196.5688"
+     inkscape:window-width="5120"
+     inkscape:window-height="2071"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg162"
+     inkscape:snap-to-guides="true"
+     showguides="false" />
+  <style
+     id="style2">.chart-container{position:relative;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto','Oxygen','Ubuntu','Cantarell','Fira Sans','Droid Sans','Helvetica Neue',sans-serif}.chart-container .axis,.chart-container .chart-label{fill:#555b51}.chart-container .axis line,.chart-container .chart-label line{stroke:#dadada}.chart-container .dataset-units circle{stroke:#fff;stroke-width:2}.chart-container .dataset-units path{fill:none;stroke-opacity:1;stroke-width:2px}.chart-container .dataset-path{stroke-width:2px}.chart-container .path-group path{fill:none;stroke-opacity:1;stroke-width:2px}.chart-container line.dashed{stroke-dasharray:5,3}.chart-container .axis-line .specific-value{text-anchor:start}.chart-container .axis-line .y-line{text-anchor:end}.chart-container .axis-line .x-line{text-anchor:middle}.chart-container .legend-dataset-text{fill:#6c7680;font-weight:600}.graph-svg-tip{position:absolute;z-index:99999;padding:10px;font-size:12px;color:#959da5;text-align:center;background:rgba(0,0,0,.8);border-radius:3px}.graph-svg-tip ul{padding-left:0;display:flex}.graph-svg-tip ol{padding-left:0;display:flex}.graph-svg-tip ul.data-point-list li{min-width:90px;flex:1;font-weight:600}.graph-svg-tip strong{color:#dfe2e5;font-weight:600}.graph-svg-tip .svg-pointer{position:absolute;height:5px;margin:0 0 0 -5px;content:' ';border:5px solid transparent;border-top-color:rgba(0,0,0,.8)}.graph-svg-tip.comparison{padding:0;text-align:left;pointer-events:none}.graph-svg-tip.comparison .title{display:block;padding:10px;margin:0;font-weight:600;line-height:1;pointer-events:none}.graph-svg-tip.comparison ul{margin:0;white-space:nowrap;list-style:none}.graph-svg-tip.comparison li{display:inline-block;padding:5px 10px}</style>
+  <defs
+     id="defs32">
+    <marker
+       style="overflow:visible;"
+       id="Arrow1Lend"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true">
+      <path
+         transform="scale(0.8) rotate(180) translate(12.5,0)"
+         style="fill-rule:evenodd;fill:context-stroke;stroke:context-stroke;stroke-width:1.0pt;"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         id="path203693" />
+    </marker>
+    <linearGradient
+       id="linearGradient54977"
+       inkscape:swatch="gradient">
+      <stop
+         style="stop-color:#0000ff;stop-opacity:1;"
+         offset="0"
+         id="stop54973" />
+      <stop
+         style="stop-color:#0000ff;stop-opacity:0;"
+         offset="1"
+         id="stop54975" />
+    </linearGradient>
+    <linearGradient
+       id="path-fill-gradient-#5e64ff-lighter"
+       x1="0"
+       x2="0"
+       y1="0"
+       y2="1">
+      <stop
+         style="stop-color: #5e64ff"
+         offset="0%"
+         stop-opacity="0.4"
+         id="stop4" />
+      <stop
+         style="stop-color: #5e64ff"
+         offset="50%"
+         stop-opacity="0.2"
+         id="stop6" />
+      <stop
+         style="stop-color: #5e64ff"
+         offset="100%"
+         stop-opacity="0"
+         id="stop8" />
+    </linearGradient>
+    <linearGradient
+       id="path-fill-gradient-#36114C-lighter"
+       x1="0"
+       x2="0"
+       y1="0"
+       y2="1">
+      <stop
+         style="stop-color: #36114C"
+         offset="0%"
+         stop-opacity="0.4"
+         id="stop11" />
+      <stop
+         style="stop-color: #36114C"
+         offset="50%"
+         stop-opacity="0.2"
+         id="stop13" />
+      <stop
+         style="stop-color: #36114C"
+         offset="100%"
+         stop-opacity="0"
+         id="stop15" />
+    </linearGradient>
+    <linearGradient
+       id="path-fill-gradient-#feef72-lighter"
+       x1="0"
+       x2="0"
+       y1="0"
+       y2="1">
+      <stop
+         style="stop-color: #feef72"
+         offset="0%"
+         stop-opacity="0.4"
+         id="stop18" />
+      <stop
+         style="stop-color: #feef72"
+         offset="50%"
+         stop-opacity="0.2"
+         id="stop20" />
+      <stop
+         style="stop-color: #feef72"
+         offset="100%"
+         stop-opacity="0"
+         id="stop22" />
+    </linearGradient>
+    <linearGradient
+       id="path-fill-gradient-#ff5858-lighter"
+       x1="0"
+       x2="0"
+       y1="0"
+       y2="1">
+      <stop
+         style="stop-color: #ff5858"
+         offset="0%"
+         stop-opacity="0.4"
+         id="stop25" />
+      <stop
+         style="stop-color: #ff5858"
+         offset="50%"
+         stop-opacity="0.2"
+         id="stop27" />
+      <stop
+         style="stop-color: #ff5858"
+         offset="100%"
+         stop-opacity="0"
+         id="stop29" />
+    </linearGradient>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend-3"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path203693-8" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend-3-7"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path203693-8-0" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Lend-3-7-6"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Lend"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(-0.8,0,0,-0.8,-10,0)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path203693-8-0-6" />
+    </marker>
+  </defs>
+  <rect
+     style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#0000ff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="rect271043"
+     width="1019.5706"
+     height="597.32892"
+     x="2.7718277"
+     y="1.8478851" />
+  <g
+     class="line-chart chart-draw-area"
+     transform="translate(50, 30)"
+     id="g134">
+    <g
+       class="y axis"
+       id="g64"
+       transform="">
+      <g
+         transform="translate(0, 490)"
+         stroke-opacity="1"
+         id="g38">
+        <line
+           class="line-horizontal "
+           x1="-6"
+           x2="950"
+           y1="0"
+           y2="0"
+           style="stroke: rgb(218, 218, 218);"
+           id="line34" />
+        <text
+           x="-10"
+           y="0"
+           dy="3px"
+           font-size="10px"
+           text-anchor="end"
+           id="text36">0</text>
+      </g>
+      <g
+         transform="translate(0, 367.5)"
+         stroke-opacity="1"
+         id="g44">
+        <line
+           class="line-horizontal "
+           x1="-6"
+           x2="950"
+           y1="0"
+           y2="0"
+           style="stroke: rgb(218, 218, 218);"
+           id="line40" />
+        <text
+           x="-10"
+           y="0"
+           dy="3px"
+           font-size="10px"
+           text-anchor="end"
+           id="text42">0.5</text>
+      </g>
+      <g
+         transform="translate(0, 245)"
+         stroke-opacity="1"
+         id="g50">
+        <line
+           class="line-horizontal "
+           x1="-6"
+           x2="950"
+           y1="0"
+           y2="0"
+           style="stroke: rgb(218, 218, 218);"
+           id="line46" />
+        <text
+           x="-10"
+           y="0"
+           dy="3px"
+           font-size="10px"
+           text-anchor="end"
+           id="text48">1</text>
+      </g>
+      <g
+         transform="translate(0, 122.5)"
+         stroke-opacity="1"
+         id="g56">
+        <line
+           class="line-horizontal "
+           x1="-6"
+           x2="950"
+           y1="0"
+           y2="0"
+           style="stroke: rgb(218, 218, 218);"
+           id="line52" />
+        <text
+           x="-10"
+           y="0"
+           dy="3px"
+           font-size="10px"
+           text-anchor="end"
+           id="text54">1.5</text>
+      </g>
+      <g
+         stroke-opacity="1"
+         id="g62"
+         transform="translate(0, 0)">
+        <line
+           class="line-horizontal "
+           x1="-6"
+           x2="950"
+           y1="0"
+           y2="0"
+           style="stroke: rgb(218, 218, 218);"
+           id="line58" />
+        <text
+           x="-10"
+           y="0"
+           dy="3px"
+           font-size="10px"
+           text-anchor="end"
+           id="text60">2</text>
+      </g>
+    </g>
+    <g
+       class="x axis"
+       id="g108"
+       transform="">
+      <g
+         transform="translate(67.43, 0)"
+         id="g70">
+        <line
+           class="line-vertical "
+           x1="0"
+           x2="0"
+           y1="496"
+           y2="-6"
+           style="stroke: rgb(218, 218, 218);"
+           id="line66" />
+        <text
+           x="0"
+           y="500"
+           dy="10"
+           font-size="10px"
+           text-anchor="middle"
+           id="text68"
+           style="font-size:12px"><tspan
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Arial;-inkscape-font-specification:'Arial Bold'"
+             id="tspan92901">0.8 GHz</tspan></text>
+      </g>
+      <g
+         transform="translate(202.29, 0)"
+         id="g76">
+        <line
+           class="line-vertical "
+           x1="0"
+           x2="0"
+           y1="496"
+           y2="-6"
+           style="stroke: rgb(218, 218, 218);"
+           id="line72" />
+        <text
+           x="0"
+           y="500"
+           dy="10"
+           font-size="10px"
+           text-anchor="middle"
+           id="text74"
+           style="font-size:12px"><tspan
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Arial;-inkscape-font-specification:'Arial Bold'"
+             id="tspan97769">1.8 GHz</tspan></text>
+      </g>
+      <g
+         transform="translate(337.14, 0)"
+         id="g82">
+        <line
+           class="line-vertical "
+           x1="0"
+           x2="0"
+           y1="496"
+           y2="-6"
+           style="stroke: rgb(218, 218, 218);"
+           id="line78" />
+        <text
+           x="0"
+           y="500"
+           dy="10"
+           font-size="10px"
+           text-anchor="middle"
+           id="text80"
+           style="font-size:12px"><tspan
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Arial;-inkscape-font-specification:'Arial Bold'"
+             id="tspan101071">3.6 GHz</tspan></text>
+      </g>
+      <g
+         transform="translate(472, 0)"
+         id="g88">
+        <line
+           class="line-vertical "
+           x1="0"
+           x2="0"
+           y1="496"
+           y2="-6"
+           style="stroke: rgb(218, 218, 218);"
+           id="line84" />
+        <text
+           x="0"
+           y="500"
+           dy="10"
+           font-size="10px"
+           text-anchor="middle"
+           id="text86"
+           style="font-size:12px"><tspan
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Arial;-inkscape-font-specification:'Arial Bold'"
+             id="tspan104979">4 GHz</tspan></text>
+      </g>
+      <g
+         transform="translate(606.86, 0)"
+         id="g94">
+        <line
+           class="line-vertical "
+           x1="0"
+           x2="0"
+           y1="496"
+           y2="-6"
+           style="stroke: rgb(218, 218, 218);"
+           id="line90" />
+        <text
+           x="0"
+           y="500"
+           dy="10"
+           font-size="10px"
+           text-anchor="middle"
+           id="text92"
+           style="font-size:12px"><tspan
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Arial;-inkscape-font-specification:'Arial Bold'"
+             id="tspan112697">4.2 GHz</tspan></text>
+      </g>
+      <g
+         transform="translate(741.71, 0)"
+         id="g100">
+        <line
+           class="line-vertical "
+           x1="0"
+           x2="0"
+           y1="496"
+           y2="-6"
+           style="stroke: rgb(218, 218, 218);"
+           id="line96" />
+        <text
+           x="0"
+           y="500"
+           dy="10"
+           font-size="10px"
+           text-anchor="middle"
+           id="text98"
+           style="font-size:12px"><tspan
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Arial;-inkscape-font-specification:'Arial Bold'"
+             id="tspan116731">4.8 GHz</tspan></text>
+      </g>
+      <g
+         transform="translate(876.57, 0)"
+         id="g106">
+        <line
+           class="line-vertical "
+           x1="0"
+           x2="0"
+           y1="496"
+           y2="-6"
+           style="stroke: rgb(218, 218, 218);"
+           id="line102" />
+        <text
+           x="0"
+           y="500"
+           dy="10"
+           font-size="10px"
+           text-anchor="middle"
+           id="text104"
+           style="font-size:12px"><tspan
+             style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Arial;-inkscape-font-specification:'Arial Bold'"
+             id="tspan119217">5.3 GHz</tspan></text>
+      </g>
+      <rect
+         style="fill:#808080;fill-opacity:0.33;stroke-width:1.1282"
+         id="rect55363"
+         width="144.63885"
+         height="132.27335"
+         x="20.646929"
+         y="357.45227" />
+      <g
+         id="g61225"
+         transform="matrix(0.19181912,0,0,0.19181912,-76.090431,506.02521)">
+        <g
+           id="g61397"
+           transform="translate(240.4646,-79.649158)"
+           style="opacity:1">
+          <rect
+             width="358"
+             height="141"
+             x="456.82101"
+             y="-332.32858"
+             id="rect3238"
+             style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+          <path
+             d="m 626.71048,-319.75467 c -43.54254,1.31828 -87.99586,6.19899 -128.19746,25.04157 -12.48784,6.58057 -27.85975,15.31176 -30.53518,31.27259 -1.11498,14.53179 11.67772,24.50482 22.26206,31.01629 33.4017,18.9466 71.71386,24.8498 109.05224,28.25047 51.74956,3.53966 104.77774,0.71176 154.3702,-15.95883 17.13806,-6.59357 36.65498,-14.0294 46.84554,-31.42389 6.39176,-11.43166 -0.9969,-24.86158 -10.16951,-31.66827 -23.70261,-18.50007 -53.39709,-25.1973 -81.79816,-30.65543 -26.99817,-4.58674 -54.45582,-6.34546 -81.82973,-5.8745 z"
+             id="Oval"
+             style="fill:#d2232a;fill-opacity:1;fill-rule:evenodd;stroke:#ffffff;stroke-width:6;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+          <text
+             x="634.49286"
+             y="-238.23679"
+             id="Danger"
+             xml:space="preserve"
+             style="font-style:normal;font-weight:bold;font-size:75px;font-family:Helvetica;text-align:center;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none"><tspan
+               x="634.49286"
+               y="-238.23679"
+               id="tspan3250"
+               style="font-style:normal;font-weight:bold;font-size:65px">DANGER</tspan></text>
+          <text
+             x="635.92108"
+             y="-121.53953"
+             id="High"
+             xml:space="preserve"
+             style="font-style:normal;font-weight:bold;font-size:75px;font-family:Helvetica;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"><tspan
+               x="635.92108"
+               y="-121.53953"
+               id="tspan3260"
+               style="font-size:75px">LOW</tspan></text>
+          <text
+             x="637.4826"
+             y="-53.539528"
+             id="Voltage"
+             xml:space="preserve"
+             style="font-style:normal;font-weight:bold;font-size:75px;font-family:Helvetica;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"><tspan
+               x="637.4826"
+               y="-53.539528"
+               id="tspan3266"
+               style="font-size:75px">VOLTAGE</tspan></text>
+        </g>
+      </g>
+    </g>
+    <g
+       class="dataset-units dataset-line dataset-0"
+       id="g114"
+       transform="">
+      <path
+         class="line-graph-path"
+         d="M67.43,313.6 C 94.402,304.29 148.348,281.504 202.29,267.05 C 256.23199999999997,252.596 283.198,248.63000000000002 337.14,241.33 C 391.082,234.03 418.056,235.304 472,230.55 C 525.944,225.79600000000002 552.918,229.90800000000002 606.86,217.56 C 660.802,205.212 687.768,184.34400000000002 741.71,168.81 C 795.652,153.276 849.5980000000001,145.674 876.57,139.89"
+         style="stroke: rgb(94, 100, 255); fill: none; stroke-width: 2;"
+         id="path110" />
+      <path
+         class="region-fill"
+         d="M67.43,490L67.43,313.6 C 94.402,304.29 148.348,281.504 202.29,267.05 C 256.23199999999997,252.596 283.198,248.63000000000002 337.14,241.33 C 391.082,234.03 418.056,235.304 472,230.55 C 525.944,225.79600000000002 552.918,229.90800000000002 606.86,217.56 C 660.802,205.212 687.768,184.34400000000002 741.71,168.81 C 795.652,153.276 849.5980000000001,145.674 876.57,139.89L876.57,490"
+         style="stroke: none; fill: url(&quot;#path-fill-gradient-#5e64ff-lighter&quot;); stroke-width: 2;"
+         id="path112" />
+    </g>
+    <g
+       class="dataset-units dataset-line dataset-1"
+       id="g120"
+       transform="">
+      <path
+         class="line-graph-path"
+         d="M67.43,325.85 C 94.402,316.54 148.348,293.754 202.29,279.3 C 256.23199999999997,264.846 283.198,260.88000000000005 337.14,253.58 C 391.082,246.28 418.056,247.554 472,242.8 C 525.944,238.04600000000002 552.918,242.15800000000002 606.86,229.81 C 660.802,217.462 687.768,196.59400000000002 741.71,181.06 C 795.652,165.526 849.5980000000001,157.924 876.57,152.14"
+         style="stroke: rgb(54, 17, 76); fill: none; stroke-width: 2;"
+         id="path116" />
+      <path
+         class="region-fill"
+         d="M67.43,490L67.43,325.85 C 94.402,316.54 148.348,293.754 202.29,279.3 C 256.23199999999997,264.846 283.198,260.88000000000005 337.14,253.58 C 391.082,246.28 418.056,247.554 472,242.8 C 525.944,238.04600000000002 552.918,242.15800000000002 606.86,229.81 C 660.802,217.462 687.768,196.59400000000002 741.71,181.06 C 795.652,165.526 849.5980000000001,157.924 876.57,152.14L876.57,490"
+         style="stroke: none; fill: url(&quot;#path-fill-gradient-#36114C-lighter&quot;); stroke-width: 2;"
+         id="path118" />
+    </g>
+    <g
+       class="dataset-units dataset-line dataset-2"
+       id="g126"
+       transform="">
+      <path
+         class="line-graph-path"
+         d="M67.43,313.6 C 94.402,313.6 148.34799999999998,319.23400000000004 202.29,313.6 C 256.23199999999997,307.966 283.198,293.22200000000004 337.14,285.43 C 391.082,277.638 418.056,279.64 472,274.64 C 525.944,269.64 552.918,274.884 606.86,260.43 C 660.802,245.976 687.768,226.47800000000004 741.71,202.37 C 795.652,178.262 849.5980000000001,152.386 876.57,139.89"
+         style="stroke: rgb(254, 239, 114); fill: none; stroke-width: 2;"
+         id="path122" />
+      <path
+         class="region-fill"
+         d="M67.43,490L67.43,313.6 C 94.402,313.6 148.34799999999998,319.23400000000004 202.29,313.6 C 256.23199999999997,307.966 283.198,293.22200000000004 337.14,285.43 C 391.082,277.638 418.056,279.64 472,274.64 C 525.944,269.64 552.918,274.884 606.86,260.43 C 660.802,245.976 687.768,226.47800000000004 741.71,202.37 C 795.652,178.262 849.5980000000001,152.386 876.57,139.89L876.57,490"
+         style="stroke: none; fill: url(&quot;#path-fill-gradient-#feef72-lighter&quot;); stroke-width: 2;"
+         id="path124" />
+    </g>
+    <g
+       class="dataset-units dataset-line dataset-3"
+       id="g132"
+       transform="">
+      <path
+         class="line-graph-path"
+         d="M67.43,411.6 C 94.402,402.29 148.348,379.504 202.29,365.05 C 256.23199999999997,350.596 283.198,346.63 337.14,339.33 C 391.082,332.03 418.056,333.30400000000003 472,328.55 C 525.944,323.796 552.918,327.908 606.86,315.56 C 660.802,303.212 687.768,282.342 741.71,266.81 C 795.652,251.278 849.5980000000001,243.68200000000002 876.57,237.9"
+         style="stroke: rgb(255, 88, 88); fill: none; stroke-width: 2;"
+         id="path128" />
+      <path
+         class="region-fill"
+         d="M67.43,490L67.43,411.6 C 94.402,402.29 148.348,379.504 202.29,365.05 C 256.23199999999997,350.596 283.198,346.63 337.14,339.33 C 391.082,332.03 418.056,333.30400000000003 472,328.55 C 525.944,323.796 552.918,327.908 606.86,315.56 C 660.802,303.212 687.768,282.342 741.71,266.81 C 795.652,251.278 849.5980000000001,243.68200000000002 876.57,237.9L876.57,490"
+         style="stroke: none; fill: url(&quot;#path-fill-gradient-#ff5858-lighter&quot;); stroke-width: 2;"
+         id="path130" />
+    </g>
+  </g>
+  <g
+     class="chart-legend"
+     transform="translate(334.03173,559.62529)"
+     id="g160">
+    <g
+       id="g140">
+      <rect
+         class="legend-bar"
+         x="0"
+         y="0"
+         width="100"
+         height="2"
+         fill="#5e64ff"
+         id="rect136" />
+      <text
+         class="legend-dataset-text"
+         x="3.3678007"
+         y="-4.0354462"
+         dy="20"
+         font-size="12px"
+         text-anchor="start"
+         fill="#555b51"
+         id="text138"
+         style="font-size:12px"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Arial;-inkscape-font-specification:'Arial Bold'"
+           id="tspan1825">Factory Voltage</tspan></text>
+    </g>
+    <g
+       transform="translate(100)"
+       id="g146">
+      <rect
+         class="legend-bar"
+         x="0"
+         y="0"
+         width="100"
+         height="2"
+         fill="#36114c"
+         id="rect142" />
+      <text
+         class="legend-dataset-text"
+         x="4"
+         y="-4.0354462"
+         font-size="12px"
+         text-anchor="start"
+         fill="#555b51"
+         id="text144"
+         style="font-size:12px"
+         dy="20"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Arial;-inkscape-font-specification:'Arial Bold'"
+           id="tspan6897">Legacy Low UV</tspan></text>
+    </g>
+    <g
+       transform="translate(200)"
+       id="g152">
+      <rect
+         class="legend-bar"
+         x="0"
+         y="0"
+         width="100"
+         height="2"
+         fill="#feef72"
+         id="rect148" />
+      <text
+         class="legend-dataset-text"
+         x="14"
+         y="16.111038"
+         font-size="12px"
+         text-anchor="start"
+         fill="#555b51"
+         id="text150"
+         style="font-size:12px"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Arial;-inkscape-font-specification:'Arial Bold'"
+           id="tspan18839">V/F Point UV</tspan></text>
+    </g>
+    <g
+       transform="translate(300)"
+       id="g158">
+      <rect
+         class="legend-bar"
+         x="0"
+         y="0"
+         width="100"
+         height="2"
+         fill="#ff5858"
+         id="rect154" />
+      <text
+         class="legend-dataset-text"
+         x="4"
+         y="-4.0354462"
+         dy="20"
+         font-size="12px"
+         text-anchor="start"
+         fill="#555b51"
+         id="text156"
+         style="font-size:12px"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12px;font-family:Arial;-inkscape-font-specification:'Arial Bold'"
+           id="tspan21049">Legacy High UV</tspan></text>
+    </g>
+    <circle
+       style="fill:#0000ff;fill-opacity:1"
+       id="path54905"
+       cx="-216.78729"
+       cy="-215.98413"
+       r="3.7704673" />
+    <circle
+       style="fill:#0000ff;fill-opacity:1"
+       id="path54905-2"
+       cx="-81.705658"
+       cy="-216.21655"
+       r="3.7704673" />
+    <circle
+       style="fill:#0000ff;fill-opacity:1"
+       id="path54905-2-9"
+       cx="53.420532"
+       cy="-244.11775"
+       r="3.7704673" />
+    <circle
+       style="fill:#0000ff;fill-opacity:1"
+       id="path54905-2-9-2"
+       cx="187.56282"
+       cy="-255.11084"
+       r="3.7704673" />
+    <circle
+       style="fill:#0000ff;fill-opacity:1"
+       id="path54905-2-9-2-8"
+       cx="323.21317"
+       cy="-269.97287"
+       r="3.7704673" />
+    <circle
+       style="fill:#0000ff;fill-opacity:1"
+       id="path54905-2-9-2-8-0"
+       cx="457.36011"
+       cy="-326.55438"
+       r="3.7704673" />
+    <circle
+       style="fill:#0000ff;fill-opacity:1"
+       id="path54905-2-9-2-8-0-0"
+       cx="590.00818"
+       cy="-388.75662"
+       r="3.7704673" />
+  </g>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:10.6667px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+     x="115.72424"
+     y="316.28558"
+     id="text139215"><tspan
+       sodipodi:role="line"
+       id="tspan139213"
+       x="115.72424"
+       y="316.28558"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">V/F</tspan><tspan
+       sodipodi:role="line"
+       x="115.72424"
+       y="329.70303"
+       id="tspan139217"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">Point #1</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:10.6667px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+     x="251.56914"
+     y="360.56152"
+     id="text139215-5"><tspan
+       sodipodi:role="line"
+       id="tspan139213-9"
+       x="251.56914"
+       y="360.56152"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">V/F</tspan><tspan
+       sodipodi:role="line"
+       x="251.56914"
+       y="373.97897"
+       id="tspan139217-7"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">Point #2</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:10.6667px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+     x="386.42862"
+     y="333.32318"
+     id="text139215-5-5"><tspan
+       sodipodi:role="line"
+       id="tspan139213-9-4"
+       x="386.42862"
+       y="333.32318"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">V/F</tspan><tspan
+       sodipodi:role="line"
+       x="386.42862"
+       y="346.74063"
+       id="tspan139217-7-7"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">Point #3</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:10.6667px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+     x="520.97461"
+     y="321.96271"
+     id="text139215-5-5-0"><tspan
+       sodipodi:role="line"
+       id="tspan139213-9-4-3"
+       x="520.97461"
+       y="321.96271"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">V/F</tspan><tspan
+       sodipodi:role="line"
+       x="520.97461"
+       y="335.38016"
+       id="tspan139217-7-7-0"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">Point #4</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:10.6667px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+     x="656.48199"
+     y="307.3476"
+     id="text139215-5-5-0-3"><tspan
+       sodipodi:role="line"
+       id="tspan139213-9-4-3-9"
+       x="656.48199"
+       y="307.3476"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">V/F</tspan><tspan
+       sodipodi:role="line"
+       x="656.48199"
+       y="320.76505"
+       id="tspan139217-7-7-0-1"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">Point #5</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:10.6667px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+     x="791.25616"
+     y="250.3862"
+     id="text139215-5-5-0-3-5"><tspan
+       sodipodi:role="line"
+       id="tspan139213-9-4-3-9-2"
+       x="791.25616"
+       y="250.3862"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">V/F</tspan><tspan
+       sodipodi:role="line"
+       x="791.25616"
+       y="263.80365"
+       id="tspan139217-7-7-0-1-5"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">Point #6</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:10.6667px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+     x="924.47009"
+     y="145.40855"
+     id="text139215-5-5-0-3-5-9"><tspan
+       sodipodi:role="line"
+       id="tspan139213-9-4-3-9-2-8"
+       x="924.47009"
+       y="145.40855"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">V/F</tspan><tspan
+       sodipodi:role="line"
+       x="924.47009"
+       y="158.826"
+       id="tspan139217-7-7-0-1-5-8"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:'Courier New';-inkscape-font-specification:'Courier New';text-align:center;text-anchor:middle">Point #7</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+     x="961.9729"
+     y="15.364585"
+     id="text160907"><tspan
+       sodipodi:role="line"
+       id="tspan160905"></tspan></text>
+  <rect
+     style="opacity:1;fill:#a0a0a0;fill-opacity:0.63999999;stroke-width:1.27647"
+     id="rect161227"
+     width="278.43625"
+     height="59.209862"
+     x="367.80112"
+     y="438.45279" />
+  <rect
+     style="opacity:1;fill:#808080;fill-opacity:1;stroke-width:1.23048"
+     id="rect161227-2"
+     width="258.73453"
+     height="59.209862"
+     x="682.06512"
+     y="366.1268" />
+  <rect
+     style="opacity:0.4;fill:#808080;fill-opacity:0.33;stroke-width:1.35193"
+     id="rect161227-5"
+     width="312.33081"
+     height="59.209862"
+     x="559.47528"
+     y="112.79041" />
+  <rect
+     style="opacity:0.4;fill:#808080;fill-opacity:0.33;stroke-width:1.39591"
+     id="rect161227-5-1"
+     width="295.93173"
+     height="66.622551"
+     x="43.851307"
+     y="194.06104" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:10.6667px;line-height:1.25;font-family:sans-serif;fill:#ff0000;fill-opacity:1;stroke:none"
+     x="377.91925"
+     y="458.3306"
+     id="text163365"><tspan
+       sodipodi:role="line"
+       x="377.91925"
+       y="458.3306"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1"
+       id="tspan167399">Legacy High UV</tspan><tspan
+       sodipodi:role="line"
+       x="377.91925"
+       y="471.83453"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1"
+       id="tspan167403">Fixed negative voltage offset for the entire V/F curve</tspan><tspan
+       sodipodi:role="line"
+       x="377.91925"
+       y="485.33844"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1"
+       id="tspan167405">Unstable at low frequencies due to excessive undervolt</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:10.6667px;line-height:1.25;font-family:sans-serif;fill:#ff0000;fill-opacity:1;stroke:none"
+     x="570.42322"
+     y="132.3421"
+     id="text163365-2"><tspan
+       sodipodi:role="line"
+       x="570.42322"
+       y="132.3421"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#000000;fill-opacity:1"
+       id="tspan167399-7">Legacy Low UV</tspan><tspan
+       sodipodi:role="line"
+       x="570.42322"
+       y="145.84602"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#000000;fill-opacity:1"
+       id="tspan167403-4">Fixed, small negative voltage offset applied to entire V/F curve</tspan><tspan
+       sodipodi:role="line"
+       x="570.42322"
+       y="159.34995"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#000000;fill-opacity:1"
+       id="tspan167405-5">Stable, but far from being most effective</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:10.6667px;line-height:1.25;font-family:sans-serif;fill:#ff0000;fill-opacity:1;stroke:none"
+     x="52.495384"
+     y="211.2813"
+     id="text163365-2-49"><tspan
+       sodipodi:role="line"
+       x="52.495384"
+       y="211.2813"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#0000ff;fill-opacity:1"
+       id="tspan167399-7-7">Factory V/F Curve</tspan><tspan
+       sodipodi:role="line"
+       x="52.495384"
+       y="224.78522"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#0000ff;fill-opacity:1"
+       id="tspan167403-4-5">Used by the CPU to determine which voltage to use. Fused</tspan><tspan
+       sodipodi:role="line"
+       x="52.495384"
+       y="238.28914"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#0000ff;fill-opacity:1"
+       id="tspan224118">at the end of manufacturing, while CPU was being tested</tspan><tspan
+       sodipodi:role="line"
+       x="52.495384"
+       y="251.79306"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#0000ff;fill-opacity:1"
+       id="tspan224120">and binned for the specific market. Always stable in PRQ</tspan><tspan
+       sodipodi:role="line"
+       x="52.495384"
+       y="265.12643"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#000000;fill-opacity:1"
+       id="tspan167405-5-4" /></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:10.6667px;line-height:1.25;font-family:sans-serif;fill:#ff0000;fill-opacity:1;stroke:none"
+     x="693.60358"
+     y="384.92313"
+     id="text163365-2-4"><tspan
+       sodipodi:role="line"
+       x="693.60358"
+       y="384.92313"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#e1e100;fill-opacity:1"
+       id="tspan167399-7-8">V/F Point UV</tspan><tspan
+       sodipodi:role="line"
+       x="693.60358"
+       y="398.42706"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#e1e100;fill-opacity:1"
+       id="tspan167403-4-2">Each point on V/F curve gets its own voltage offset</tspan><tspan
+       sodipodi:role="line"
+       x="693.60358"
+       y="411.93097"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.6667px;font-family:Arial;-inkscape-font-specification:Arial;fill:#e1e100;fill-opacity:1"
+       id="tspan167405-5-3">Most efficient stable undervolting if done right</tspan></text>
+  <ellipse
+     style="opacity:1;fill:#808080;fill-opacity:0;stroke:#e1e100;stroke-width:1.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="path203257"
+     cx="590.22485"
+     cy="300.54626"
+     rx="6.3048482"
+     ry="9.3028164" />
+  <ellipse
+     style="fill:#808080;fill-opacity:0;stroke:#e13030;stroke-width:1.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="path203257-2"
+     cx="293.80081"
+     cy="384.86411"
+     rx="6.3048482"
+     ry="9.3028164" />
+  <ellipse
+     style="fill:#000000;fill-opacity:0;stroke:#000000;stroke-width:1.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="path203257-2-4"
+     cx="410.21649"
+     cy="280.68475"
+     rx="6.3048482"
+     ry="9.3028164" />
+  <ellipse
+     style="fill:#000000;fill-opacity:0;stroke:#0000ff;stroke-width:1.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="path203257-2-4-4"
+     cx="225.09363"
+     cy="303.74533"
+     rx="6.3048482"
+     ry="9.3028164" />
+  <path
+     style="fill:none;stroke:#ffc020;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 682.06512,366.1268 594.94318,306.20752"
+     id="path203608"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;stroke:#ff3030;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 367.87658,438.53621 299.18064,391.65154"
+     id="path203608-8"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 559.47528,172.00027 415.87196,275.06994"
+     id="path203608-8-4"
+     sodipodi:nodetypes="cc" />
+  <path
+     style="fill:none;stroke:#0000ff;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="m 187.36102,261.36216 32.57901,35.96475"
+     id="path203608-8-4-2"
+     sodipodi:nodetypes="cc" />
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:37.3333px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+     x="49.788799"
+     y="69.121674"
+     id="text250607"><tspan
+       sodipodi:role="line"
+       id="tspan250605"
+       x="49.788799"
+       y="69.121674"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:37.3333px;font-family:Arial;-inkscape-font-specification:Arial">CPU Voltage / Frequency</tspan><tspan
+       sodipodi:role="line"
+       x="49.788799"
+       y="116.38522"
+       id="tspan250609"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:37.3333px;font-family:Arial;-inkscape-font-specification:Arial">(V/F) Curve - Intro</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+     x="311.97446"
+     y="-46.345951"
+     id="text256001"><tspan
+       sodipodi:role="line"
+       id="tspan255999"></tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none"
+     x="825.75238"
+     y="-52.966801"
+     id="text258245"><tspan
+       sodipodi:role="line"
+       id="tspan258243"></tspan></text>
+  <rect
+     style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#0000ff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     id="rect271041"
+     width="1.8478853"
+     height="0.46197131"
+     x="15.245053"
+     y="12.473226" />
+</svg>

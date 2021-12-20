@@ -84,30 +84,31 @@ UINT64 GetPkgPowerLimits(
   return msr.u64;
 }
 
-
 /*******************************************************************************
- * SetPkgPowerLimit1_MSR
+ * SetPkgPowerLimit12
  ******************************************************************************/
 
-void SetPkgPowerLimit12_MSR(
-    
-    // firmware limits
-    // (if they exist)
-    const UINT32 PkgMaxTau,
-    const UINT32 PkgMinPL1,
-    const UINT32 PkgMaxPL1,
+void SetPkgPowerLimit12(
 
-    const UINT8 enablePL1,
-    const UINT8 enablePL2,
+  const UINT8 dst,            // 0=MSR, 1=MMIO
 
-    const UINT32 timeUnits,
-    const UINT32 energyUnits,
-    const UINT32 powerUnits,
+  // firmware limits
+  // (if they exist)
+  const UINT32 PkgMaxTau,
+  const UINT32 PkgMinPL1,
+  const UINT32 PkgMaxPL1,
 
-    const UINT8 clamp,
-    const UINT32 pl1t,
-    const UINT32 pl1w,    
-    const UINT32 pl2w )
+  const UINT8 enablePL1,
+  const UINT8 enablePL2,
+
+  const UINT32 timeUnits,
+  const UINT32 energyUnits,
+  const UINT32 powerUnits,
+
+  const UINT8 clamp,
+  const UINT32 pl1t,
+  const UINT32 pl1w,
+  const UINT32 pl2w)
 {
   QWORD msr = { 0 };
 
@@ -116,13 +117,16 @@ void SetPkgPowerLimit12_MSR(
   //
   // Back to Watts
 
-  UINT8 FX, FY, TNOERR;
   UINT32 xform_pl1w, xform_pl2w, xform_tau;
+
+  UINT8 FX = 0;
+  UINT8 FY = 0;
+  UINT8 TNOERR = 0;
 
   xform_pl1w = xform_pl2w = MAX_POWAH;
   xform_tau = 0x7fff;
 
-  TNOERR = FindTauConsts(pl1t, (UINT8)powerUnits, &FX, &FY);
+  TNOERR = FindTauConsts(pl1t, (UINT8)timeUnits, &FX, &FY);
 
   if (!TNOERR) {
     return;
@@ -144,14 +148,24 @@ void SetPkgPowerLimit12_MSR(
 
   xform_pl1w = (PkgMinPL1 > 0) ? MAX(xform_pl1w, PkgMinPL1) : xform_pl1w;
   xform_pl1w = (PkgMaxPL1 > 0) ? MIN(xform_pl1w, PkgMaxPL1) : xform_pl1w;
-  xform_tau = (PkgMaxTau > 0) ? MIN(xform_tau, PkgMaxTau) : xform_tau;
+  xform_tau = (PkgMaxTau > 0) ?  MIN(xform_tau, PkgMaxTau) : xform_tau;
 
-  msr.u64 = pm_rdmsr64(MSR_PACKAGE_POWER_LIMIT);
+  msr.u64 = pm_xio_read64( dst, (dst==IO_MSR) ? 
+    MSR_PACKAGE_POWER_LIMIT :
+    MMIO_PACKAGE_POWER_LIMIT );
 
   if (!(msr.u32.hi & bit31u32)) {        // do not attempt to write locked MSR
-  /////////
-  // PL1 //
-  /////////
+
+    MiniTraceEx("Setting Pkg PL1/2: PL1=0x%x, PL2: 0x%x, tau: %u X=%u, Y=%u",
+      xform_pl1w,
+      xform_pl2w,
+      pl1t,
+      FX,
+      FY);
+
+    /////////
+    // PL1 //
+    /////////
 
     msr.u32.lo = (enablePL1) ?
       msr.u32.lo | bit15u32 :
@@ -201,14 +215,19 @@ void SetPkgPowerLimit12_MSR(
       msr.u32.hi &= 0xff01ffff;
     }
 
-    pm_wrmsr64(MSR_PACKAGE_POWER_LIMIT, msr.u64);
+    pm_xio_write64(dst, (dst == IO_MSR) ?
+      MSR_PACKAGE_POWER_LIMIT :
+      MMIO_PACKAGE_POWER_LIMIT,
+      msr.u64);
 
     MicroStall(3);
 
     //
     // Clamp
 
-    msr.u64 = pm_rdmsr64(MSR_PACKAGE_POWER_LIMIT);
+    msr.u64 = pm_xio_read64(dst, (dst == IO_MSR) ?
+      MSR_PACKAGE_POWER_LIMIT :
+      MMIO_PACKAGE_POWER_LIMIT);
 
     msr.u32.lo = (clamp) ?
       msr.u32.lo | bit16u32 :
@@ -218,11 +237,150 @@ void SetPkgPowerLimit12_MSR(
       msr.u32.hi | bit16u32 :
       msr.u32.hi & ~bit16u32;
 
-    pm_wrmsr64(MSR_PACKAGE_POWER_LIMIT, msr.u64);
+    pm_xio_write64(dst, (dst == IO_MSR) ?
+      MSR_PACKAGE_POWER_LIMIT :
+      MMIO_PACKAGE_POWER_LIMIT,
+      msr.u64 );
 
     MicroStall(3);
   }
 }
+
+/*******************************************************************************
+ * SetPlatformPowerLimit12
+ ******************************************************************************/
+
+VOID EFIAPI SetPlatformPowerLimit12(
+  const UINT8 enablePL1,
+  const UINT8 enablePL2,
+  const UINT32 unitsT,
+  const UINT32 unitsW,
+  const UINT8 clamp,
+  const UINT32 pl1t,
+  const UINT32 pl1w,
+  const UINT32 pl2w)
+{
+  QWORD msr = { 0 };
+
+  const UINT32 vmask1 = 0x7fff;
+
+  MiniTraceEx("Setting Platform PL1/2 Limits");
+
+  //
+  // Back to Watts
+
+  UINT32 xform_pl1w = MAX_POWAH;
+  UINT32 xform_pl2w = MAX_POWAH;
+  UINT32 xform_pl1t = 0x7F;
+
+  UINT8 FX = 0;
+  UINT8 FY = 0;
+  UINT8 TNOERR = 0;
+
+
+  if (pl1w != MAX_POWAH)
+  {
+    xform_pl1w = pl1w * unitsW;
+    xform_pl1w = (xform_pl1w) ? xform_pl1w / 1000 : 0;
+  }
+
+  if (pl2w != MAX_POWAH)
+  {
+    xform_pl2w = pl2w * unitsW;
+    xform_pl2w = (xform_pl2w) ? xform_pl2w / 1000 : 0;
+  }
+
+  xform_pl1t = (pl1t > 0x7F) ? 0x7F : pl1t;
+
+  TNOERR = FindTauConsts(pl1t, (UINT8)unitsT, &FX, &FY);
+
+  if (!TNOERR) {
+    return;
+  }
+
+
+  msr.u64 = pm_rdmsr64(MSR_PLATFORM_POWER_LIMIT);
+
+  /////////
+  // PL1 //
+  /////////
+
+  msr.u32.lo = (enablePL1) ?
+    msr.u32.lo | bit15u32 :
+    msr.u32.lo & ~bit15u32;
+
+  if (enablePL1) {
+    // POWER
+    msr.u32.lo &= ~vmask1;
+    msr.u32.lo |= (xform_pl1w > vmask1) ? vmask1 : xform_pl1w & vmask1;
+
+    // TIME
+    if (TNOERR) {
+      msr.u32.lo &= 0xff01ffff;
+      msr.u32.lo |= (UINT32)(FX) << 22;
+      msr.u32.lo |= (UINT32)(FY) << 17;
+    }
+    else {
+      msr.u32.lo |= xform_pl1t << 17;
+    }
+
+  }
+  else {
+    msr.u32.lo &= ~vmask1;
+    msr.u32.lo &= 0xff01ffff;
+  }
+
+  /////////
+  // PL2 //
+  /////////
+
+  msr.u32.hi = (enablePL2) ?
+    msr.u32.hi | bit15u32 :
+    msr.u32.hi & ~bit15u32;
+
+  if (enablePL2)
+  {
+    // POWER
+    msr.u32.hi &= ~vmask1;
+    msr.u32.hi |= (xform_pl2w > vmask1) ? vmask1 : xform_pl2w & vmask1;
+  }
+  else {
+    msr.u32.hi &= ~vmask1;
+  }
+
+  pm_wrmsr64(MSR_PLATFORM_POWER_LIMIT, msr.u64);
+  MicroStall(3);
+
+  {
+    ///////////
+    // Clamp //
+    ///////////
+
+    QWORD numsr = { 0 };
+
+    msr.u64 = numsr.u64 = pm_rdmsr64(MSR_PLATFORM_POWER_LIMIT);
+
+    //
+    // PL1
+
+    numsr.u32.lo = (clamp) ?
+      numsr.u32.lo | bit16u32 :
+      numsr.u32.lo & ~bit16u32;
+
+    //
+    // PL2
+
+    numsr.u32.hi = (clamp) ?
+      numsr.u32.hi | bit16u32 :
+      numsr.u32.hi & ~bit16u32;
+
+    if (numsr.u64 != msr.u64) {
+      pm_wrmsr64(MSR_PLATFORM_POWER_LIMIT, numsr.u64);
+      MicroStall(3);
+    }
+  }
+}
+
 
 /*******************************************************************************
  * SetPL12MSRLock
@@ -373,256 +531,6 @@ VOID EFIAPI SetPP0Lock(const UINT8 lock)
     MicroStall(3);
   }
 }
-
-
-/*******************************************************************************
- * SetPkgPowerLimit12_MMIO
- ******************************************************************************/
-
-VOID EFIAPI SetPkgPowerLimit12_MMIO(
-
-  // firmware limits
-  // (if they exist)
-  const UINT32 PkgMaxTau,
-  const UINT32 PkgMinPL1,
-  const UINT32 PkgMaxPL1,
-
-  const UINT8 enablePL1,
-  const UINT8 enablePL2,
-  
-  const UINT32 timeUnits,
-  const UINT32 energyUnits,
-  const UINT32 powerUnits,
-
-  const UINT8 clamp,
-  const UINT32 pl1t,
-  const UINT32 pl1w,  
-  const UINT32 pl2w)
-{
-  QWORD msr = { 0 };
-
-  const UINT32 vmask1 = 0x7fff;
-
-  MiniTraceEx("Setting MMIO PL1/2 Limits");
-
-  //
-  // Back to Watts
-
-  UINT8 FX, FY, TNOERR;
-  UINT32 xform_pl1w, xform_pl2w, xform_tau;
-
-  xform_pl1w = xform_pl2w = MAX_POWAH;
-  xform_tau = 0x7fff;
-
-  TNOERR = FindTauConsts(pl1t, (UINT8)powerUnits, &FX, &FY);
-
-  if (!TNOERR) {
-    return;
-  }
-
-  if (pl1w != MAX_POWAH) {
-    xform_pl1w = pl1w * powerUnits;
-    xform_pl1w = (xform_pl1w) ? xform_pl1w / 1000 : 0;
-  }
-
-  if (pl2w != MAX_POWAH) {
-    xform_pl2w = pl2w * powerUnits;
-    xform_pl2w = (xform_pl2w) ? xform_pl2w / 1000 : 0;
-  }
-
-  //
-  // If limits are enforced by the firmware, ensure that
-  // we fall in between
-
-  xform_pl1w = (PkgMinPL1 > 0) ? MAX(xform_pl1w, PkgMinPL1) : xform_pl1w;
-  xform_pl1w = (PkgMaxPL1 > 0) ? MIN(xform_pl1w, PkgMaxPL1) : xform_pl1w;
-  xform_tau = (PkgMaxTau > 0) ? MIN(xform_tau, PkgMaxTau) : xform_tau;
-
-  msr.u64 = pm_rdmsr64(MSR_PACKAGE_POWER_LIMIT);
-
-  /////////
-  // PL1 //
-  /////////
-
-  msr.u32.lo = (enablePL1) ?
-    msr.u32.lo | bit15u32 :
-    msr.u32.lo & ~bit15u32;
-
-  msr.u32.lo &= ~vmask1;
-
-  if (enablePL1) 
-  {
-    // POWER    
-    msr.u32.lo |= (xform_pl1w > vmask1) ? vmask1 : xform_pl1w & vmask1;
-
-    if (TNOERR) {
-      // TIME
-      msr.u32.lo &= 0xff01ffff;
-      msr.u32.lo |= (UINT32)(FX) << 22;
-      msr.u32.lo |= (UINT32)(FY) << 17;
-    }
-  }
-
-  /////////
-  // PL2 //
-  /////////
-
-  msr.u32.hi = (enablePL2) ?
-    msr.u32.hi | bit15u32 :
-    msr.u32.hi & ~bit15u32;
-
-  msr.u32.hi &= ~vmask1;
-
-  if (enablePL2) 
-  {
-    // POWER
-    msr.u32.hi |= (xform_pl2w > vmask1) ? vmask1 : xform_pl2w & vmask1;
-
-    if (TNOERR) {
-      // TIME
-      msr.u32.hi &= 0xff01ffff;
-      msr.u32.hi |= (UINT32)(FX) << 22;
-      msr.u32.hi |= (UINT32)(FY) << 17;
-    }
-  }
-
-  if (gMCHBAR) {
-
-    pm_mmio_write32(gMCHBAR + MMIO_PACKAGE_POWER_LIMIT,    msr.u32.lo);
-    pm_mmio_write32(gMCHBAR + MMIO_PACKAGE_POWER_LIMIT_HI, msr.u32.hi);
-
-    QWORD numsr = msr;
-
-    numsr.u32.lo = (clamp) ?
-      numsr.u32.lo | bit16u32 :
-      numsr.u32.lo & ~bit16u32;
-
-    numsr.u32.hi = (clamp) ?
-      numsr.u32.hi | bit16u32 :
-      numsr.u32.hi & ~bit16u32;
-
-    if (numsr.u64 != msr.u64) {
-      pm_mmio_or32(gMCHBAR + MMIO_PACKAGE_POWER_LIMIT,    numsr.u32.lo);
-      pm_mmio_or32(gMCHBAR + MMIO_PACKAGE_POWER_LIMIT_HI, numsr.u32.hi);
-    }
-  }
-}
-
-
-/*******************************************************************************
- * SetPlatformPowerLimit12
- ******************************************************************************/
-
-VOID EFIAPI SetPlatformPowerLimit12(
-  const UINT8 enablePL1,
-  const UINT8 enablePL2,
-  const UINT32 unitsW,
-  const UINT8 clamp,
-  const UINT32 pl1t,
-  const UINT32 pl1w,    
-  const UINT32 pl2w)
-{
-  QWORD msr = { 0 };
-
-  const UINT32 vmask1 = 0x7fff;
-
-  MiniTraceEx("Setting Platform PL1/2 Limits");
-
-  //
-  // Back to Watts
-
-  UINT32 xform_pl1w = MAX_POWAH;
-  UINT32 xform_pl2w = MAX_POWAH;
-  UINT32 xform_pl1t = 0x7F;
-
-  if (pl1w != MAX_POWAH)
-  {
-    xform_pl1w = pl1w * unitsW;
-    xform_pl1w = (xform_pl1w) ? xform_pl1w / 1000 : 0;
-  }
-  
-  if (pl2w != MAX_POWAH)
-  {
-    xform_pl2w = pl2w * unitsW;
-    xform_pl2w = (xform_pl2w) ? xform_pl2w / 1000 : 0;
-  }
-
-  xform_pl1t = (pl1t > 0x7F) ? 0x7F : pl1t;
-
-  msr.u64 = pm_rdmsr64(MSR_PLATFORM_POWER_LIMIT);
-
-  /////////
-  // PL1 //
-  /////////
-
-  msr.u32.lo = (enablePL1) ?
-    msr.u32.lo | bit15u32 :
-    msr.u32.lo & ~bit15u32;
-
-  if (enablePL1) {
-    // POWER
-    msr.u32.lo &= ~vmask1;
-    msr.u32.lo |= (xform_pl1w > vmask1) ? vmask1 : xform_pl1w & vmask1;
-
-    // TIME
-    msr.u32.lo |= xform_pl1t<<17;
-  }
-  else {
-    msr.u32.lo &= ~vmask1;
-    msr.u32.lo &= 0xff01ffff;
-  }
-
-  /////////
-  // PL2 //
-  /////////
-
-  msr.u32.hi = (enablePL2) ?
-    msr.u32.hi | bit15u32 :
-    msr.u32.hi & ~bit15u32;
-
-  if (enablePL2)
-  {
-    // POWER
-    msr.u32.hi &= ~vmask1;
-    msr.u32.hi |= (xform_pl2w > vmask1) ? vmask1 : xform_pl2w & vmask1;
-  }
-  else {
-    msr.u32.hi &= ~vmask1;
-  }
-
-  pm_wrmsr64(MSR_PLATFORM_POWER_LIMIT, msr.u64);
-  MicroStall(3);
-
-  {
-    ///////////
-    // Clamp //
-    ///////////
-
-    QWORD numsr = { 0 };
-
-    msr.u64 = numsr.u64 = pm_rdmsr64(MSR_PLATFORM_POWER_LIMIT);
-
-    //
-    // PL1
-
-    numsr.u32.lo = (clamp) ?
-      numsr.u32.lo | bit16u32 :
-      numsr.u32.lo & ~bit16u32;
-
-    //
-    // PL2
-
-    numsr.u32.hi = (clamp) ?
-      numsr.u32.hi | bit16u32 :
-      numsr.u32.hi & ~bit16u32;
-
-    if (numsr.u64 != msr.u64) {
-      pm_wrmsr64(MSR_PLATFORM_POWER_LIMIT, numsr.u64);
-      MicroStall(3);
-    }
-  }
-}
-
 
 /*******************************************************************************
  * SetPlatformPowerLimit3

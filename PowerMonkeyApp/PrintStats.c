@@ -29,6 +29,7 @@
 #include <Library/UefiLib.h>
 #include <Protocol/MpService.h>
 #include "Platform.h"
+#include "CpuData.h"
 
 /*******************************************************************************
  * Globals
@@ -83,7 +84,6 @@ UINT16 voltModeColStr[2][11] = {
 
 VOID PrintVFPoints(IN PLATFORM* psys)
 {
-
   for (UINTN pidx = 0; pidx < psys->PkgCnt; pidx++)
   {
     PACKAGE* pac = psys->packages + pidx;
@@ -91,7 +91,7 @@ VOID PrintVFPoints(IN PLATFORM* psys)
     AsciiPrint("Package #%u\n", pidx);
 
     for (UINTN didx = 0; didx < MAX_DOMAINS; didx++) {
-      if (DomainSupported((UINT8)didx)) {
+      if (VoltageDomainExists((UINT8)didx)) {
         if ((didx == IACORE) || (didx == RING)|| (didx==ECORE)) {
 
           DOMAIN* dom = pac->planes + didx;
@@ -99,18 +99,19 @@ VOID PrintVFPoints(IN PLATFORM* psys)
           if ((pac->Program_VF_Points[didx] == 2) ||
             (gPrintVFPoints_PostProgram != 0))
           {
-            AsciiPrint("    Domain: %s, number of reported V/F points: %u\n",
+            AsciiPrint("\n  Domain: %s, number of reported V/F points: %u\n",
               &vrDomainPrStr[didx][0], dom->nVfPoints);
 
             for (UINTN vidx = 0; vidx < dom->nVfPoints; vidx++) {
               VF_POINT* vp = dom->vfPoint + vidx;
 
-              AsciiPrint("      [%s][VF point #%u]     fused ratio: %ux  -  voltage offset: %d mV\n",
-                &vrDomainPrStr[didx][0], vidx, vp->FusedRatio, vp->OffsetVolts);
+              AsciiPrint("    [%s][VFP#%u] V_offset = %d mV @ %u MHz\n",
+                &vrDomainPrStr[didx][0], 
+                vidx,                 
+                vp->VOffset,
+                vp->FusedRatio * gBCLK_bsp / 1000);
             }
           }
-
-          AsciiPrint("\n");
         }
       }
     }
@@ -146,26 +147,28 @@ VOID PrintPlatformSettings(IN PLATFORM* psys)
       );
 
       for (UINTN didx = 0; didx < MAX_DOMAINS; didx++) {
-        if (DomainSupported((UINT8)didx)) {
+        if (VoltageDomainExists((UINT8)didx)) {
           DOMAIN* dom = pac->planes + didx;
 
-          Print(
-            (dom->OffsetVolts < 0) ?
-            L"|%s| 0x%02x |%s| %03u A  |%s|  %04u mV  | %04d mV  |\n" :
-            L"|%s| 0x%02x |%s| %03u A  |%s|  %04u mV  |  %03d mV  |\n",
+          if (dom->VRaddr != INVALID_VR_ADDR) {
+            Print(
+              (dom->OffsetVolts < 0) ?
+              L"|%s| 0x%02x |%s| %03u A  |%s|  %04u mV  | %04d mV  |\n" :
+              L"|%s| 0x%02x |%s| %03u A  |%s|  %04u mV  |  %03d mV  |\n",
 
-            vrDomainColStr[didx & 0x7],
+              vrDomainColStr[didx & 0x7],
 
-            dom->VRaddr,
+              dom->VRaddr,
 
-            &svidColStr[dom->VRtype & 0x1][0],
-            (dom->IccMax) ? dom->IccMax >> 2 : 0,
+              &svidColStr[dom->VRtype & 0x1][0],
+              (dom->IccMax) ? dom->IccMax >> 2 : 0,
 
-            &voltModeColStr[dom->VoltMode & 0x1][0],
+              &voltModeColStr[dom->VoltMode & 0x1][0],
 
-            (UINT32)dom->TargetVolts,
-            (INT32)dom->OffsetVolts
-          );
+              (UINT32)dom->TargetVolts,
+              (INT32)dom->OffsetVolts
+            );
+          }
         }
       }
 

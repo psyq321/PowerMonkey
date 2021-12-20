@@ -50,6 +50,7 @@
   <ItemGroup>
     <ClCompile Include="CONFIGURATION.c" />
     <ClCompile Include="CpuData.c" />
+    <ClCompile Include="CpuDataVR.c" />
     <ClCompile Include="CpuInfo.c" />
     <ClCompile Include="CpuMailboxes.c" />
     <ClCompile Include="DelayX86.c" />
