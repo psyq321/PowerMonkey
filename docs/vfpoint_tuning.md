@@ -32,20 +32,20 @@
     - [Core i9-12900K (P-Core Only) Results](#core-i9-12900k-p-core-only-results)
     - [Conclusion](#conclusion)
 
-## IMPORTANT NOTE
+## IMPORTANT NOTES
+
+| Draft Article  |
+| ------------- |
+| This article is still a draft and will undergo further revisions, for improving clarity and correcting errors. AVX-512 is not part of the released Core i9-12900K specification, and here is used for testing purposes only. |
 
 | Trademarks and Copyrights  |
 | ------------- |
 | All product names, logos, and brands are property of their respective owners. All company, product and service names used in this website are for identification purposes only. Use of these names, logos, and brands does not imply endorsement. |
 |3D XPoint, Altera, Arc, Arria, Avalon, Axxia, Barefoot Networks, the Barefoot logo, the Footsie logo, BunnyPeople, Celeron, Cilk, Cyclone, Do something wonderful., Docea, eASIC, easicopy, Enpirion, Hyperflex, Intel, the Intel logo, Intel Adaptix, Intel Agilex, Intel Atom, Intel CoFluent, Intel Core, Intel Evo, Intel Inside, the Intel Inside logo, Intel Optane, Intel RealSense, Intel Shooting Star, Intel SpeedStep, Intel Unite, Intel vPro, Iris, Itanium, Killer, MAX, Movidius, Myriad, Nios, OpenVINO, the OpenVINO logo, Pentium, Quark, Quartus, Simics, SmartByte, SoftSilicon, Sound Mark, StarPro, Stratix, the Stratix logo, Stay With It, the Engineering Stay With It logo, StreamSight, The Journey Inside, Thunderbolt, the Thunderbolt logo, Tofino, Transcede, Ultrabook, VTune, and Xeon are trademarks of Intel Corporation or its subsidiaries.|
 
-| Draft Article  |
-| ------------- |
-| This article is still a draft and will undergo further revisions, for improving clarity and correcting errors. AVX-512 is not part of the released Core i9-12900K specification, and here is used for testing purposes only. |
-
 ## TL;DR - For the Inpatient
 
-![vf_explainer](img/tldr.jpg)
+![tldr](img/tldr.jpg)
 
 ## Introduction... or what is this V/F thing anyway??
 
@@ -101,7 +101,7 @@ Did we reach levels of CPU tuning where the chips come out of the factory very n
 
 No, we did not! And the same Comet Lake architecture also offered a way to prove it!
 
-### Unlocked Comet Lake also brings unlocked access to V/F Curve!
+### Unlocked Comet Lake also brings unlocked access to V/F Curve
 
 While it is not widely known, Intel Comet Lake CPUs were the first to expose fine-grained control over the V/F curve to 3rd parties. In subsequent new CPU generations, this capability has been (and still is) reserved only for "OC unlocked" CPUs - so the K, KX, etc., models. Lower models do not even allow reading the V/F point values (!).
 
@@ -137,14 +137,14 @@ Coincidentally (or not?) - Comet Lake’s V/F point access would allow us actual
 
 Sounds like too good to be true? Well, it sort of is still - remember what was written above: "OC Unlocked" SKUs only. But that is something for now - and maybe the industry will listen, and we get this control on lower SKUs as well…
 
-## PowerMonkey.efi 0.1.8 and AVX-512 Prime95 at 4.85 GHz!
+## PowerMonkey.efi 0.1.8 and AVX-512 Prime95 at 4.85 GHz
 
 ### Preparation of the Test Systems
 
 To ensure proper support, I used both Rocket Lake-S and Alder Lake-S CPUs with fully unlocked OC and multipliers and, therefore, V/F curve control. Unfortunately, I could get any OC-unlocked Comet Lake or Tiger Lake systems, but I see no reason why they would not work.
 
 | Rocket Lake| Alder Lake-S|
-|:----------:|:-----------:| 
+|:----------:|:-----------:|
 |![vf_explainer](img/rkl_prog.jpg)|![vf_explainer](img/adl_mb.jpg)|
 | Rocket Lake Lake Motherboard undergoing CPR due to bad flash (one of many)|Alder Lake Setup - Not quite a notebook, though...|
 
@@ -153,9 +153,9 @@ So, let’s look at the recipe - to start with, we need to extract the V/F point
 **Here are reference values for the CPUs used in this test:**
 
 ### Rocket Lake
+
 <details>
   <summary>Click to expand!</summary>
-  
 | | CORE | RING|
 |:--: |:----------:|:-----------:|
 | V/F Pt. #1 | 8x | 8x |
@@ -170,6 +170,7 @@ So, let’s look at the recipe - to start with, we need to extract the V/F point
 </details>
 
 ### Alder Lake (P-Core Only!)
+
 <details>
   <summary>Click to expand!</summary>
   
@@ -236,10 +237,9 @@ At this point, one can take the worst cases of these, add a "buffer" considered 
     pk->planes[IACORE].vfPoint[6].VOffset =
       pk->planes[RING].vfPoint[6].VOffset = 0;     // V_Offset (mv) @ 5300 MHz
 
-
 ```
 
-**Let's also not forget to enable VF Point programming:**
+**Let's also not forget to enable V/F Point programming:**
 
 ```cpp
     pk->Program_VF_Points[IACORE] =                 // 0 - Do not program
@@ -285,9 +285,9 @@ Lovely, looks like our values are at least programmed. Let’s now boot in Windo
 
 ### Core i9-12900K (P-Core Only) Results
 
-Since the test systems are not thermally limited (by no means, thanks to that 360mm water cooling rig), it is tough to see the benefit of undervolting. For this, in the future I will test the CPU in "pretend notebook" state with their energy / thermal limits imposed artificially as the next step… 
+Since the test systems are not thermally limited (by no means, thanks to that 360mm water cooling rig), it is tough to see the benefit of undervolting. For this, in the future I will test the CPU in "pretend notebook" state with their energy / thermal limits imposed artificially as the next step…
 
-But for now, let’s ask the following question: 
+But for now, let’s ask the following question:
 
 What is the all-core maximum clock at which the system will continuously run AVX-512 energy virus?
 
@@ -315,4 +315,4 @@ As we can see, gain in maximum frequency is almost instant as soon as voltage is
 
 ### Conclusion
 
-TBD.
+TBD...
