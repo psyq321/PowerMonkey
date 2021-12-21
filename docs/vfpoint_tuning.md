@@ -51,16 +51,11 @@
 
 Older ones among us will undoubtedly remember easier times when CPUs used to run on a single voltage - supplied by the motherboard, no ifs, and no buts. Those days were simple, but let’s not forget that those 386 and early 486 CPUs ran on 5 volts (yes, five!).
 
-| Pentium III|
-|:----------:|
-|![vf_explainer](img/pentium3.jpg)|
-| From the happy days when CPUs had working voltage written on them...|
-
 As innovations kept coming, CPUs finally became tiny computers - with embedded RAM, RAM controllers, I/O, GPUs, and more. Trivia: did you know that your CPU has an entirely independent processor responsible for the power management of the main CPU only and that it runs its software (pcode)?
 
-This little processor (called PMC) "wakes up" way before the main CPU executes a single instruction!  All new complexity, not to mention massive advancements in modern CPU operating frequency and number of cores - requires way more advanced and complex logic for maintaining stable power, yet ensuring that the power draw is as low as possible.
+This little processor (called PCU) "wakes up" way before the main CPU executes a single instruction!  All new complexity, not to mention massive advancements in modern CPU operating frequency and number of cores - requires way more advanced and complex logic for maintaining stable power, yet ensuring that the power draw is as low as possible.
 
-PMC capabilities employed to maintain low power and stable high performance mainly were a CPU vendor secret and not even disclosed to the computer manufacturers beyond their "need to know.". PMC was truly living in deep underground, known only by those who work with it directly.
+PCU capabilities employed to maintain low power and stable high performance mainly were a CPU vendor secret and not even disclosed to the computer manufacturers beyond their "need to know.". PCU was truly living in deep underground, known only by those who work with it directly.
 
 However, something happened, and we slowly got more info and then *some* control over this topic!
 
@@ -80,9 +75,9 @@ So, finally, what >is< this V/F curve we keep mentioning?
 
 Simply put, the V/F curve is a table (actually, it is most likely more than one table internally) containing information about stable voltages for every supported operating point of the CPU. We can treat it as a basic 2D table with one voltage per operating frequency for simplicity reasons.
 
-In reality, matters are much more complex - PMC must apply real-time corrections to the V/F curve, depending on the current temperature, types of workload being executed and other things such as: other circuits sharing the same voltage regulator, time since the last change (due to ramp-up, ramp-down), etc.
+In reality, matters are much more complex - PCU must apply real-time corrections to the V/F curve, depending on the current temperature, types of workload being executed and other things such as: other circuits sharing the same voltage regulator, time since the last change (due to ramp-up, ramp-down), etc.
 
-This complexity also explains why users were given very basic control over MSR 0x150 - that interface is just an abstraction, acting as a "gatekeeper" between 3rd parties (as in "not CPU architects") and PMC itself. After offsets were sent via MSR 0x150 in Skylake/Kaby Lake/Coffee Lake era, PMC would re-calculate the internal V/F curve, ensuring consistency and set the final (hidden) values. Some basic consistency checking was there - but, as everybody who did undervolting knows, it is very thin. Whoever uses this MSR shall know very well what they are doing. Wrong actions lead to crashes or hang without any forewarning.
+This complexity also explains why users were given very basic control over MSR 0x150 - that interface is just an abstraction, acting as a "gatekeeper" between 3rd parties (as in "not CPU architects") and PCU itself. After offsets were sent via MSR 0x150 in Skylake/Kaby Lake/Coffee Lake era, PCU would re-calculate the internal V/F curve, ensuring consistency and set the final (hidden) values. Some basic consistency checking was there - but, as everybody who did undervolting knows, it is very thin. Whoever uses this MSR shall know very well what they are doing. Wrong actions lead to crashes or hangs without any forewarning.
 
 For voltage control, software like [Intel's XTU](https://www.intel.com/content/www/us/en/download/17881/intel-extreme-tuning-utility-intel-xtu.html)
  or [ThrottleStop](https://www.techpowerup.com/download/techpowerup-throttlestop/) use MSR 0x150.
@@ -190,7 +185,7 @@ Remember, always cross-check with your own hardware!
 
 After V/F points are known, it is time to test the CPU to determine stable voltages for each V/F point. You can do this in many ways;  I was lazy and just patched the [Plundervolt script](https://github.com/KitMurdock/plundervolt/blob/master/utils/find_crash_point.sh) (some good out of it at the end) with slightly better control of the CPU states and Prime95 run for every test. Then I let it run in a mini Linux distro that auto-boots after each crash…
 
-To ensure coverage, I actually ran three tests (SSE only, AVX and AVX-512) as those have very different power demands, and PMC could handle them differently in terms of voltages and frequencies.
+To ensure coverage, I actually ran three tests (SSE only, AVX and AVX-512) as those have very different power demands, and PCU could handle them differently in terms of voltages and frequencies.
 
 If you do this, please ensure you disable all CPU-assisted frequency scaling and power management and keep monitoring tests for throttling (try avoiding it) - otherwise, your newly found voltages will not represent reality.
 
@@ -217,25 +212,25 @@ At this point, one can take the worst cases of these, add a "buffer" considered 
     /// SSE         N/A    -250    -246    -232    -238    -186     N/A
     
     pk->planes[IACORE].vfPoint[0].VOffset =
-      pk->planes[RING].vfPoint[0].VOffset = 0;     // V_Offset (mv) @ 800 MHz
+      pk->planes[RING].vfPoint[0].VOffset = 0;     // V_Offset (mV) @  800 MHz
 
     pk->planes[IACORE].vfPoint[1].VOffset =
-      pk->planes[RING].vfPoint[1].VOffset = -190;  // V_Offset (mv) @ 1800 MHz
+      pk->planes[RING].vfPoint[1].VOffset = -190;  // V_Offset (mV) @ 1800 MHz
 
     pk->planes[IACORE].vfPoint[2].VOffset =
-      pk->planes[RING].vfPoint[2].VOffset = -180;  // V_Offset (mv) @ 3600 MHz
+      pk->planes[RING].vfPoint[2].VOffset = -180;  // V_Offset (mV) @ 3600 MHz
 
     pk->planes[IACORE].vfPoint[3].VOffset =
-      pk->planes[RING].vfPoint[3].VOffset = -180;  // V_Offset (mv) @ 4000 MHz
+      pk->planes[RING].vfPoint[3].VOffset = -180;  // V_Offset (mV) @ 4000 MHz
 
     pk->planes[IACORE].vfPoint[4].VOffset =
-      pk->planes[RING].vfPoint[4].VOffset = -175;  // V_Offset (mv) @ 4200 MHz
+      pk->planes[RING].vfPoint[4].VOffset = -175;  // V_Offset (mV) @ 4200 MHz
 
     pk->planes[IACORE].vfPoint[5].VOffset =
-      pk->planes[RING].vfPoint[5].VOffset = -137;  // V_Offset (mv) @ 4800 MHz
+      pk->planes[RING].vfPoint[5].VOffset = -137;  // V_Offset (mV) @ 4800 MHz
 
     pk->planes[IACORE].vfPoint[6].VOffset =
-      pk->planes[RING].vfPoint[6].VOffset = 0;     // V_Offset (mv) @ 5300 MHz
+      pk->planes[RING].vfPoint[6].VOffset = 0;     // V_Offset (mV) @ 5300 MHz
 
 ```
 
@@ -275,7 +270,7 @@ All of this leads to the following picture:
 
 ![vf_explainer](img/vf1.svg)
 
-The most important bit in the picture above are the first and the last V/F points - you can see that they are left unused, with no voltage drop applied. This is to hint to the PMC that we have no business in undervolting the CPU further in its lower frequency range (or the highest/OC for that matter).
+The most important bit in the picture above are the first and the last V/F points - you can see that they are left unused, with no voltage drop applied. This is to hint to the PCU that we have no business in undervolting the CPU further in its lower frequency range (or the highest/OC for that matter).
 
 After recompiling ```PowerMonkey.efi```, running it pre-boot - we are greeted with this new screen:
 
@@ -307,11 +302,11 @@ What you are seeing above is Core i9-12900K being pounded with AVX-512 Prime95 w
 
 And, yet, with our V/F point undervolt it manages to run on ~4.8 GHz on average - this, 100% "power virus" CPU load, all cores >and< AVX-512! Stock configuration runs 150 MHz lower - at ~4.65 GHz
 
-To verify this is not some sort of fluke, we can simply test the impact of -0.137v voltage drop durin the workload, and see how will this affect PMC and its decisions about allowed clocks:
+To verify this is not some sort of fluke, we can simply test the impact of -0.137v voltage drop durin the workload, and see how will this affect PCU and its decisions about allowed clocks:
 
 ![vf_explainer](img/pm_ab_adls.jpg)
 
-As we can see, gain in maximum frequency is almost instant as soon as voltage is dropped. PMC immediately calculates that is is safe to bump-up core  another 150-200 MHz.
+As we can see, gain in maximum frequency is almost instant as soon as voltage is dropped. PCU immediately calculates that is is safe to bump-up core  another 150-200 MHz.
 
 ### Conclusion
 
