@@ -53,7 +53,6 @@ VALID_ARCHITECTURES             = X64
   CpuData.c
   CpuData.h
   CpuDataVR.c
-  CpuDataVR.h
   CpuInfo.c
   CpuInfo.h
   CpuMailboxes.c
