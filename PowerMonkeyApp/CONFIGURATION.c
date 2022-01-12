@@ -162,7 +162,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
                                                 // Overrides for E-Cores
 
 
-    pk->Program_VF_Overrides[RING] =  1;        // Enable programming of VFC:\Development\PowerMonkey\workspace\README.MD
+    pk->Program_VF_Overrides[RING] =  1;        // Enable programming of VF
                                                 // Overrides for Ring / Cache
 
 
