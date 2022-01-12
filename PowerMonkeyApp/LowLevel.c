@@ -6,7 +6,7 @@
 * | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
 * |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
 *                                                                       (____/
-* Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+* Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.
 *
 * All trademarks, logos and brand names are the property of their respective
 * owners. All company, product and service names used are for identification
@@ -27,10 +27,12 @@
 #include <Uefi.h>
 #include <Library/UefiLib.h>
 #include <Library/BaseLib.h>
+#include <immintrin.h>
 
 #include "SaferAsmHdr.h"
 #include "LowLevel.h"
 #include "MiniLog.h"
+
 
 /*******************************************************************************
  * Compiler Overrides
@@ -52,7 +54,7 @@ UINT32 gMCHBAR = 0;
 
 typedef struct _MINISTAT {
   
-  UINT8 errtxt[128];
+  CHAR8 errtxt[128];
 
   UINT64 param1;
   UINT64 param2;
@@ -149,7 +151,7 @@ VOID EFIAPI InitializeMMIO(VOID)
  * Below routines are wrappers for ASM + Error Handling
  ******************************************************************************/
 
-UINT64 pm_rdmsr64(const UINT32 msr_idx)
+UINT64 EFIAPI pm_rdmsr64(const UINT32 msr_idx)
 { 
   UINT32 err = 0;
   UINT64 val = safer_rdmsr64(msr_idx, &err);
@@ -176,7 +178,7 @@ UINT64 pm_rdmsr64(const UINT32 msr_idx)
  * 
  ******************************************************************************/
 
-UINT32 pm_wrmsr64(const UINT32 msr_idx, const UINT64 value)
+UINT32 EFIAPI pm_wrmsr64(const UINT32 msr_idx, const UINT64 value)
 {
   MiniTrace(MINILOG_OPID_WRMSR64, 1, (UINT32)msr_idx, value);
 
@@ -202,7 +204,7 @@ UINT32 pm_wrmsr64(const UINT32 msr_idx, const UINT64 value)
  *
  ******************************************************************************/
 
-UINT32 pm_mmio_read32(const UINT32 addr)
+UINT32 EFIAPI pm_mmio_read32(const UINT32 addr)
 {  
   UINT32 err = 0;
   UINT32 val = safer_mmio_read32(addr, &err);
@@ -229,7 +231,7 @@ UINT32 pm_mmio_read32(const UINT32 addr)
  *
  ******************************************************************************/
 
-UINT32 pm_mmio_or32(const UINT32 addr, const UINT32 value)
+UINT32 EFIAPI pm_mmio_or32(const UINT32 addr, const UINT32 value)
 {
   MiniTrace(MINILOG_OPID_MMIO_OR32, 0, (UINT64)value | (UINT64)addr<<32, 1);
 
@@ -255,7 +257,7 @@ UINT32 pm_mmio_or32(const UINT32 addr, const UINT32 value)
  *
  ******************************************************************************/
 
-UINT32 pm_mmio_write32(const UINT32 addr, const UINT32 value)
+UINT32 EFIAPI pm_mmio_write32(const UINT32 addr, const UINT32 value)
 {
   MiniTrace(MINILOG_OPID_MMIO_WRITE32, 0, (UINT64)value | (UINT64)addr << 32, 1);
 
@@ -281,7 +283,7 @@ UINT32 pm_mmio_write32(const UINT32 addr, const UINT32 value)
  * pm_xio_read64
  ******************************************************************************/
 
-UINT64 pm_xio_read64(const UINT8 tgtype, const UINT32 addr)
+UINT64 EFIAPI pm_xio_read64(const UINT8 tgtype, const UINT32 addr)
 {
   if (tgtype == IO_MSR) {
     return pm_rdmsr64(addr);
@@ -305,7 +307,7 @@ UINT64 pm_xio_read64(const UINT8 tgtype, const UINT32 addr)
  * pm_xio_write64
  ******************************************************************************/
 
-UINT32 pm_xio_write64(const UINT8 tgtype, const UINT32 addr, const UINT64 val)
+UINT32 EFIAPI pm_xio_write64(const UINT8 tgtype, const UINT32 addr, const UINT64 val)
 {
   if (tgtype == IO_MSR) {
     return pm_wrmsr64(addr, val);

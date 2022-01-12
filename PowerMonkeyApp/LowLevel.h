@@ -6,7 +6,7 @@
 * | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
 * |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
 *                                                                       (____/
-* Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+* Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.
 *
 * All trademarks, logos and brand names are the property of their respective
 * owners. All company, product and service names used are for identification
@@ -51,37 +51,37 @@ VOID EFIAPI SetCpuGSBase(const void* addr);
  * InitializeMMIO
  ******************************************************************************/
 
-void InitializeMMIO(VOID);
+void EFIAPI InitializeMMIO(VOID);
 
 /*******************************************************************************
  * pm_wrmsr64
  ******************************************************************************/
 
-UINT32 pm_wrmsr64(const UINT32 msr_idx, const UINT64 value);
+UINT32 EFIAPI pm_wrmsr64(const UINT32 msr_idx, const UINT64 value);
 
 /*******************************************************************************
  * pm_rdmsr64
  ******************************************************************************/
 
-UINT64 pm_rdmsr64(const UINT32 msr_idx);
+UINT64 EFIAPI pm_rdmsr64(const UINT32 msr_idx);
 
 /*******************************************************************************
  * pm_mmio_or32
  ******************************************************************************/
 
-UINT32 pm_mmio_or32(const UINT32 addr, const UINT32 value);
+UINT32 EFIAPI pm_mmio_or32(const UINT32 addr, const UINT32 value);
 
 /*******************************************************************************
  * pm_mmio_write32
  ******************************************************************************/
 
-UINT32 pm_mmio_write32(const UINT32 addr, const UINT32 value);
+UINT32 EFIAPI pm_mmio_write32(const UINT32 addr, const UINT32 value);
 
 /*******************************************************************************
  * pm_mmio_read32
  ******************************************************************************/
 
-UINT32 pm_mmio_read32(const UINT32 addr);
+UINT32 EFIAPI pm_mmio_read32(const UINT32 addr);
 
 /*******************************************************************************
  *
@@ -97,10 +97,10 @@ enum XioType
  * pm_xio_read64
  ******************************************************************************/
 
-UINT64 pm_xio_read64(const UINT8 tgtype, const UINT32 addr);
+UINT64 EFIAPI pm_xio_read64(const UINT8 tgtype, const UINT32 addr);
 
 /*******************************************************************************
  * pm_xio_write64
  ******************************************************************************/
 
-UINT32 pm_xio_write64(const UINT8 tgtype, const UINT32 addr, const UINT64 val);
+UINT32 EFIAPI pm_xio_write64(const UINT8 tgtype, const UINT32 addr, const UINT64 val);

@@ -6,7 +6,7 @@
 * | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
 * |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
 *                                                                       (____/
-* Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+* Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.
 *
 * All trademarks, logos and brand names are the property of their respective
 * owners. All company, product and service names used are for identification
@@ -56,7 +56,7 @@ UINT16 cvrt_offsetvolts_i16_tofix(const INT16 in)
   /// you will need to replace the code in this routine
   /// 
 
-  UINT64 nvolts = sizeof(OffsetVolts_S11) / sizeof(VOLTS16);
+  UINT64 nvolts = sizeof(OffsetVolts_S11) / (sizeof(VOLTS16));
   VOLTS16* vtbl = (VOLTS16*)&OffsetVolts_S11[0];
 
   if (in == 0)
@@ -82,7 +82,7 @@ INT16 cvrt_offsetvolts_fxto_i16(const UINT16 in)
   /// you will need to replace the code in this routine
   /// 
 
-  UINT64 nvolts = sizeof(OffsetVolts_S11) / sizeof(VOLTS16);
+  UINT64 nvolts = sizeof(OffsetVolts_S11) / (sizeof(VOLTS16));
   VOLTS16* vtbl = (VOLTS16*)&OffsetVolts_S11[0];
 
   if (in == 0)
@@ -109,7 +109,7 @@ UINT16 cvrt_ovrdvolts_fxto_i16(const UINT16 in)
   /// you will need to replace the code in this routine
   /// 
 
-  UINT64 nvolts = sizeof(OverrdVolts_U12) / sizeof(VOLTS16);
+  UINT64 nvolts = sizeof(OverrdVolts_U12) / (sizeof(VOLTS16));
   VOLTS16* vtbl = (VOLTS16*)&OverrdVolts_U12[0];
 
   if (in == 0)
@@ -135,7 +135,7 @@ UINT16 cvrt_ovrdvolts_i16_tofix(const UINT16 in)
   /// you will need to replace the code in this routine
   /// 
 
-  UINT64 nvolts = sizeof(OverrdVolts_U12) / sizeof(VOLTS16);
+  UINT64 nvolts = sizeof(OverrdVolts_U12) / (sizeof(VOLTS16));
   VOLTS16* vtbl = (VOLTS16*)&OverrdVolts_U12[0];
 
   if (in == 0)

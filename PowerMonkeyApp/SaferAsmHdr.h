@@ -6,7 +6,7 @@
 * | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
 * |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
 *                                                                       (____/
-* Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+* Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.
 *
 * All trademarks, logos and brand names are the property of their respective
 * owners. All company, product and service names used are for identification
@@ -34,38 +34,71 @@ extern "C" {
  * Below calls are implemented in SaferAsm.asm
  ******************************************************************************/
 
-VOID stop_interrupts_on_this_cpu(VOID);
-VOID resume_interrupts_on_this_cpu(VOID);
+//
+// CLI
 
-UINT64 safer_rdmsr64(
+VOID EFIAPI stop_interrupts_on_this_cpu(VOID);
+
+//
+// STI
+
+VOID EFIAPI resume_interrupts_on_this_cpu(VOID);
+
+//
+// RDMSR
+
+UINT64 EFIAPI safer_rdmsr64(
     const UINT32 msr_idx,
     UINT32* is_err);
 
-UINT32 safer_wrmsr64(
+//
+// WRMSR
+
+UINT32 EFIAPI safer_wrmsr64(
     const UINT32 msr_idx,
     const UINT64 value);
 
-UINT32 safer_mmio_read32(
+//
+// MMIO_READ32
+
+UINT32 EFIAPI safer_mmio_read32(
   const UINT32 addr, 
   UINT32* is_err);
 
-UINT32 safer_mmio_or32(
+//
+// MMIO_OR32
+
+UINT32 EFIAPI safer_mmio_or32(
   const UINT32 addr, 
   const UINT32 value);
 
-UINT32 safer_mmio_write32(
+//
+// MMIO_WRITE32
+
+UINT32 EFIAPI safer_mmio_write32(
   const UINT32 addr,
   const UINT32 value);
 
-VOID get_current_idtr(VOID* pidtr);
+//
+// SIDT
 
-UINT32 get_pciex_base_addr(VOID);
+VOID EFIAPI get_current_idtr(VOID* pidtr);
 
-UINT64 hlp_atomic_increment_u64(UINT64 *val);
-UINT64 hlp_atomic_decrement_u64(UINT64* val);
+//
+// CPUID
 
-UINT32 hlp_atomic_increment_u32(UINT32* val);
-UINT32 hlp_atomic_decrement_u32(UINT32* val);
+VOID EFIAPI _pm_cpuid(const UINT32 func, UINT32 *regs);
+VOID EFIAPI _pm_cpuid_ex(const UINT32 func, const UINT32 subfunc, UINT32 *regs);
+
+
+UINT32 EFIAPI get_pciex_base_addr(VOID);
+
+UINT64 EFIAPI hlp_atomic_increment_u64(UINT64 *val);
+UINT64 EFIAPI hlp_atomic_decrement_u64(UINT64* val);
+
+UINT32 EFIAPI hlp_atomic_increment_u32(UINT32* val);
+UINT32 EFIAPI hlp_atomic_decrement_u32(UINT32* val);
+
 
 /*******************************************************************************
  * ISR entry points in SaferAsm.asm

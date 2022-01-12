@@ -6,7 +6,7 @@
 * | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
 * |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
 *                                                                       (____/
-* Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+* Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.
 *
 * All trademarks, logos and brand names are the property of their respective
 * owners. All company, product and service names used are for identification
@@ -34,8 +34,6 @@
  * 
  ******************************************************************************/
 
-#pragma intrinsic(__cpuid)
-#pragma intrinsic(__cpuidex)
 extern void* memset(void* str, int c, UINTN n);
 
 /*******************************************************************************
@@ -54,9 +52,9 @@ void GetCpuInfo(CPUINFO* ci)
   UINT32* venstr = (UINT32 *)ci->venString;
   UINT32* brandstr = (UINT32*)ci->brandString;
 
-  __cpuid(venstr,    0x80000002);
-  __cpuid(venstr+4,  0x80000003);
-  __cpuid(venstr+12, 0x80000004);
+  _pm_cpuid(0x80000002, venstr);
+  _pm_cpuid(0x80000003, venstr+4);
+  _pm_cpuid(0x80000004, venstr+12);
 
   ///////////////////
   // Vendor String //
@@ -64,15 +62,17 @@ void GetCpuInfo(CPUINFO* ci)
   
   UINT32 args[4] = {0};
 
-  __cpuid(args, 0x00000000);
+  _pm_cpuid(0, args);
+  
   UINT32 hscall = ci->maxf = args[0];
+  
   brandstr[0] = args[1];
   brandstr[1] = args[3];
   brandstr[2] = args[2];
-
   
   memset(args, 0, sizeof(args));  
-  __cpuid(args, 0x01);
+  
+  _pm_cpuid(0x01, args);
 
   ci->f1 = args[0];
   ci->stepping =  args[0] & 0x0000000F;
@@ -90,15 +90,18 @@ void GetCpuInfo(CPUINFO* ci)
   ///////////////////////////////////
 
   memset(args, 0, sizeof(args));
-  __cpuid(args, 0x7);
+  
+  _pm_cpuid(0x7, args);
 
   ci->HybridArch = (args[3] & bit15u32) ? 1 : 0;  
 
   if (ci->HybridArch) {
 
     if (hscall >= 0x1A) {
+      
       memset(args, 0, sizeof(args));
-      __cpuid(args, 0x1A);
+      
+      _pm_cpuid(0x1A, args);
 
       UINT32 ct = ((args[0] & 0xFF000000) >> 24);
 

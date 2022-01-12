@@ -6,7 +6,7 @@
 * | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
 * |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
 *                                                                       (____/
-* Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+* Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.
 *
 * All trademarks, logos and brand names are the property of their respective
 * owners. All company, product and service names used are for identification
@@ -30,10 +30,11 @@
 #include <Library/TimerLib.h>
 #include "CpuInfo.h"
 #include "CpuData.h"
+#include "SaferAsmHdr.h"
+#include <immintrin.h>
 
 #pragma intrinsic(__rdtsc)                // At this point, code will look so
 #pragma intrinsic(_mm_pause)              // fugly that writing it in pure SMM
-#pragma intrinsic(__cpuid)                // assembly would count as beautify
 
 /*******************************************************************************
  * Globals that must be initialized
@@ -52,7 +53,7 @@ EFI_STATUS EFIAPI InitializeTscVars(VOID)
   UINT32 regs[4] = { 0 };
 
   if(gCpuInfo.maxf >= 0x15)
-    __cpuid(regs, 0x15);
+    _pm_cpuid(0x15, regs);
 
   gXtalFreq = regs[2];
 
@@ -73,7 +74,7 @@ EFI_STATUS EFIAPI InitializeTscVars(VOID)
     UINT32 regs2[4] = { 0 };
 
     if (gCpuInfo.maxf >= 0x15)
-      __cpuid(regs2, 0x16);
+      _pm_cpuid(0x16, regs2);
 
     gXtalFreq = (UINT64)regs2[0] * 1000000 * (UINT64)regs[0] / (UINT64)regs[1];
 

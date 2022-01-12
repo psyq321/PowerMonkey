@@ -6,7 +6,7 @@
 * | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
 * |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
 *                                                                       (____/
-* Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+* Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.
 *
 * All trademarks, logos and brand names are the property of their respective
 * owners. All company, product and service names used are for identification
@@ -30,9 +30,15 @@
  * 
  ******************************************************************************/
 
+#if defined(_MSC_VER)
 #define ALIGN8  __declspec(align(8))
 #define ALIGN16 __declspec(align(16))
 #define ALIGN32 __declspec(align(32))
+#else
+#define ALIGN8  __attribute((aligned(8)))
+#define ALIGN16 __attribute((aligned(16)))
+#define ALIGN32 __attribute((aligned(32)))
+#endif
 #define IUNUSED(x) (void)x;
 
 /*******************************************************************************

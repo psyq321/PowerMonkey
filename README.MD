@@ -8,7 +8,7 @@
   | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
   |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
                                                                         (____/
-  Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+  Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.
   
   WARNING: This code is a proof of concept for educative purposes. It can
   modify internal computer configuration parameters and cause malfunctions or
@@ -38,6 +38,7 @@
     - [Extra 650 MHz and energy saved? Where is the catch?](#extra-650-mhz-and-energy-saved-where-is-the-catch)
     - [Moving onto Hyper-V](#moving-onto-hyper-v)
     - [**Even Better Undervolting: V/F Point Adjustment**](#even-better-undervolting-vf-point-adjustment)
+      - [**Click Here for Detailed Recipe with 12900K Results**](#click-here-for-detailed-recipe-with-12900k-results)
   
 ## What is PowerMonkey?
 
@@ -157,6 +158,26 @@ This route is based on Alex Ionescu's excellent [VisualUEFI project](https://git
 3. Open ```PmWorkspace.sln``` and build the project directly in Visual Studio. This process shall generate no warnings or errors. The result should be an EFI executable ```/PowerMonkey/x64/Release/PowerMonkey.efi```
 
 #### **Building - EDK2 route:**
+
+NOTE: Only MSVC (VS2019) and CLANG (CLANGDWARF) toolchains are validated. For CLANGDWARF toolchain, you will need to add:
+
+`DEBUG_CLANGDWARF_X64_DLINK_FLAGS =`**`  -z notext ... `**<p>`RELEASE_CLANGDWARF_X64_DLINK_FLAGS =`**`  -z notext ... `**<p>`NOOPT_CLANGDWARF_X64_DLINK_FLAGS =`**`  -z notext ... `**
+
+```lang-makefile
+DEBUG_CLANGDWARF_X64_CC_FLAGS         = DEF(CLANG38_ALL_CC_FLAGS) -m64 "-DEFIAPI=__attribute__((ms_abi))" -mno-red-zone -mcmodel=small -fpie -Oz -flto DEF(CLANG38_X64_TARGET) -g
+DEBUG_CLANGDWARF_X64_DLINK_FLAGS      = DEF(CLANGDWARF_IA32_X64_DLINK_FLAGS) ``` **` -z notext `** ``` -flto -Wl,-O3 -Wl,-melf_x86_64 -Wl,--oformat,elf64-x86-64 -Wl,-pie -mcmodel=small -Wl,--apply-dynamic-relocs
+DEBUG_CLANGDWARF_X64_DLINK2_FLAGS     = DEF(CLANGDWARF_X64_DLINK2_FLAGS) -O3 -fuse-ld=lld
+
+RELEASE_CLANGDWARF_X64_CC_FLAGS       = DEF(CLANG38_ALL_CC_FLAGS) -m64 "-DEFIAPI=__attribute__((ms_abi))" -mno-red-zone -mcmodel=small -fpie -Oz -flto DEF(CLANG38_X64_TARGET)
+RELEASE_CLANGDWARF_X64_DLINK_FLAGS    = DEF(CLANGDWARF_IA32_X64_DLINK_FLAGS) -z notext -flto -Wl,-O3 -Wl,-melf_x86_64 -Wl,--oformat,elf64-x86-64 -Wl,-pie -mcmodel=small -Wl,--apply-dynamic-relocs
+RELEASE_CLANGDWARF_X64_DLINK2_FLAGS   = DEF(CLANGDWARF_X64_DLINK2_FLAGS) -O3 -fuse-ld=lld
+
+NOOPT_CLANGDWARF_X64_CC_FLAGS         = DEF(CLANG38_ALL_CC_FLAGS) -m64 "-DEFIAPI=__attribute__((ms_abi))" -mno-red-zone -mcmodel=small -fpie -O0 DEF(CLANG38_X64_TARGET) -g
+NOOPT_CLANGDWARF_X64_DLINK_FLAGS      = DEF(CLANGDWARF_IA32_X64_DLINK_FLAGS) -z notext -Wl,-O0 -Wl,-melf_x86_64 -Wl,--oformat,elf64-x86-64 -Wl,-pie -mcmodel=small -Wl,--apply-dynamic-relocs
+NOOPT_CLANGDWARF_X64_DLINK2_FLAGS     = DEF(CLANGDWARF_X64_DLINK2_FLAGS) -O0 -fuse-ld=lld
+```
+
+**EDK2 Build Steps:**
 
 1. Download EDK2 source from [https://github.com/tianocore/edk2](https://github.com/tianocore/edk2) - ideally, the EDK2 version shall match your computer firmware “baseline EDK2 version” in case your UEFI firmware is based on TianoCore.
 
@@ -314,6 +335,8 @@ Things become even more interesting if one logs the data and checks what has CPU
 Differences are less drastic compared to Cinebench, which is to be expected as Linux kernel build is not so CPU-heavy. Still, it is almost a minute faster and, as originally intended: serves to prove that custom CPU settings are active under Hyper-V.
 
 ### **Even Better Undervolting: V/F Point Adjustment**
+
+#### [**Click Here for Detailed Recipe with 12900K Results**](docs/vfpoint_tuning.md)
 
 Unlocked CML, RKL, TGL and ADL chips offer even more advanced tweaking of voltages: per individual points on Voltage/frequency curve. While there will be a separate guide on this, here is a quick preview of V/F Point Adjustment in action, with Alder Lake CPU:
 

@@ -6,7 +6,7 @@
 ; | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
 ; |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
 ;                                                                       (____/
-; Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+; Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.
 ;
 ; All trademarks, logos and brand names are the property of their respective
 ; owners. All company, product and service names used are for identification
@@ -861,7 +861,59 @@ smo_done:
         pop     rdi
 
         ret
+;------------------------------------------------------------------------------
 
+;  void
+;  _pm_cpuid (
+;    in  u32  func,
+;    out u32 *regs          // EAX EBX ECX EDX, as array of 32-bit integers
+;   );
+;------------------------------------------------------------------------------
+
+        global _pm_cpuid
+        _pm_cpuid:
+
+        push    rbx
+
+        mov     r10, rdx
+        mov     eax, ecx
+
+        cpuid
+
+        mov     dword [r10],    eax
+        mov     dword [r10+4 ], ebx
+        mov     dword [r10+8 ], ecx 
+        mov     dword [r10+12], edx 
+    
+        pop     rbx
+        ret
+
+;------------------------------------------------------------------------------
+;  void
+;  _pm_cpuid_ex (
+;    in  u32  func,
+;    in  u32  subfunc,
+;    out u32 *regs           // EAX EBX ECX EDX, as array of 32-bit integers
+;  );
+;------------------------------------------------------------------------------
+
+        global _pm_cpuid_ex
+        _pm_cpuid_ex:
+
+        push    rbx
+        
+        mov     eax, ecx
+        mov     ecx, edx
+
+        cpuid
+
+        mov     dword [r8],    eax
+        mov     dword [r8+4 ], ebx
+        mov     dword [r8+8 ], ecx 
+        mov     dword [r8+12], edx 
+    
+        pop     rbx
+        ret
 
 section .data
 global safer_c_isr_fptr

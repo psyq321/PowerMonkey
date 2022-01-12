@@ -6,7 +6,7 @@
 * | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
 * |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
 *                                                                       (____/
-* Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+* Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.
 *
 * All trademarks, logos and brand names are the property of their respective
 * owners. All company, product and service names used are for identification
@@ -262,11 +262,11 @@ VOID PrintBanner(VOID)
     " |  ____// _ \\ | | | | / _  ) / __)| || || | / _ \\ |  _ \\ | | / )/ _  )| | | |\n"
     " | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |\n"
     " |_|     \\___/  \\____| \\____)|_|   |_||_||_| \\___/ |_| |_||_| \\_)\\____) \\__  |\n"
-    "                                                         Version 0.1.8 (____/\n"
+    "                                                         Version 0.1.9 (____/\n"
   );
 
   AsciiPrint(
-    " Copyright (C) 2021 Ivan Dimkovic. All rights reserved.\n"
+    " Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.\n"
     "\n"
     " SPDX-License-Identifier: Apache-2.0\n"
     "\n"

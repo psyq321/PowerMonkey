@@ -6,7 +6,7 @@
 * | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
 * |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
 *                                                                       (____/
-* Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+* Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.
 *
 * All trademarks, logos and brand names are the property of their respective
 * owners. All company, product and service names used are for identification
@@ -194,7 +194,7 @@ BOOLEAN VoltageDomainExists(const UINT8 didx)
  * ProbePackage
  ******************************************************************************/
 
-EFI_STATUS ProbePackage(IN OUT PACKAGE* pkg)
+EFI_STATUS EFIAPI ProbePackage(IN OUT PACKAGE* pkg)
 {
   EFI_STATUS status = EFI_SUCCESS;
 
@@ -269,7 +269,7 @@ EFI_STATUS ProbePackage(IN OUT PACKAGE* pkg)
  * ProgramPackageOrCore
  ******************************************************************************/
 
-EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
+EFI_STATUS EFIAPI ProgramPackageOrCore(IN OUT PACKAGE* pkg)
 {
   EFI_STATUS status = EFI_SUCCESS;
 
@@ -376,7 +376,7 @@ EFI_STATUS ProgramPackageOrCore(IN OUT PACKAGE* pkg)
  * Program package locks in the separate stage, after everything else is done
  ******************************************************************************/
 
-EFI_STATUS ProgramPackage_Stage2(IN OUT PACKAGE* pkg)
+EFI_STATUS EFIAPI ProgramPackage_Stage2(IN OUT PACKAGE* pkg)
 {
   EFI_STATUS status = EFI_SUCCESS;
 
@@ -394,7 +394,7 @@ EFI_STATUS ProgramPackage_Stage2(IN OUT PACKAGE* pkg)
  * ProgramPackage_Stage1
  ******************************************************************************/
 
-EFI_STATUS ProgramPackage_Stage1(IN OUT PACKAGE* pkg)
+EFI_STATUS EFIAPI ProgramPackage_Stage1(IN OUT PACKAGE* pkg)
 {
   EFI_STATUS status = EFI_SUCCESS;
 
@@ -544,7 +544,7 @@ EFI_STATUS EFIAPI ProbePackages(IN OUT PLATFORM* ppd)
   {
     PACKAGE* pac = ppd->packages + pidx;
 
-    status = RunOnPackageOrCore(ppd, pac->FirstCoreNumber, ProbePackage, pac);
+    status = RunOnPackageOrCore(ppd, pac->FirstCoreNumber, (EFI_AP_PROCEDURE)ProbePackage, pac);
 
     if (EFI_ERROR(status)) {
       Print(L"[ERROR] CPU package %u, status code: 0x%x\n",
@@ -751,7 +751,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
     for (UINTN cidx = 0; cidx < pk->LogicalCores; cidx++)
     {
       CPUCORE* core = pk->Core + cidx;
-      RunOnPackageOrCore(sys, core->AbsIdx, ProgramPackageOrCore, pk);
+      RunOnPackageOrCore(sys, core->AbsIdx, (EFI_AP_PROCEDURE)ProgramPackageOrCore, pk);
     }
   }
 
@@ -765,7 +765,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   for (UINTN pidx = 0; pidx < sys->PkgCnt; pidx++)
   {
     PACKAGE* pk = sys->packages + pidx;
-    RunOnPackageOrCore(sys, pk->FirstCoreNumber, ProgramPackage_Stage1, pk);
+    RunOnPackageOrCore(sys, pk->FirstCoreNumber, (EFI_AP_PROCEDURE)ProgramPackage_Stage1, pk);
   }
 
   /////////////////
@@ -775,7 +775,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   //
   // MSR Locks
 
-  RunOnAllProcessors(ProgramCoreKnobs, FALSE, (void *)sys);
+  RunOnAllProcessors((EFI_AP_PROCEDURE)ProgramCoreKnobs, FALSE, (void *)sys);
 
   //
   // MMIO locks
@@ -783,7 +783,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   for (UINTN pidx = 0; pidx < sys->PkgCnt; pidx++)
   {
     PACKAGE* pk = sys->packages + pidx;
-    RunOnPackageOrCore(sys, pk->FirstCoreNumber, ProgramPackage_Stage2, pk);
+    RunOnPackageOrCore(sys, pk->FirstCoreNumber, (EFI_AP_PROCEDURE)ProgramPackage_Stage2, pk);
   }
 
   ////////////////////

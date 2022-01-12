@@ -6,7 +6,7 @@
 * | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |
 * |_|     \___/  \____| \____)|_|   |_||_||_| \___/ |_| |_||_| \_)\____) \__  |
 *                                                                       (____/
-* Copyright (C) 2021 Ivan Dimkovic. All rights reserved.
+* Copyright (C) 2021-2022 Ivan Dimkovic. All rights reserved.
 *
 * All trademarks, logos and brand names are the property of their respective
 * owners. All company, product and service names used are for identification
@@ -28,7 +28,7 @@
 #include <Library/TimerLib.h>
 #include <Library/IoLib.h>
 
-#include "VfTuning.h"
+#include "VFTuning.h"
 #include "LowLevel.h"
 #include "DelayX86.h"
 #include "TimeWindows.h"
