@@ -33,8 +33,15 @@
 #include "SaferAsmHdr.h"
 #include <immintrin.h>
 
+#if defined(__GNUC__) && !defined(__clang__)
+#include <x86intrin.h>
+#else
+
 #pragma intrinsic(__rdtsc)                // At this point, code will look so
 #pragma intrinsic(_mm_pause)              // fugly that writing it in pure SMM
+                                          // ASM would count as an improvement
+#endif
+
 
 /*******************************************************************************
  * Globals that must be initialized

@@ -159,7 +159,9 @@ This route is based on Alex Ionescu's excellent [VisualUEFI project](https://git
 
 #### **Building - EDK2 route:**
 
-NOTE: Only MSVC (VS2019) and CLANG (CLANGDWARF) toolchains are validated. For CLANGDWARF toolchain, you will need to add:
+NOTE: Only MSVC (VS2019), gcc (GCC5) and Clang (CLANGDWARF) toolchains are validated. 
+
+For CLANGDWARF toolchain, you will need to add:
 
 `DEBUG_CLANGDWARF_X64_DLINK_FLAGS =`**`  -z notext ... `**<p>`RELEASE_CLANGDWARF_X64_DLINK_FLAGS =`**`  -z notext ... `**<p>`NOOPT_CLANGDWARF_X64_DLINK_FLAGS =`**`  -z notext ... `**
 

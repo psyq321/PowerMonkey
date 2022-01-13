@@ -253,4 +253,3 @@ EFI_STATUS EFIAPI RunOnAllProcessors(
 
   return status;
 }
-
