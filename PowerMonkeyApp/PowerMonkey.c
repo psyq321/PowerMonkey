@@ -262,7 +262,7 @@ VOID PrintBanner(VOID)
     " |  ____// _ \\ | | | | / _  ) / __)| || || | / _ \\ |  _ \\ | | / )/ _  )| | | |\n"
     " | |    | |_| || | | |( (/ / | |   | || || || |_| || | | || |< (( (/ / | |_| |\n"
     " |_|     \\___/  \\____| \\____)|_|   |_||_||_| \\___/ |_| |_||_| \\_)\\____) \\__  |\n"
-    "                                                         Version 0.2.0 (____/\n"
+    "                                                         Version 0.2.1 (____/\n"
   );
 
   AsciiPrint(
@@ -356,7 +356,6 @@ EFI_STATUS EFIAPI UefiMain(
   ///
 
   ApplyPolicy(SystemTable, gPlatform);
-
 
   ///
   /// Self test

@@ -31,7 +31,10 @@
 #include "CpuInfo.h"
 #include "CpuData.h"
 #include "SaferAsmHdr.h"
+
+#if defined(__clang__)
 #include <immintrin.h>
+#endif
 
 #if defined(__GNUC__) && !defined(__clang__)
 #include <x86intrin.h>

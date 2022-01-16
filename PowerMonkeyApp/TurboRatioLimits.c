@@ -78,6 +78,16 @@ UINT64 GetTurboRatioLimits(VOID)
 }
 
 /*******************************************************************************
+ * GetTurboRatioLimits_ECORE
+ ******************************************************************************/
+
+UINT64 GetTurboRatioLimits_ECORE(VOID)
+{
+  return pm_rdmsr64(MSR_TURBO_RATIO_LIMIT_ECORE);
+}
+
+
+/*******************************************************************************
  * SetTurboRatioLimits
  ******************************************************************************/
 
@@ -95,6 +105,26 @@ EFI_STATUS SetTurboRatioLimits(const UINT64 val)
 
   return EFI_SUCCESS;
 }
+
+/*******************************************************************************
+ * SetTurboRatioLimits_ECORE
+ ******************************************************************************/
+
+EFI_STATUS SetTurboRatioLimits_ECORE(const UINT64 val)
+{
+  pm_wrmsr64(MSR_TURBO_RATIO_LIMIT_ECORE, val);
+
+  MicroStall(10);
+
+  UINT64 msr = pm_rdmsr64(MSR_TURBO_RATIO_LIMIT_ECORE);
+
+  if (msr != val) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  return EFI_SUCCESS;
+}
+
 
 /*******************************************************************************
  * ProgramMaxTurboRatios
@@ -120,4 +150,31 @@ EFI_STATUS IAPERF_ProgramMaxTurboRatios(const UINT8 maxRatio)
   MiniTraceEx("Setting all-core max turbo ratio to: %ux", maxRatio);
 
   return SetTurboRatioLimits(msr);
+}
+
+
+/*******************************************************************************
+ * ProgramMaxTurboRatios_ECORE
+ ******************************************************************************/
+
+EFI_STATUS IAPERF_ProgramMaxTurboRatios_ECORE(const UINT8 maxRatio)
+{
+  UINT64 msr = GetTurboRatioLimits_ECORE();
+  UINT8* msr8 = (UINT8*)&msr;
+
+  //
+  // Adjust max ratios for seemingly valid blocks
+
+  for (UINT8 blkidx = 0; blkidx < 8; blkidx++) {
+    if ((msr8[blkidx]) && (msr8[blkidx] != 0xFF)) {
+      msr8[blkidx] = maxRatio;
+    }
+  }
+
+  //
+  // Program the new values
+
+  MiniTraceEx("Setting all-core max ECORE turbo ratio to: %ux", maxRatio);
+
+  return SetTurboRatioLimits_ECORE(msr);
 }

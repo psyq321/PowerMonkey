@@ -36,7 +36,10 @@
 #include <Library/DebugLib.h>
 #include <Protocol/MpService.h>
 #include <Library/SynchronizationLib.h>
+
+#if defined(__clang__)
 #include <immintrin.h>
+#endif
 
 #include "CONFIGURATION.h"
 #include "MiniLog.h"

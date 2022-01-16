@@ -65,14 +65,15 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
 
   //
   // Alderlake: if we are running on E-Core, skip other domains
+  
+//  CPUCORE *core = (CPUCORE *)GetCpuDataBlock();
 
-  CPUCORE *core = (CPUCORE *)GetCpuDataBlock();
-
-  if (core->CpuInfo.HybridArch && core->IsECore) {
-    if (domIdx != ECORE) {
-      return status;
-    }
-  }
+// 
+//   if (core->IsECore) {
+//     if (domIdx != ECORE) {
+//       return EFI_SUCCESS;
+//     }
+//   }
 
   OcMailbox_InitializeAsMSR(&box);
 
@@ -162,17 +163,13 @@ EFI_STATUS EFIAPI IAPERF_ProbeDomainVF(IN const UINT8 domIdx, OUT DOMAIN* dom)
         vp->VOffset = cvrt_offsetvolts_fxto_i16(voltOffsetFx);
         vp->IsValid = 1;
 
-        dom->nVfPoints++;
-      }
-
-      if (box.status == 0) {
-        VF_POINT* vp = &dom->vfPoint[dom->nVfPoints - 1];
-        
         MiniTraceEx("VF Pt. found, #%u, mult: %ux, voffset: %d mV, dom: 0x%x",
           dom->nVfPoints,
           vp->FusedRatio,
           vp->VOffset,
           domIdx);
+
+        dom->nVfPoints++;
       }
 
       pidx++;
@@ -199,13 +196,12 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
   //
   // Alderlake: if we are running on E-Core, skip other domains
 
-  CPUCORE* core = (CPUCORE*)GetCpuDataBlock();
-
-  if (core->CpuInfo.HybridArch && core->IsECore) {
-    if (domIdx != ECORE) {
-      return EFI_SUCCESS;
-    }
-  }
+//  CPUCORE* core = (CPUCORE*)GetCpuDataBlock();
+//   if (core->CpuInfo.HybridArch && core->IsECore) {
+//     if (domIdx != ECORE) {
+//       return EFI_SUCCESS;
+//     }
+//   }
 
   //
   // Use OC Mailbox MSR
@@ -263,7 +259,8 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
   // Do not perform legacy programming
   // if user has chosen to program individual VF points
 
-  if ((programVfPoints == 0) || (!gActiveCpuData->VfPointsExposed)) {
+  //if ((programVfPoints == 0) || (!gActiveCpuData->VfPointsExposed)) 
+  {
 
     //
     // Convert the desired voltages in OC Mailbox format
@@ -278,9 +275,11 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
     // Compose the command for the OC mailbox
 
     data = dom->MaxRatio;
-    data |= ((UINT32)(targetVoltsFx)) << 8;
-    data |= ((UINT32)(dom->VoltMode & bit1u8)) << 20;
     data |= (offsetVoltsFx) << 21;
+    data |= ((UINT32)(dom->VoltMode & bit1u8)) << 20;
+    data |= ((UINT32)(targetVoltsFx)) << 8;
+    
+    cmd = OcMailbox_BuildInterface(0x11, domIdx, 0x0);
 
     MiniTraceEx("Dom: 0x%x programming: max %ux, vmode: %u, voff: %d, vtgt: %u",
       domIdx,
@@ -288,11 +287,6 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
       dom->VoltMode,
       dom->OffsetVolts,
       dom->TargetVolts);
-
-    cmd = OcMailbox_BuildInterface(0x11, domIdx, 0x0);
-
-    //
-    // Send our VF override request to the OC Mailbox
 
     if (EFI_ERROR(OcMailbox_ReadWrite(cmd, data, &box))) {
 
@@ -302,8 +296,7 @@ EFI_STATUS EFIAPI IAPERF_ProgramDomainVF( IN const UINT8 domIdx,
 
       return EFI_ABORTED;
     }
-  }
-    
+  }    
 
   ///////////////
   // VF Points //

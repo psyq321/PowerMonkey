@@ -79,6 +79,30 @@ UINT16 voltModeColStr[2][11] = {
 };
 
 /*******************************************************************************
+ * PrintCoreInfo
+ ******************************************************************************/
+
+VOID PrintCoreInfo()
+{
+  for (UINTN cidx = 0; cidx < gNumCores; cidx++)
+  {
+    CPUCORE* core = (CPUCORE*) gCorePtrs[cidx];
+
+    AsciiPrint("Core %u, apic id: %u, physical: %u, hyb arch: %u, E-core: %u, pkg idx: %u, v: %u\n",
+      cidx,
+      core->ApicID,
+      core->IsPhysical,
+      core->CpuInfo.HybridArch,
+      core->IsECore,
+      core->PkgIdx,
+      core->ValidateIdx
+    );
+  }
+
+  AsciiPrint("\n");
+}
+
+/*******************************************************************************
  * PrintVFPoints
  ******************************************************************************/
 
@@ -131,7 +155,7 @@ VOID PrintPlatformSettings(IN PLATFORM* psys)
       PACKAGE* pac = psys->packages + pidx;
 
       Print(
-        L"+---------------------------------------------------------------------+\n"
+        L"+---------------------------------------------------+\n"
       );
 
       Print(L"| Package %u |  ", pidx);
@@ -141,9 +165,9 @@ VOID PrintPlatformSettings(IN PLATFORM* psys)
 
 
       Print(
-        L"+-----------+------+------+--------+----------+-----------+----------+\n"
-        L"| Vt Domain |  VR  | SVID | IccMax | VoltMode |  Vtarget  | Voffset  |\n"
-        L"|-----------|------|------|--------|----------|-----------|----------|\n"
+        L"+-----------+-----------+-------+--------+----------+\n"
+        L"| Vt Domain |  VR Addr  | SVID? | IccMax | VoltMode |\n"
+        L"|-----------|-----------|-------|--------|----------|\n"
       );
 
       for (UINTN didx = 0; didx < MAX_DOMAINS; didx++) {
@@ -153,8 +177,8 @@ VOID PrintPlatformSettings(IN PLATFORM* psys)
           if (dom->VRaddr != INVALID_VR_ADDR) {
             Print(
               (dom->OffsetVolts < 0) ?
-              L"|%s| 0x%02x |%s| %03u A  |%s|  %04u mV  | %04d mV  |\n" :
-              L"|%s| 0x%02x |%s| %03u A  |%s|  %04u mV  |  %03d mV  |\n",
+              L"|%s|    0x%02x   | %s| %03u A  |%s|\n" :
+              L"|%s|    0x%02x   | %s| %03u A  |%s|\n",
 
               vrDomainColStr[didx & 0x7],
 
@@ -163,17 +187,14 @@ VOID PrintPlatformSettings(IN PLATFORM* psys)
               &svidColStr[dom->VRtype & 0x1][0],
               (dom->IccMax) ? dom->IccMax >> 2 : 0,
 
-              &voltModeColStr[dom->VoltMode & 0x1][0],
-
-              (UINT32)dom->TargetVolts,
-              (INT32)dom->OffsetVolts
+              &voltModeColStr[dom->VoltMode & 0x1][0]
             );
           }
         }
       }
 
       Print(
-        L"+-----------+------+------+--------+----------+-----------+----------+\n"
+        L"+-----------+-----------+-------+--------+----------+\n"
         L"\n");
     }
   }

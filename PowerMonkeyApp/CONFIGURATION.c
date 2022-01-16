@@ -196,8 +196,9 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     /// NOTE: Legacy V/F overrides >will not apply< if you chose to program
     /// individual V/F points. 
     
-    //
-    // Legacy (will be ignored in vfpoints are used)
+    ///////////////////////////////
+    // Legacy (entire VF curve)  //
+    ///////////////////////////////
 
     pk->planes[IACORE].VoltMode =
       pk->planes[RING].VoltMode = V_IPOLATIVE;      // V_IPOLATIVE = Interpolate
@@ -206,9 +207,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
       pk->planes[RING].TargetVolts = 0;             // in mV (absolute)
 
     pk->planes[IACORE].OffsetVolts =
-      pk->planes[RING].OffsetVolts = -50;           // in mV 
+    pk->planes[RING].OffsetVolts = 0;// -50;        // in mV 
                                                     // (negative = undervolt)
-
     
     ///
     /// V/F OVERRIDES FOR DOMAIN: E-Core (ADL & Co. only)
@@ -229,7 +229,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
                                                 // V_OVERRIDE =  Override
 
     pk->planes[UNCORE].TargetVolts = 0;         // in mV (absolute)
-    pk->planes[UNCORE].OffsetVolts = -35;       // in mV (negative = undervolt)
+    pk->planes[UNCORE].OffsetVolts = 0;// -35;  // in mV (negative = undervolt)
 
     // Add your adjustments here if needed    
 
@@ -272,15 +272,14 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     /// SVID, then you must program the same voltage adjustment for both
 
     pk->Program_VF_Points[IACORE] =                 // 0 - Do not program
-      pk->Program_VF_Points[RING] = 0;              // 1 - Program
+      pk->Program_VF_Points[RING] = 1;              // 1 - Program
                                                     // 2 - Print current values                                                    
                                                     //     (2 does not program)
     
-                                                    //
     // Hybrid Architectures (Alder Lake +): E-Cores
 
                                                     // 1 - Program
-    pk->Program_VF_Points[ECORE] = 0;               // 0 - Do not program
+    pk->Program_VF_Points[ECORE] = 1;               // 0 - Do not program
                                                     // 2 - Print current values                                                    
                                                     //     (2 does not program)
 
@@ -333,6 +332,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     ///
     /// CPU: Alder Lake-S 12900K PRQ
     /// Autotune script: prime95_ultrashort
+    /// E-Cores: Disabled
+    /// AVX-512: Enabled
     /// 
     /// Crash offsets (in mV) per VF point:
     ///
@@ -340,7 +341,7 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     /// AVX512:     N/A    -244    -238    -225    -235    -190    -158     N/A
     /// AVX2        N/A    -240    -230    -214    -230    -170    -144     N/A
     /// SSE         N/A    -250    -246    -232    -238    -186    -172     N/A
-    
+
     pk->planes[IACORE].vfPoint[0].VOffset =
       pk->planes[RING].vfPoint[0].VOffset = 0;     // V_Offset @ 800 MHz (mV)
 
@@ -371,7 +372,6 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->planes[IACORE].vfPoint[9].VOffset =
       pk->planes[RING].vfPoint[9].VOffset = 0;     // V_Offset @ 5300 MHz (mV)
 
-
     /////////////////////////////
     // E-Cores - bogus values, //
     /////////////////////////////
@@ -381,6 +381,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     pk->planes[ECORE].vfPoint[2].VOffset = 0;
     pk->planes[ECORE].vfPoint[3].VOffset = 0;
     pk->planes[ECORE].vfPoint[4].VOffset = 0;
+    pk->planes[ECORE].vfPoint[5].VOffset = 0;
+    pk->planes[ECORE].vfPoint[6].VOffset = 0;
 
 #endif
  
@@ -429,20 +431,27 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
     // (e.g. 1C, 2C, 4C, 8C, = use this ratio). Remove or set to 0
     // if you do not wish to set it
 
-    pk->ForcedRatioForAllCoreCounts = 51;
+    pk->ForcedRatioForPCoreCounts = 51;        // Pre ADL-S/H/P: All cores
+                                               // ADL_S/H/P and newer: P-Cores
+                                               // 0 = "do not change - leave as=is"
+                                                
 
-    /////////////////////
-    /// Power Control ///
-    /////////////////////
+    pk->ForcedRatioForECoreCounts = 0;         // Pre ADL-S/H/P: not applicable
+                                               // ADL_S and newer: E-Cores
+
+
+    ////////////////////
+    /// Power Tweaks ///
+    ////////////////////
     
-    pk->ProgramPowerControl = 1;                // Enable programing of power
-                                                // control knobs
+    pk->ProgramPowerTweaks = 1;                // Enable programing of power
+                                               // control knobs
 
-    pk->EnableEETurbo = 1;                      // Energy Efficient Turbo
-                                                // (0=disable, 1=enable)
+    pk->EnableEETurbo = 1;                     // Energy Efficient Turbo
+                                               // (0=disable, 1=enable)
 
-    pk->EnableRaceToHalt = 1;                   // Race To Halt
-                                                // (0=disable, 1=enable)
+    pk->EnableRaceToHalt = 1;                  // Race To Halt
+                                               // (0=disable, 1=enable)
 
     ////////////////////
     /// Power Limits ///
@@ -530,8 +539,8 @@ VOID ApplyComputerOwnersPolicy(IN PLATFORM* sys)
 
     pk->EnableMmioPkgPL1 = 1;               // Enable MMIO PL1
     pk->EnableMmioPkgPL2 = 1;               // Enable MMIO PL2
-    pk->MmioPkgPL1_Power = MAX_POWAH;        // MMIO PL1 in mW or MAX_POWAH
-    pk->MmioPkgPL2_Power = MAX_POWAH;      // MMIO PL2 in mW or MAX_POWAH
+    pk->MmioPkgPL1_Power = MAX_POWAH;       // MMIO PL1 in mW or MAX_POWAH
+    pk->MmioPkgPL2_Power = MAX_POWAH;       // MMIO PL2 in mW or MAX_POWAH
     pk->MmioPkgPL_Time   = MAX_POWAH;       // Tau in ms or MAX_POWAH
     pk->ClampMmioPkgPL =   1;               // Allow clamping
     pk->LockMmioPkgPL12 =  1;               // Lock after programming

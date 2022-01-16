@@ -27,7 +27,10 @@
 #include <Uefi.h>
 #include <Library/UefiLib.h>
 #include <Library/BaseLib.h>
+
+#if defined(__clang__)
 #include <immintrin.h>
+#endif
 
 #include "SaferAsmHdr.h"
 #include "LowLevel.h"
@@ -40,6 +43,16 @@
 #if defined(_MSC_VER)
 #pragma warning( disable : 4090 )
 #endif
+
+#if defined(__GNUC__) && !defined(__clang__)
+#include <x86intrin.h>
+#else
+
+#pragma intrinsic(__rdtsc)                // At this point, code will look so
+#pragma intrinsic(_mm_pause)              // fugly that writing it in pure SMM
+                                          // ASM would count as an improvement
+#endif
+
 
 /*******************************************************************************
  * Globals

@@ -31,6 +31,7 @@
 #include "CpuData.h"
 #include "OcMailbox.h"
 #include "MiniLog.h"
+#include "SaferAsmHdr.h"
 
 CPUINFO gCpuInfo = { 0 };
 
@@ -143,13 +144,19 @@ CPUCONFIGTABLE gCpuConfigTable[] = {
   { {6, 165, 4} , "CometLake", 0, 10, 1, 0, &vcfg_q_xyzlake_client },
   { {6, 165, 5} , "CometLake-S", 0, 10, 1, 0, &vcfg_q_xyzlake_client },
   { {6, 166, 0} , "CometLake", 0, 10, 1, 0, &vcfg_q_xyzlake_client },
+  
   { {6, 167, 0} , "RocketLake", 0, 10, 1, 0, &vcfg_q_xyzlake_client },       // RKL-S ES
   { {6, 167, 1} , "RocketLake", 0, 10, 1, 0, &vcfg_q_xyzlake_client },       // RKL-S QS/PRQ
-  { {6, 151, 2} , "AlderLake-S", 0, 11, 1, 1, &vcfg_q_alderlake_client },    // ADL-S QS/PRQ
-  { {6, 151, 4} , "AlderLake-S", 0, 11, 1, 1, &vcfg_q_alderlake_client },    // ADL-S
-  { {6, 151, 5} , "AlderLake-S", 0, 11, 1, 1, &vcfg_q_alderlake_client },    // ADL-S
-  { {6, 154, 2} , "AlderLake-P", 0, 11, 1, 1, &vcfg_q_alderlake_client },    // ADL-P
-  { {6, 154, 3} , "AlderLake-P", 0, 11, 1, 1, &vcfg_q_alderlake_client },    // ADL-P
+  
+  { {6, 151, 0} , "AlderLake", 0, 11, 1, 1, &vcfg_q_alderlake_client },      // (90670)
+  { {6, 151, 1} , "AlderLake-S", 0, 11, 1, 1, &vcfg_q_alderlake_client },    // ADL-S ES2 (90671)
+  { {6, 151, 2} , "AlderLake-S", 0, 11, 1, 1, &vcfg_q_alderlake_client },    // ADL-S QS/PRQ (90672)
+  { {6, 151, 4} , "AlderLake-S", 0, 11, 1, 1, &vcfg_q_alderlake_client },    // ADL-S (90674)
+  { {6, 151, 5} , "AlderLake-S", 0, 11, 1, 1, &vcfg_q_alderlake_client },    // ADL-S QS/PRQ (90675)
+  { {6, 154, 2} , "AlderLake-H/P", 0, 11, 1, 1, &vcfg_q_alderlake_client },    // ADL-H/P (906A2)
+  { {6, 154, 3} , "AlderLake-H/P", 0, 11, 1, 1, &vcfg_q_alderlake_client },    // ADL-H/P (906A3)
+  { {6, 154, 4} , "AlderLake-H/P", 0, 11, 1, 1, &vcfg_q_alderlake_client },    // ADL-H/P (906A4)
+  { {6, 154, 1} , "AlderLake", 0, 11, 1, 1, &vcfg_q_alderlake_client },
 };
 
 
@@ -169,6 +176,20 @@ BOOLEAN DetectCpu()
   // CPUID
 
   GetCpuInfo(&gCpuInfo);
+
+  //
+  // Detect BIOS-limited maximum CPUID input value 
+  // as it would interfere with our ability to detect features
+
+  if (gCpuInfo.maxf <= 2) 
+  {
+    AsciiPrint("WARNING: possible maximum CPUID input value limitation detected!\n");
+    AsciiPrint("This condition can interfere with CPU feature detection.\n");
+    AsciiPrint("For ensuring correct operation, it is advisable to disable CPUID limit.\n");
+    AsciiPrint("This is typically done in BIOS Setup.\n");
+    AsciiPrint("\n");
+  }
+   
 
   //
   // BCLK

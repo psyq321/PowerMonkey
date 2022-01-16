@@ -41,10 +41,8 @@ typedef struct _CPUINFO
   UINT32 model;
   UINT32 stepping;
  
-  BOOLEAN HybridArch;
-  
+  BOOLEAN HybridArch;  
   BOOLEAN ECore;
-  BOOLEAN PCore;
 
 } CPUINFO;
 

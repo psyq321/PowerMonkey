@@ -87,8 +87,8 @@ VOID EFIAPI get_current_idtr(VOID* pidtr);
 //
 // CPUID
 
-VOID EFIAPI _pm_cpuid(const UINT32 func, UINT32 *regs);
-VOID EFIAPI _pm_cpuid_ex(const UINT32 func, const UINT32 subfunc, UINT32 *regs);
+UINT32 EFIAPI _pm_cpuid(UINT32 func, UINT32 *regs);
+UINT32 EFIAPI _pm_cpuid_ex(UINT32 func, UINT32 subfunc, UINT32 *regs);
 
 
 UINT32 EFIAPI get_pciex_base_addr(VOID);

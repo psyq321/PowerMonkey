@@ -877,15 +877,19 @@ smo_done:
 
         mov     r10, rdx
         mov     eax, ecx
+        xor     ecx, ecx
+        push    rax
 
         cpuid
 
-        mov     dword [r10],    eax
-        mov     dword [r10+4 ], ebx
-        mov     dword [r10+8 ], ecx 
-        mov     dword [r10+12], edx 
+        mov     [r10],    eax
+        mov     [r10+4 ], ebx
+        mov     [r10+8 ], ecx 
+        mov     [r10+12], edx 
     
+        pop     rax
         pop     rbx
+        
         ret
 
 ;------------------------------------------------------------------------------
@@ -900,18 +904,19 @@ smo_done:
         global _pm_cpuid_ex
         _pm_cpuid_ex:
 
-        push    rbx
-        
+        push    rbx        
         mov     eax, ecx
         mov     ecx, edx
+        push    rax
 
         cpuid
 
-        mov     dword [r8],    eax
-        mov     dword [r8+4 ], ebx
-        mov     dword [r8+8 ], ecx 
-        mov     dword [r8+12], edx 
+        mov     [r8],    eax
+        mov     [r8+4 ], ebx
+        mov     [r8+8 ], ecx 
+        mov     [r8+12], edx 
     
+        pop     rax
         pop     rbx
         ret
 

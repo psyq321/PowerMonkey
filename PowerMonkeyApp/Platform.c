@@ -61,8 +61,8 @@ extern PLATFORM* gPlatform;
  ******************************************************************************/
 
 UINTN gNumCores = 0;
-VOID* CoreIdxMap[MAX_CORES * MAX_PACKAGES] = { 0 };
-UINTN CoreApicIDs[MAX_CORES * MAX_PACKAGES] = { 0 };
+VOID* gCorePtrs[MAX_CORES * MAX_PACKAGES] = { 0 };
+UINTN gCoreApicIDs[MAX_CORES * MAX_PACKAGES] = { 0 };
 
 /*******************************************************************************
  * ApicIdToCoreNumber
@@ -71,7 +71,7 @@ UINTN CoreApicIDs[MAX_CORES * MAX_PACKAGES] = { 0 };
 UINTN ApicIdToCoreNumber(const UINTN ApicID)
 {
   for (UINTN ccount = 0; ccount < gNumCores; ccount++) {
-    if (CoreApicIDs[ccount] == ApicID) {
+    if (gCoreApicIDs[ccount] == ApicID) {
       return ccount;
     }
   }
@@ -198,17 +198,13 @@ EFI_STATUS EFIAPI ProbePackage(IN OUT PACKAGE* pkg)
 {
   EFI_STATUS status = EFI_SUCCESS;
 
-  ///////////
-  // CPUID //
-  ///////////
-
   if (pkg->probed != 1) {
-    
-    GetCpuInfo(&pkg->CpuInfo);
 
-    AsmCpuid(0x01,
-      &pkg->CpuID,
-      NULL, NULL, NULL);
+    ///////////
+    // CPUID //
+    ///////////
+
+    GetCpuInfo(&pkg->CpuInfo);
 
     //////////////////////////
     // Discover VR Topology //
@@ -266,19 +262,31 @@ EFI_STATUS EFIAPI ProbePackage(IN OUT PACKAGE* pkg)
 }
 
 /*******************************************************************************
- * ProgramPackageOrCore
+ * ProgramVFOverridesAndOCRatios
  ******************************************************************************/
 
-EFI_STATUS EFIAPI ProgramPackageOrCore(IN OUT PACKAGE* pkg)
+EFI_STATUS EFIAPI ProgramVFOverridesAndOCRatios()
 {
   EFI_STATUS status = EFI_SUCCESS;
 
   //
-  // Force max ratio for all turbo core counts
-  // (if requested) 
+  // We will locate our core and package using 
+  // per-CPU Local Storage
 
-  if (pkg->ForcedRatioForAllCoreCounts) {
-    IAPERF_ProgramMaxTurboRatios(pkg->ForcedRatioForAllCoreCounts);
+  CPUCORE* core = (CPUCORE*)GetCpuDataBlock();
+  PACKAGE* pkg = (PACKAGE*)core->parent;
+    
+  //
+  // Forced turbo ratios
+
+  if (pkg->ForcedRatioForPCoreCounts) {
+    IAPERF_ProgramMaxTurboRatios(pkg->ForcedRatioForPCoreCounts);
+  }
+
+  if (gCpuInfo.HybridArch) {
+    if (pkg->ForcedRatioForECoreCounts) {
+      IAPERF_ProgramMaxTurboRatios_ECORE(pkg->ForcedRatioForECoreCounts);
+    }
   }
 
   //
@@ -294,6 +302,24 @@ EFI_STATUS EFIAPI ProgramPackageOrCore(IN OUT PACKAGE* pkg)
       }
     }
   }
+
+  return status;
+}
+
+/*******************************************************************************
+ * ProgramPowerLimits
+ ******************************************************************************/
+
+EFI_STATUS EFIAPI ProgramPowerLimits()
+{
+  EFI_STATUS status = EFI_SUCCESS;
+
+  //
+  // We will locate our core and package using 
+  // per-CPU Local Storage
+
+  CPUCORE* core = (CPUCORE*)GetCpuDataBlock();
+  PACKAGE* pkg = (PACKAGE*)core->parent;
 
   //
   // Program Config TDP Params
@@ -368,17 +394,32 @@ EFI_STATUS EFIAPI ProgramPackageOrCore(IN OUT PACKAGE* pkg)
 
   }
 
+  //
+  // Power Control
+
+  if (pkg->ProgramPowerTweaks) {
+    ProgramPowerCtl(pkg->EnableEETurbo, pkg->EnableRaceToHalt);
+  }
+
+
   return status;
 }
 
 /*******************************************************************************
- * ProgramPackage_Stage2
+ * ProgramPackageLocks_Stage2
  * Program package locks in the separate stage, after everything else is done
  ******************************************************************************/
 
-EFI_STATUS EFIAPI ProgramPackage_Stage2(IN OUT PACKAGE* pkg)
+EFI_STATUS EFIAPI ProgramPackageLocks_Stage2()
 {
   EFI_STATUS status = EFI_SUCCESS;
+
+  //
+  // We will locate our core and package using 
+  // per-CPU Local Storage
+
+  CPUCORE* core = (CPUCORE*)GetCpuDataBlock();
+  PACKAGE* pkg = (PACKAGE*)core->parent;
 
   //
   // Power Limits MMIO Lock
@@ -391,12 +432,19 @@ EFI_STATUS EFIAPI ProgramPackage_Stage2(IN OUT PACKAGE* pkg)
 }
 
 /*******************************************************************************
- * ProgramPackage_Stage1
+ * ProgramPowerLimits_Stage2
  ******************************************************************************/
 
-EFI_STATUS EFIAPI ProgramPackage_Stage1(IN OUT PACKAGE* pkg)
+EFI_STATUS EFIAPI ProgramPowerLimits_Stage2()
 {
   EFI_STATUS status = EFI_SUCCESS;
+
+  //
+  // We will locate our core and package using 
+  // per-CPU Local Storage
+
+  CPUCORE* core = (CPUCORE*)GetCpuDataBlock();
+  PACKAGE* pkg = (PACKAGE*)core->parent;
 
   //
   // MMIO
@@ -454,9 +502,8 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* psys)
 
   UINTN nPackages = 0;
   UINTN nThreadsTotal = 0;
-  UINTN nCoresTotal = 0;
 
-  UINTN localCoreOrThreadCount = 0;
+  UINTN localCoreCount = 0;
 
   pac->parent = psys;
 
@@ -468,31 +515,62 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* psys)
 
   for (UINTN tidx = 0; tidx < psys->LogicalProcessors; tidx++) {
 
-    EFI_PROCESSOR_INFORMATION pi;
+    EFI_PROCESSOR_INFORMATION pi = {0};
 
+#if 0
+    
+    //
+    // Extended topology
+    
+    gMpServices->GetProcessorInfo(gMpServices, tidx | CPU_V2_EXTENDED_TOPOLOGY, &pi);
+
+//    UINT32 *ppi_core =    &pi.ExtendedInformation.Location2.Core;
+    UINT32 *ppi_thread =  &pi.ExtendedInformation.Location2.Thread;
+    UINT32 *ppi_package = &pi.ExtendedInformation.Location2.Package;
+
+#else
+
+    //
+    // Basic topology
+    
     gMpServices->GetProcessorInfo(gMpServices, tidx, &pi);
 
+//    UINT32 *ppi_core =    &pi.Location.Core;
+    UINT32 *ppi_thread =  &pi.Location.Thread;
+    UINT32 *ppi_package = &pi.Location.Package;
+
+#endif
+
     if (prevPackage == 0xFFFFFFFF)
-      prevPackage = pi.Location.Package;
+      prevPackage = *ppi_package;
 
-    CPUCORE* core = &pac->Core[localCoreOrThreadCount];
+    CPUCORE* core = &pac->Core[localCoreCount];
 
-    core->LocalIdx = (UINT8) localCoreOrThreadCount;
+    core->LocalIdx = (UINT8) localCoreCount;
     core->ApicID = pi.ProcessorId;
     core->AbsIdx = tidx;
-    core->parent = (VOID*)pac;
+    core->parent = (VOID*) pac;
     core->PkgIdx = (UINT8) nPackages;
-    pac->idx = (UINT64)nPackages;
+    pac->idx = (UINT64) nPackages;
 
-    CoreIdxMap[tidx] = (VOID*)&pac->Core[localCoreOrThreadCount];
-    CoreApicIDs[tidx] = pac->Core[localCoreOrThreadCount].ApicID;
+    gCorePtrs[tidx] = (VOID*)&pac->Core[localCoreCount];
+    gCoreApicIDs[tidx] = pac->Core[localCoreCount].ApicID;
 
-    const BOOLEAN physCore = (pi.Location.Thread == 0) ? 1 : 0;
+    //
+    // ALDER LAKE HACK!
+    // some systems will keep returning pi.location.core as 0, and keep 
+    // increasing thread idx instead
+    // because of these systems, we need to go back to old ugly hack
+
+    //const BOOLEAN physCore = (*ppi_thread == 0) ? 1 : 0;
+
+    const BOOLEAN physCore = (((*ppi_thread == 0)||((*ppi_thread > 0) &&
+                             (*ppi_thread % 2 == 0)))) ? 1 : 0;             // will not work for N>2-way SMT
         
     pac->LogicalCores += 1;
     pac->PhysicalCores += (physCore) ? 1 : 0;
 
-    pac->Core[localCoreOrThreadCount].IsPhysical = physCore;
+    pac->Core[localCoreCount].IsPhysical = physCore;
 
     if (pac->FirstCoreApicID == 0xFFFFFFFF) {
       pac->FirstCoreApicID = pi.ProcessorId;
@@ -503,22 +581,31 @@ EFI_STATUS DetectPackages(IN OUT PLATFORM* psys)
     }      
     
     nThreadsTotal++;
-    localCoreOrThreadCount++;
-    nCoresTotal += (pi.Location.Thread == 0) ? 1 : 0;
+    localCoreCount++;
 
-    //AsciiPrint("[Tidx %u] apic id: %lu, abs idx: %lu, pkg idx: %u\n", tidx, core->ApicID, core->AbsIdx, core->PkgIdx);
+#if 0
 
-    if (pi.Location.Package != prevPackage)
+    AsciiPrint("[Tidx %lu] pi.loc.core: %u, pi.loc.package: %u, pi.loc.thread: %u, physical: %u, abs idx: %lu, pkg idx: %u\n", 
+      tidx, 
+      *ppi_core,
+      *ppi_package,
+      *ppi_thread,
+      (UINT32) core->IsPhysical,
+      (UINT32) core->AbsIdx,
+      (UINT32) core->PkgIdx);
+
+#endif
+
+    if (*ppi_package != prevPackage)
     {
       //
       // New package detected
 
       pac->parent = (VOID*)psys;
 
-
       nPackages++;
-      prevPackage = pi.Location.Package;
-      localCoreOrThreadCount = 0;
+      prevPackage = *ppi_package;
+      localCoreCount = 0;
       pac++;
     }
   }
@@ -538,11 +625,14 @@ EFI_STATUS EFIAPI ProbePackages(IN OUT PLATFORM* ppd)
   EFI_STATUS status = EFI_SUCCESS;
 
   //
-  // Probe each package in its own context
+  // For each package
 
   for (UINTN pidx = 0; pidx < ppd->PkgCnt; pidx++)
   {
     PACKAGE* pac = ppd->packages + pidx;
+
+    //
+    // Run on 1st core
 
     status = RunOnPackageOrCore(ppd, pac->FirstCoreNumber, (EFI_AP_PROCEDURE)ProbePackage, pac);
 
@@ -557,6 +647,55 @@ EFI_STATUS EFIAPI ProbePackages(IN OUT PLATFORM* ppd)
 
   return status;
 }
+
+/*******************************************************************************
+ * ProbeCores
+ * Probes information from each and every CPU core
+ ******************************************************************************/
+
+EFI_STATUS EFIAPI ProbeCores(IN OUT PLATFORM* ppd)
+{
+  EFI_STATUS status = EFI_SUCCESS;
+
+  //
+  // Probe each package in its own context
+
+  for (UINTN pidx = 0; pidx < ppd->PkgCnt; pidx++)
+  {
+    PACKAGE* pac = ppd->packages + pidx;
+
+    for (UINTN cidx = 0; cidx < pac->LogicalCores; cidx++)
+    {
+      CPUCORE* core = &pac->Core[cidx];
+
+      /* if (core->IsPhysical) */ {
+
+        //
+        // Note: we use NULL instead of a real callback, because only data
+        // being collected per-core is going to be collected by the MP dispatch
+        // "Ignite" call itself. Once we need more data from each core, there
+        // will be separate callback to do so
+
+        status = RunOnPackageOrCore(ppd,
+          core->AbsIdx,
+          (EFI_AP_PROCEDURE)NULL,
+          pac
+        );
+
+        if (EFI_ERROR(status)) {
+          Print(L"[ERROR] CPU package %u, status code: 0x%x\n",
+            pac->FirstCoreNumber,
+            status);
+
+          return status;
+        }
+      }
+    }
+  }
+
+  return status;
+}
+
 
 /*******************************************************************************
 * DiscoverPlatform
@@ -606,7 +745,22 @@ EFI_STATUS EFIAPI DiscoverPlatform(IN OUT PLATFORM** ppsys)
 
   ppd->PkgCnt = 1;                    // Boot Processor
 
+  //
+  // Identify CPU packages
+  // and their respective CPU cores 
+
   DetectPackages(ppd);
+
+  //
+  // Collect information specific
+  // to each CPU core - currently only hybrid architecture CPUs need this
+
+  /*if (gCpuInfo->HybridArch)*/ {   // <-- remove when necessary
+    ProbeCores(ppd);
+  }
+
+  //
+  // Probe each detected package and collect info
   
   ProbePackages(ppd);
   
@@ -627,20 +781,16 @@ VOID PrintPlatformInfo(IN PLATFORM* psys)
  * ProgramCoreLocks
  ******************************************************************************/
 
-EFI_STATUS EFIAPI ProgramCoreKnobs(PLATFORM* psys)
+EFI_STATUS EFIAPI ProgramCoreLocks()
 {
   //
-  // Hack - assuming all packages are the same!!!!
+  // We will locate our core and package using 
+  // per-CPU Local Storage
 
-  PACKAGE* pk = &psys->packages[0];
+  CPUCORE* core = (CPUCORE*)GetCpuDataBlock();
+  PACKAGE* pk = (PACKAGE*)core->parent;
 
-  //
-  // Power Control
   
-  if (pk->ProgramPowerControl) {
-    ProgramPowerCtl(pk->EnableEETurbo, pk->EnableRaceToHalt);
-  }
-
   //
   // PL1/2 Lock (MSR)
 
@@ -713,6 +863,7 @@ StartupPlatformInit(
   PLATFORM* sys = *Platform;
 
   PrintPlatformInfo(sys);
+  //PrintCoreInfo();
 
   return status;
 }
@@ -734,6 +885,11 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
 
   ApplyComputerOwnersPolicy(sys);
 
+  ///////////////////
+  // VF Overrides  //
+  // and OC ratios //
+  ///////////////////
+  
   //
   // Strictly speaking, we do not need to program every core
   // Performing programming once per package would be sufficient (except for
@@ -743,30 +899,36 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   //
   // So we will program every core, for the sake of completeness...
 
-  for (UINTN pidx = 0; pidx < sys->PkgCnt; pidx++)
-  {
+  for (UINTN pidx = 0; pidx < sys->PkgCnt; pidx++) {
+
     PACKAGE* pk = sys->packages + pidx;
 
-    //for (INTN cidx = pk->LogicalCores; cidx >= 0; --cidx)
     for (UINTN cidx = 0; cidx < pk->LogicalCores; cidx++)
     {
       CPUCORE* core = pk->Core + cidx;
-      RunOnPackageOrCore(sys, core->AbsIdx, (EFI_AP_PROCEDURE)ProgramPackageOrCore, pk);
+      RunOnPackageOrCore(sys, core->AbsIdx, (EFI_AP_PROCEDURE)ProgramVFOverridesAndOCRatios, NULL);
     }
   }
 
-  //////////
-  // MISC //
-  //////////
-
-  //
-  // Power Limits (MMIO)
+  //////////////////
+  // Power Limits //
+  //////////////////
 
   for (UINTN pidx = 0; pidx < sys->PkgCnt; pidx++)
   {
     PACKAGE* pk = sys->packages + pidx;
-    RunOnPackageOrCore(sys, pk->FirstCoreNumber, (EFI_AP_PROCEDURE)ProgramPackage_Stage1, pk);
+
+    //
+    // cTDP, MSR PL1/PL2, ...
+
+    RunOnPackageOrCore(sys, pk->FirstCoreNumber, (EFI_AP_PROCEDURE)ProgramPowerLimits, NULL);
+
+    //
+    // MMIO, PSys, ...
+
+    RunOnPackageOrCore(sys, pk->FirstCoreNumber, (EFI_AP_PROCEDURE)ProgramPowerLimits_Stage2, NULL);
   }
+
 
   /////////////////
   // Apply LOCKS //
@@ -775,7 +937,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   //
   // MSR Locks
 
-  RunOnAllProcessors((EFI_AP_PROCEDURE)ProgramCoreKnobs, FALSE, (void *)sys);
+  RunOnAllProcessors((EFI_AP_PROCEDURE)ProgramCoreLocks, FALSE, (void *)sys);
 
   //
   // MMIO locks
@@ -783,7 +945,7 @@ EFI_STATUS EFIAPI ApplyPolicy(IN EFI_SYSTEM_TABLE* SystemTable,
   for (UINTN pidx = 0; pidx < sys->PkgCnt; pidx++)
   {
     PACKAGE* pk = sys->packages + pidx;
-    RunOnPackageOrCore(sys, pk->FirstCoreNumber, (EFI_AP_PROCEDURE)ProgramPackage_Stage2, pk);
+    RunOnPackageOrCore(sys, pk->FirstCoreNumber, (EFI_AP_PROCEDURE)ProgramPackageLocks_Stage2, pk);
   }
 
   ////////////////////
@@ -809,6 +971,6 @@ VOID* GetCpuDataBlock()
 {
   UINTN processorNumber;
   gMpServices->WhoAmI(gMpServices, &processorNumber);
-  VOID* coreStructAddr = CoreIdxMap[processorNumber];
+  VOID* coreStructAddr = gCorePtrs[processorNumber];
   return coreStructAddr;
 }

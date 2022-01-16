@@ -31,15 +31,18 @@
  ******************************************************************************/
 
 UINT64 GetTurboRatioLimits(VOID);
+UINT64 GetTurboRatioLimits_ECORE(VOID);
 
 /*******************************************************************************
  * SetTurboRatioLimits
  ******************************************************************************/
 
 EFI_STATUS SetTurboRatioLimits(const UINT64 val);
+EFI_STATUS SetTurboRatioLimits_ECORE(const UINT64 val);
 
 /*******************************************************************************
  * ProgramMaxTurboRatios
  ******************************************************************************/
 
 EFI_STATUS IAPERF_ProgramMaxTurboRatios(const UINT8 maxRatio);
+EFI_STATUS IAPERF_ProgramMaxTurboRatios_ECORE(const UINT8 maxRatio);

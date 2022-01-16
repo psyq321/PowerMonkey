@@ -88,26 +88,30 @@ VOID EFIAPI ProcessorIgnite(VOID* params)
   SetCpuGSBase(coreStructAddr);
 
   ///
-  /// Populate CPU-specific info
+  /// Populate CPU core-specific info
   /// 
   
   CPUCORE* core = (CPUCORE*)coreStructAddr;
-  GetCpuInfo(&core->CpuInfo);
-
-  if (core->CpuInfo.HybridArch) {
-    core->IsECore = core->CpuInfo.ECore;
-    core->IsPerfCore = core->CpuInfo.PCore;
-  }
-  else {
-    core->IsECore = 0;
-    core->IsPerfCore = 1;
-  }
   
-  ///
-  /// Execute user's call
-  /// 
+  GetCpuInfo(&core->CpuInfo);
+  core->IsECore = core->CpuInfo.ECore;
 
-  pic->userProc(pic->userParam);
+  //
+  // Debug
+  {
+    UINTN processorNumber = 0;
+    gMpServices->WhoAmI(gMpServices, &processorNumber);
+    core->ValidateIdx = (UINT32)processorNumber;
+  }  
+  
+  if (pic->userProc) {
+
+    ///
+    /// Execute user's call (if supplied)
+    ///
+
+    pic->userProc(pic->userParam);
+  }  
 }
 
 

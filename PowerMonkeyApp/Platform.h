@@ -48,8 +48,8 @@
  ******************************************************************************/
 
 extern UINTN gNumCores;
-extern VOID* CoreIdxMap[MAX_CORES * MAX_PACKAGES];
-extern UINTN CoreApicIDs[MAX_CORES * MAX_PACKAGES];
+extern VOID* gCorePtrs[MAX_CORES * MAX_PACKAGES];
+extern UINTN gCoreApicIDs[MAX_CORES * MAX_PACKAGES];
 
 UINTN ApicIdToCoreNumber(const UINTN ApicID);
 
@@ -158,15 +158,16 @@ typedef struct _CPUCORE
   UINTN     AbsIdx;
   UINT8     LocalIdx;
 
-  UINT32    CpuID;
-
   BOOLEAN   IsPhysical;
-  BOOLEAN   IsPerfCore;
   BOOLEAN   IsECore;
 
   VOID      *parent;
   UINT8     PkgIdx;
 
+  //
+  // Debug
+
+  UINT32    ValidateIdx;
 } CPUCORE;
 
 
@@ -194,9 +195,16 @@ typedef struct _PACKAGE
   
   UINT64  TurboRatioLimits;                    // [READ] MSR_TURBO_RATIO_LIMIT
     
-  UINT8   ForcedRatioForAllCoreCounts;         // [WRITE] If != 0, we will 
+  UINT8   ForcedRatioForPCoreCounts;           // [WRITE] If != 0, we will 
                                                // program this ratio for all 
-                                               // core-counts
+                                               // core-counts. Note: for Alder
+                                               // lake and newer: this excludes
+                                               // E-Cores, see below.
+
+  UINT8   ForcedRatioForECoreCounts;           // Same as above, but for E-cores
+                                               // ignored if the CPU is not hyb.
+
+
   //////////////////
   // Power limits //
   //////////////////
@@ -221,7 +229,7 @@ typedef struct _PACKAGE
   //
   // Power Control
 
-  UINT8 ProgramPowerControl;        // Enable Programming of PowCtl
+  UINT8 ProgramPowerTweaks;        // Enable Programming of PowCtl
   UINT8 EnableEETurbo;              // Enable Energy Efficient Turbo
   UINT8 EnableRaceToHalt;           // Enable Race To Halt
 

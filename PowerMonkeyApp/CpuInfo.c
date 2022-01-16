@@ -34,6 +34,15 @@
  * 
  ******************************************************************************/
 
+#define CPUID_EAX   0
+#define CPUID_EBX   1
+#define CPUID_ECX   2
+#define CPUID_EDX   3
+
+/*******************************************************************************
+ * 
+ ******************************************************************************/
+
 extern void* memset(void* str, int c, UINTN n);
 
 /*******************************************************************************
@@ -43,7 +52,6 @@ extern void* memset(void* str, int c, UINTN n);
 void GetCpuInfo(CPUINFO* ci)
 {
   memset(ci, 0, sizeof(CPUINFO));
-
 
   //////////////////
   // Brand String //
@@ -60,63 +68,46 @@ void GetCpuInfo(CPUINFO* ci)
   // Vendor String //
   ///////////////////
   
-  UINT32 args[4] = {0};
+  UINT32 regs[4] = {0};
 
-  _pm_cpuid(0, args);
+  _pm_cpuid(0, regs);
   
-  UINT32 hscall = ci->maxf = args[0];
+  UINT32 hscall = ci->maxf = regs[CPUID_EAX];
   
-  brandstr[0] = args[1];
-  brandstr[1] = args[3];
-  brandstr[2] = args[2];
-  
-  memset(args, 0, sizeof(args));  
-  
-  _pm_cpuid(0x01, args);
+  brandstr[0] = regs[CPUID_EBX];
+  brandstr[1] = regs[CPUID_EDX];
+  brandstr[2] = regs[CPUID_ECX];
+ 
+  _pm_cpuid(0x01, regs);
 
-  ci->f1 = args[0];
-  ci->stepping =  args[0] & 0x0000000F;
-  ci->family =   (UINT32)(args[0] & 0x00000F00) >> 8;
-  ci->model =    (UINT32)(args[0] & 0x000000F0) >> 4;
+  ci->f1 = regs[CPUID_EAX];
+  ci->stepping =  regs[CPUID_EAX] & 0x0000000F;
+  ci->family =   (UINT32)(regs[CPUID_EAX] & 0x00000F00) >> 8;
+  ci->model =    (UINT32)(regs[CPUID_EAX] & 0x000000F0) >> 4;
 
   if ((ci->family == 0xF) || (ci->family == 0x6)) {
-    ci->model  |= (UINT32)((args[0] & 0x0000F0000) >> 12);
-    ci->family |= (UINT32)((args[0] & 0x00FF00000) >> 16);
+    ci->model  |= (UINT32)((regs[CPUID_EAX] & 0x0000F0000) >> 12);
+    ci->family |= (UINT32)((regs[CPUID_EAX] & 0x00FF00000) >> 16);
   }
-
   
   ///////////////////////////////////
   // Hybrid Architecture Detection //
   ///////////////////////////////////
-
-  memset(args, 0, sizeof(args));
   
-  _pm_cpuid(0x7, args);
+  _pm_cpuid(0x7, regs);
 
-  ci->HybridArch = (args[3] & bit15u32) ? 1 : 0;  
+  ci->ECore = 0;
+  ci->HybridArch = ((regs[CPUID_EDX] & bit15u32)) ? 1 : 0;
 
   if (ci->HybridArch) {
+    if (hscall >= 0x1A) {      
+      _pm_cpuid(0x1A, regs);
 
-    if (hscall >= 0x1A) {
-      
-      memset(args, 0, sizeof(args));
-      
-      _pm_cpuid(0x1A, args);
-
-      UINT32 ct = ((args[0] & 0xFF000000) >> 24);
+      UINT32 ct = ((regs[CPUID_EAX] & 0xFF000000) >> 24);
 
       if (ct == 0x20) {
         ci->ECore = 1;
-        ci->PCore = 0;
-      }
-      else {
-        ci->ECore = 0;
-        ci->PCore = 1;
-      }
+      }        
     }
-  }
-  else {
-    ci->ECore = 0;
-    ci->PCore = 1;
   }
 }
