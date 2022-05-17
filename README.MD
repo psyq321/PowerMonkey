@@ -76,7 +76,7 @@ PowerMonkey.efi is currently proof-of-concept for expert users who have systems 
 
 ## Enabled Features
 
-*NOTE: Alder Lake Support is BETA (P-Cores Only, spurious crashes discovered when E-Cores are emabled)*
+*NOTE: Alder Lake Support is BETA (P-Cores Only, spurious crashes discovered when E-Cores are enabled)*
 
 PowerMonkey is a POC and is **not tested** on anything other than few CML, RKL and ADL* systems.
 At this stage, usage is recommended only to developers and experts under precautions. There are no checks for CPU compatibility so crashes could occur. It can brick computers or cause them to fail in all kinds of ways!
@@ -334,7 +334,8 @@ Things become even more interesting if one logs the data and checks what has CPU
 | **WSL2 Custom Linux Kernel Build** |                    |                    |
 |   Total Build Time                 |      18m18.203s    |      17m21.769s    |
 
-Differences are less drastic compared to Cinebench, which is to be expected as Linux kernel build is not so CPU-heavy. Still, it is almost a minute faster and, as originally intended: serves to prove that custom CPU settings are active under Hyper-V.
+Differences are less drastic compared to Cinebench, which is to be expected as Linux kernel build is not so CPU-heavy(Code compilation is more Cache dependent, aka Ring in BIOS, OCing Ring gives a 5%+ boost on a TGL-H laptop*). Still, it is almost a minute faster and, as originally intended: serves to prove that custom CPU settings are active under Hyper-V.
+* [11800H Ring OC Results](https://openbenchmarking.org/result/2202121-NE-2202120NE05)
 
 ### **Even Better Undervolting: V/F Point Adjustment**
 
