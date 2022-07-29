@@ -29,7 +29,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <Link>
-      <AdditionalDependencies>UefiApplicationEntryPoint.lib;BaseIoLibIntrinsic.lib;SecPeiDxeTimerLibCpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>UefiApplicationEntryPoint.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>EFI Application</SubSystem>
     </Link>
     <ClCompile>
